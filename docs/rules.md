@@ -1,0 +1,44 @@
+# Reglas implementadas
+
+## Roll For Shoes base
+
+- Todo personaje empieza con **Do Anything 1**.
+- Para actuar se tiran tantos d6 como el nivel de la habilidad usada. El DM tira dados de oposición y se comparan las sumas.
+- **Todos 6:** se gana una habilidad nueva, de nivel +1 respecto a la usada y derivada de ella (el jugador la nombra; p. ej. `Do Anything 1` → `Trepar 2`).
+- **Fallo:** +1 XP.
+- **XP:** 1 XP convierte un dado en 6, **solo para avanzar**, nunca para cambiar el resultado.
+
+## Variantes de Kovalt Roller (configurables por sala)
+
+| Ajuste | Por defecto | Efecto |
+|---|---|---|
+| `skillSlots` | 5 | Slots para habilidades ganadas. Do Anything 1 no ocupa slot y no se puede reemplazar. Con los slots llenos, el jugador reemplaza una habilidad o descarta la nueva. |
+| `tieWinner` | jugador | Quién gana en empate. |
+| `xpSameRoll` | sí | Si el XP ganado al fallar se puede gastar en esa misma tirada. |
+| `maxDice` | 10 | Máximo de dados por tirada; una habilidad de ese nivel ya no avanza. |
+
+Otras decisiones:
+
+- Los nombres de habilidad no se repiten dentro de una hoja (sin distinguir mayúsculas).
+- Reemplazar la misma habilidad que se usó para tirar está permitido.
+
+## Flujo de una tirada
+
+```
+declarada ──(DM)──► aprobada ──(DM)──► oposicion ──(jugador)──► tirada ──► resuelta
+    ├──(DM)──► contraoferta ──(jugador acepta / edita)──► declarada
+    ├──(DM)──► rechazada ────(jugador edita)────────────► declarada
+    ├──(DM)──► sin_tirada ──► resuelta (narración directa, sin XP)
+    └──(jugador)──► retirada
+```
+
+- **Contraoferta:** el DM sugiere otra habilidad. El jugador la acepta tal cual o edita y vuelve a declarar; en ambos casos regresa a revisión del DM.
+- **Oposición:** el DM tira primero y el resultado es visible para el jugador antes de su tirada.
+- **Retirar:** el jugador puede retirar su declaración mientras está en `declarada`, `contraoferta` o `rechazada`.
+- **Resuelta:** el resultado se calcula automáticamente. Si hay avance posible, el jugador decide (nombre de la habilidad, gastar XP, qué slot usar) y se aplica.
+
+## Inventario
+
+- El DM mantiene un catálogo privado por sala. Un objeto tiene nombre, descripción (incluye el efecto si es mágico), valor opcional (entero) y cantidad (puede ser 0).
+- El DM entrega **copias** a los personajes, con su propia cantidad.
+- Cada inventario lo ven solo su dueño y el DM. El dueño solo puede cambiar la cantidad.

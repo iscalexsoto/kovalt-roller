@@ -1,0 +1,8 @@
+[workspace]
+resolver = "3"
+members = ["crates/r4s_engine"]
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+authors = ["iscalexsoto <iscalexsoto@gmail.com>"]
