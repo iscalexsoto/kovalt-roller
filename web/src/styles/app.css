@@ -100,7 +100,10 @@
 .rl-table__side { grid-area: side; }
 @media (min-width: 1200px) {
   .rl-table { grid-template-columns: 260px minmax(0, 1fr) 380px; grid-template-areas: "players log side"; grid-template-rows: auto; }
-  .rl-table__players, .rl-table__side { position: sticky; top: 80px; max-height: calc(100dvh - 96px); overflow-y: auto; overflow-x: hidden; }
+  /* Con scroll, la columna recorta lo que se sale: el padding (compensado con margen) deja sitio al rim de 1px de los
+     elementos cortados que llegan al borde. */
+  .rl-table__players, .rl-table__side { position: sticky; top: 80px; max-height: calc(100dvh - 96px); overflow-y: auto; overflow-x: hidden;
+    padding: 4px; margin: -4px; }
 }
 .rl-compact { flex: 1; padding: 12px var(--kv-margin) calc(100px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 12px; }
 /* La barra inferior de la sala usa botones (vistas), no enlaces. */
