@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { deleteDoc, doc, getDoc, serverTimestamp, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore';
 import {
   BASE_SKILL, CODE, createEnv, declaredRoll, DEFAULT_SETTINGS, DM, guest, P1, P2, registered,
   ROOM, seedRoll, seedRoom, withClaims,
@@ -179,17 +179,21 @@ describe('personajes', () => {
 });
 
 describe('catálogo e inventario', () => {
-  const item = (extra = {}) => ({ name: 'Cuerda', description: '10 m', value: null, quantity: 1, ...extra });
-  const inv = (db, uid, id = 'i1') => doc(db, `rooms/${ROOM}/characters/${uid}/inventory/${id}`);
+  const look = { icon: 'package', color: 'sand' };
+  const catalogItem = (extra = {}) => ({ name: 'Cuerda', description: '10 m', value: null, ...look, ...extra });
+  const item = (extra = {}) => ({ ...catalogItem(), quantity: 1, ...extra });
+  const inv = (db, uid, id = 'c1') => doc(db, `rooms/${ROOM}/characters/${uid}/inventory/${id}`);
 
-  it('el catálogo es privado del DM', async () => {
+  it('el catálogo es privado del DM y no lleva cantidades', async () => {
     await seedRoom(env);
     const ref = (db) => doc(db, `rooms/${ROOM}/catalog/c1`);
-    await assertSucceeds(setDoc(ref(dmDb()), item({ value: 5, quantity: 0 })));
-    await assertFails(setDoc(ref(dmDb()), item({ quantity: -1 })));
-    await assertFails(setDoc(ref(dmDb()), item({ name: '' })));
+    await assertSucceeds(setDoc(ref(dmDb()), catalogItem({ value: 5, color: 'ember', icon: 'sword' })));
+    await assertFails(setDoc(ref(dmDb()), catalogItem({ quantity: 1 })));
+    await assertFails(setDoc(ref(dmDb()), catalogItem({ color: 'fucsia' })));
+    await assertFails(setDoc(ref(dmDb()), catalogItem({ value: -1 })));
+    await assertFails(setDoc(ref(dmDb()), catalogItem({ name: '' })));
     await assertFails(getDoc(ref(p1Db())));
-    await assertFails(setDoc(ref(p1Db()), item()));
+    await assertFails(setDoc(ref(p1Db()), catalogItem()));
   });
 
   it('el DM entrega copias; el dueño solo ajusta la cantidad', async () => {
@@ -205,6 +209,106 @@ describe('catálogo e inventario', () => {
     await assertFails(updateDoc(inv(p1Db(), P1), { name: 'Cuerda mágica' }));
     await assertFails(deleteDoc(inv(p1Db(), P1)));
     await assertSucceeds(deleteDoc(inv(dmDb(), P1)));
+  });
+
+  it('monedas: el DM las ajusta; el dueño no se las sube', async () => {
+    await seedRoom(env);
+    await assertSucceeds(updateDoc(charRef(dmDb(), P1), { coins: 10 }));
+    await assertFails(updateDoc(charRef(dmDb(), P1), { coins: -1 }));
+    await assertFails(updateDoc(charRef(p1Db(), P1), { coins: 11 }));
+    await assertFails(updateDoc(charRef(p2Db(), P1), { coins: 5 }));
+  });
+});
+
+describe('botines y tiendas', () => {
+  const look = { icon: 'flask-round', color: 'rose' };
+  const line = (extra = {}) => ({ name: 'Poción', description: 'Cura', value: 4, ...look, price: 4, stock: 3, ...extra });
+  const offerRef = (db, id = 'o1') => doc(db, `rooms/${ROOM}/offers/${id}`);
+  const lineRef = (db, id = 'o1', lid = 'c1') => doc(db, `rooms/${ROOM}/offers/${id}/lines/${lid}`);
+  const inv = (db, uid, id = 'c1') => doc(db, `rooms/${ROOM}/characters/${uid}/inventory/${id}`);
+  const copy = (quantity) => ({
+    name: 'Poción', description: 'Cura', value: 4, ...look, quantity,
+    catalogItemId: 'c1', offerId: 'o1', givenBy: null, givenAt: serverTimestamp(),
+  });
+
+  async function seedOffer({ kind = 'loot', open = true, audience = ['*'], stock = 3, coins = 10 } = {}) {
+    await seedRoom(env);
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore();
+      await setDoc(offerRef(db), { kind, title: 'Cofre', open, audience, createdAt: new Date(), updatedAt: new Date() });
+      await setDoc(lineRef(db), line({ stock }));
+      await updateDoc(charRef(db, P1), { coins });
+    });
+  }
+
+  /** P1 toma (o compra) `q` unidades; `coins` es su saldo después, si la tienda cobra. */
+  function claimBatch(db, q, { from = 3, invQty = q, create = true, coins } = {}) {
+    const b = writeBatch(db);
+    b.update(lineRef(db), { stock: from - q });
+    if (create) b.set(inv(db, P1), copy(invQty));
+    else b.update(inv(db, P1), { quantity: invQty });
+    if (coins !== undefined) b.update(charRef(db, P1), { coins, updatedAt: serverTimestamp() });
+    return b.commit();
+  }
+
+  it('solo el DM los arma', async () => {
+    await seedRoom(env);
+    const offer = { kind: 'shop', title: 'Herrería', open: false, audience: ['*'], createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
+    await assertSucceeds(setDoc(offerRef(dmDb()), offer));
+    await assertSucceeds(setDoc(lineRef(dmDb()), line()));
+    await assertFails(setDoc(offerRef(dmDb(), 'o2'), { ...offer, kind: 'subasta' }));
+    await assertFails(setDoc(lineRef(dmDb(), 'o1', 'c2'), line({ stock: -1 })));
+    await assertFails(setDoc(offerRef(p1Db(), 'o3'), offer));
+    await assertFails(setDoc(lineRef(p1Db(), 'o1', 'c3'), line()));
+  });
+
+  it('se ven abiertos y solo por su público', async () => {
+    await seedOffer({ audience: [P2] });
+    await assertFails(getDoc(offerRef(p1Db())));
+    await assertFails(getDoc(lineRef(p1Db())));
+    await assertSucceeds(getDoc(offerRef(p2Db())));
+    await assertSucceeds(getDoc(lineRef(p2Db())));
+    const offers = collection(p2Db(), `rooms/${ROOM}/offers`);
+    await assertSucceeds(getDocs(query(offers, where('open', '==', true), where('audience', 'array-contains', P2))));
+    await assertSucceeds(getDocs(query(offers, where('open', '==', true), where('audience', 'array-contains', '*'))));
+    await assertFails(getDocs(query(offers, where('audience', 'array-contains', P2))));
+    await env.withSecurityRulesDisabled((ctx) => updateDoc(offerRef(ctx.firestore()), { open: false }));
+    await assertFails(getDoc(offerRef(p2Db())));
+  });
+
+  it('botín: el primero que llega se lo lleva, sin pagar', async () => {
+    await seedOffer();
+    await assertFails(claimBatch(p1Db(), 2, { invQty: 3 }));
+    await assertFails(claimBatch(p1Db(), 4));
+    await assertSucceeds(claimBatch(p1Db(), 2));
+    await assertFails(claimBatch(p1Db(), 2, { from: 1, create: false, invQty: 4 }));
+    await assertSucceeds(claimBatch(p1Db(), 1, { from: 1, create: false, invQty: 3 }));
+    await assertFails(updateDoc(lineRef(p1Db()), { stock: 0, price: 0 }));
+  });
+
+  it('no se toma sin llevárselo, ni de una ventana cerrada o ajena', async () => {
+    await seedOffer();
+    await assertFails(updateDoc(lineRef(p1Db()), { stock: 2 }));
+    await env.withSecurityRulesDisabled((ctx) => updateDoc(offerRef(ctx.firestore()), { open: false }));
+    await assertFails(claimBatch(p1Db(), 1));
+    await env.withSecurityRulesDisabled((ctx) => updateDoc(offerRef(ctx.firestore()), { open: true, audience: [P2] }));
+    await assertFails(claimBatch(p1Db(), 1));
+  });
+
+  it('la copia debe ser fiel a la línea', async () => {
+    await seedOffer();
+    const b = writeBatch(p1Db());
+    b.update(lineRef(p1Db()), { stock: 2 });
+    b.set(inv(p1Db(), P1), { ...copy(1), name: 'Poción legendaria' });
+    await assertFails(b.commit());
+  });
+
+  it('tienda: cobra precio × cantidad y no deja deber', async () => {
+    await seedOffer({ kind: 'shop', coins: 10 });
+    await assertFails(claimBatch(p1Db(), 2));
+    await assertFails(claimBatch(p1Db(), 2, { coins: 3 }));
+    await assertFails(claimBatch(p1Db(), 3, { coins: -2 }));
+    await assertSucceeds(claimBatch(p1Db(), 2, { coins: 2 }));
   });
 });
 

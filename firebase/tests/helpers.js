@@ -15,18 +15,22 @@ export const P2 = 'p2';
 export const DEFAULT_SETTINGS = { skillSlots: 2, tieWinner: 'player', xpSameRoll: true, maxDice: 10 };
 export const BASE_SKILL = { name: 'Do Anything', level: 1, permanent: true, derivedFrom: null };
 
+// `firebase emulators:exec` publica dónde quedó cada emulador; por defecto, los puertos de firebase.json.
+function emulator(envVar, port) {
+  const [host, p] = (process.env[envVar] ?? `127.0.0.1:${port}`).split(':');
+  return { host, port: Number(p) };
+}
+
 export async function createEnv() {
   return initializeTestEnvironment({
     projectId: PROJECT_ID,
     firestore: {
       rules: readFileSync(here('../firestore.rules'), 'utf8'),
-      host: '127.0.0.1',
-      port: 8080,
+      ...emulator('FIRESTORE_EMULATOR_HOST', 8080),
     },
     database: {
       rules: readFileSync(here('../database.rules.json'), 'utf8'),
-      host: '127.0.0.1',
-      port: 9000,
+      ...emulator('FIREBASE_DATABASE_EMULATOR_HOST', 9000),
     },
   });
 }

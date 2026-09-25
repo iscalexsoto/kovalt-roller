@@ -8,9 +8,15 @@ import {
   applyRoll,
   baseSkill,
   defaultRoomSettings,
+  adjustCoins,
+  claim,
   giveItem,
+  MAX_STOCK,
+  newCatalogItem,
+  offerLine,
+  stack,
+  validateOfferTitle,
   newCharacter,
-  newItem,
   resolve,
   roll,
   skillLabel,
@@ -234,12 +240,47 @@ describe('avance', () => {
 });
 
 describe('inventario', () => {
-  it('permite cantidad 0 y valor opcional', () => {
-    const item = newItem('Cuerda', '10 m', null, 0);
-    expect(item.quantity).toBe(0);
-    const given = giveItem(item, 3);
-    expect(given.quantity).toBe(3);
-    expect(given.name).toBe('Cuerda');
-    expect(() => newItem('  ', '', 5, 1)).toThrow(EngineError);
+  const cuerda = () => newCatalogItem('Cuerda', '10 m', 5, { icon: 'package', color: 'sand' });
+
+  it('el catálogo no lleva cantidad; el valor es opcional', () => {
+    expect(newCatalogItem('Antorcha', '', null).value).toBeNull();
+    expect(cuerda()).not.toHaveProperty('quantity');
+    expect(() => newCatalogItem('  ', '', 5)).toThrow(EngineError);
+    expect(errorOf(() => newCatalogItem('Daga', '', -1)).detail.kind).toBe('InvalidAmount');
+    expect(errorOf(() => newCatalogItem('Daga', '', null, { icon: 'no-existe', color: 'slate' })).detail.kind).toBe('InvalidItemLook');
+    expect(errorOf(() => newCatalogItem('Daga', '', null, { icon: 'sword', color: 'fucsia' })).detail.kind).toBe('InvalidItemLook');
+  });
+
+  it('entregar hace una copia con cantidad propia, que puede ser 0, y se apila', () => {
+    const given = giveItem(cuerda(), 3);
+    expect(given).toMatchObject({ name: 'Cuerda', icon: 'package', color: 'sand', quantity: 3 });
+    expect(giveItem(cuerda(), 0).quantity).toBe(0);
+    expect(stack(given.quantity, 2)).toBe(5);
+    expect(() => stack(1, 0)).toThrow(EngineError);
+  });
+
+  it('la línea de tienda parte del valor como precio', () => {
+    expect(offerLine(cuerda(), 3)).toMatchObject({ price: 5, stock: 3 });
+    expect(offerLine(newCatalogItem('Piedra', '', null)).price).toBe(0);
+    expect(() => offerLine(cuerda(), MAX_STOCK + 1)).toThrow(EngineError);
+    expect(() => validateOfferTitle('   ')).toThrow(EngineError);
+  });
+
+  it('botín: se toma gratis mientras haya existencias', () => {
+    const line = offerLine(cuerda(), 3);
+    expect(claim('loot', line, 2, 0)).toEqual({ stock: 1, cost: 0, coins: 0 });
+    expect(errorOf(() => claim('loot', { ...line, stock: 1 }, 2, 0)).detail).toEqual({ kind: 'OutOfStock', available: 1 });
+    expect(errorOf(() => claim('loot', line, 0, 0)).detail.kind).toBe('InvalidAmount');
+  });
+
+  it('tienda: cobra precio × cantidad y no deja deber', () => {
+    const line = offerLine(cuerda(), 3);
+    expect(claim('shop', line, 2, 12)).toEqual({ stock: 1, cost: 10, coins: 2 });
+    expect(errorOf(() => claim('shop', line, 3, 12)).detail).toEqual({ kind: 'NotEnoughCoins', needed: 15, available: 12 });
+  });
+
+  it('las monedas nunca quedan negativas', () => {
+    expect(adjustCoins(3, 7)).toBe(10);
+    expect(() => adjustCoins(3, -4)).toThrow(EngineError);
   });
 });

@@ -143,12 +143,13 @@ service cloud.firestore {
     // se valida únicamente la habilidad nueva (advancementGuard), para no pasar
     // del límite de 1000 expresiones por evaluación.
     function basicCharacter(c, settings) {
-      return c.keys().hasOnly(['ownerUid', 'name', 'description', 'notes', 'xp', 'skills',
+      return c.keys().hasOnly(['ownerUid', 'name', 'description', 'notes', 'xp', 'coins', 'skills',
                                'lastAppliedRollId', 'updatedAt'])
         && isStr(c.name, 1, 60)
         && optStr(c.get('description', ''), 4000)
         && optStr(c.get('notes', ''), 20000)
         && c.xp is int && c.xp >= 0
+        && c.get('coins', 0) is int && c.get('coins', 0) >= 0
         && c.skills is list && c.skills.size() >= 1
         && c.skills.size() <= settings.skillSlots + 1
         && isBaseSkill(c.skills[0]);
@@ -313,24 +314,77 @@ service cloud.firestore {
           return data().ownerUid == resource.data.ownerUid
             && basicCharacter(data(), settings)
             && ((cid == uid() && changedOnly(['name', 'description', 'notes', 'updatedAt']))
+                // Pagar en la tienda: el dueño solo puede gastar (ver claimLine).
+                || (cid == uid() && changedOnly(['coins', 'updatedAt'])
+                    && data().coins < resource.data.get('coins', 0))
                 || (cid == uid() && advancementGuard(r, cid, settings))
                 || (isDM(r) && validSkillList(data().skills, settings.maxDice)));
         }
 
+        // Las copias del mismo objeto del catálogo se apilan: el id es el del catálogo.
         match /inventory/{itemId} {
           allow read: if cid == uid() || isDM(r);
-          allow create: if isDM(r) && validItem(data());
+          allow create: if (isDM(r) && validItem(data()))
+            || (cid == uid() && claimedCopy(r, itemId));
           allow update: if (isDM(r) && validItem(data()))
             || (cid == uid() && changedOnly(['quantity'])
                 && data().quantity is int && data().quantity >= 0);
           allow delete: if isDM(r);
+
+          // Primera unidad tomada de un botín o una tienda: copia fiel de la línea,
+          // con tantas unidades como bajaron sus existencias en el mismo batch.
+          function claimedCopy(r, itemId) {
+            let path = linePath(r, data().offerId, itemId);
+            let line = get(path).data;
+            return validItem(data())
+              && data().catalogItemId == itemId
+              && data().givenBy == null
+              && data().name == line.name
+              && data().description == line.description
+              && data().value == line.value
+              && data().icon == line.icon
+              && data().color == line.color
+              && data().quantity == line.stock - getAfter(path).data.stock;
+          }
         }
       }
 
       match /catalog/{itemId} {
         allow read: if isDM(r);
-        allow create, update: if isDM(r) && validItem(data());
+        allow create, update: if isDM(r) && validCatalogItem(data());
         allow delete: if isDM(r);
+      }
+
+      // Botines y tiendas. El DM los arma; los ven los jugadores de `audience`
+      // ('*' = todos) mientras estén abiertos.
+      match /offers/{oid} {
+        allow read: if isDM(r) || (isMember(r) && canSeeOffer(resource.data));
+        allow create, update: if isDM(r) && validOffer(data());
+        allow delete: if isDM(r);
+
+        match /lines/{lid} {
+          allow read: if isDM(r) || (isMember(r) && canSeeOffer(get(offerPath(r, oid)).data));
+          allow create: if isDM(r) && validLine(data());
+          allow update: if (isDM(r) && validLine(data()))
+            || (isMember(r) && claimLine(r, oid, lid));
+          allow delete: if isDM(r);
+        }
+
+        // El primero que llega se lo lleva: las existencias bajan en q, el
+        // inventario del jugador sube en q y, en la tienda, paga precio × q.
+        function claimLine(r, oid, lid) {
+          let offer = get(offerPath(r, oid)).data;
+          let q = resource.data.stock - data().stock;
+          let inv = /databases/$(db)/documents/rooms/$(r)/characters/$(uid())/inventory/$(lid);
+          let me = characterPath(r, uid());
+          return canSeeOffer(offer)
+            && changedOnly(['stock'])
+            && data().stock is int && data().stock >= 0 && q >= 1
+            && getAfter(inv).data.quantity == (exists(inv) ? get(inv).data.quantity : 0) + q
+            && (offer.kind == 'loot'
+                || getAfter(me).data.get('coins', 0)
+                     == get(me).data.get('coins', 0) - q * resource.data.price);
+        }
       }
 
       match /rolls/{rid} {
@@ -438,13 +492,60 @@ service cloud.firestore {
       }
     }
 
-    function validItem(i) {
-      return i.keys().hasOnly(['catalogItemId', 'name', 'description', 'value', 'quantity',
-                               'givenBy', 'givenAt', 'updatedAt'])
-        && isStr(i.name, 1, 80)
+    // ---------- objetos ----------
+
+    function offerPath(r, o) {
+      return /databases/$(db)/documents/rooms/$(r)/offers/$(o);
+    }
+
+    function linePath(r, o, l) {
+      return /databases/$(db)/documents/rooms/$(r)/offers/$(o)/lines/$(l);
+    }
+
+    function canSeeOffer(o) {
+      return o.open == true && ('*' in o.audience || uid() in o.audience);
+    }
+
+    // Ícono y color: claves de la interfaz (ver ITEM_COLOR_KEYS en el motor).
+    function validLook(i) {
+      return isStr(i.get('icon', 'package'), 1, 40)
+        && i.get('color', 'slate') in ['slate', 'bone', 'sand', 'amber', 'rust', 'ember',
+                                       'rose', 'violet', 'cobalt', 'sky', 'jade', 'moss'];
+    }
+
+    function validItemText(i) {
+      return isStr(i.name, 1, 80)
         && optStr(i.get('description', ''), 4000)
         && (i.get('value', null) == null || (i.value is int && i.value >= 0))
+        && validLook(i);
+    }
+
+    // El catálogo no maneja cantidades; el valor es el precio por defecto.
+    function validCatalogItem(i) {
+      return i.keys().hasOnly(['name', 'description', 'value', 'icon', 'color', 'updatedAt'])
+        && validItemText(i);
+    }
+
+    function validItem(i) {
+      return i.keys().hasOnly(['catalogItemId', 'offerId', 'name', 'description', 'value', 'icon', 'color',
+                               'quantity', 'givenBy', 'givenAt', 'updatedAt'])
+        && validItemText(i)
         && i.quantity is int && i.quantity >= 0;
+    }
+
+    function validOffer(o) {
+      return o.keys().hasOnly(['kind', 'title', 'open', 'audience', 'createdAt', 'updatedAt'])
+        && o.kind in ['loot', 'shop']
+        && isStr(o.title, 1, 60)
+        && o.open is bool
+        && o.audience is list && o.audience.size() >= 1 && o.audience.size() <= 50;
+    }
+
+    function validLine(l) {
+      return l.keys().hasOnly(['name', 'description', 'value', 'icon', 'color', 'price', 'stock', 'updatedAt'])
+        && validItemText(l)
+        && l.price is int && l.price >= 0
+        && l.stock is int && l.stock >= 0 && l.stock <= 999;
     }
   }
 }

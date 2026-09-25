@@ -20,6 +20,11 @@ export type EngineErrorDetail =
   | { kind: 'EmptyAction' }
   | { kind: 'EmptyNarration' }
   | { kind: 'InvalidItemName'; max: number }
+  | { kind: 'InvalidItemLook' }
+  | { kind: 'InvalidAmount'; what: string; value: number }
+  | { kind: 'InvalidOfferTitle'; max: number }
+  | { kind: 'OutOfStock'; available: number }
+  | { kind: 'NotEnoughCoins'; needed: number; available: number }
   | { kind: 'TransitionNotAllowed'; state: RollState; action: FlowActionKind; actor: Actor }
   | { kind: 'AdvancementNotPending' }
   | { kind: 'InvalidSettings'; reason: string };
@@ -64,6 +69,16 @@ function message(d: EngineErrorDetail): string {
       return 'la narración no puede estar vacía';
     case 'InvalidItemName':
       return `el nombre del objeto es obligatorio (1-${d.max} caracteres)`;
+    case 'InvalidItemLook':
+      return 'ícono o color de objeto desconocido';
+    case 'InvalidAmount':
+      return `${d.what} inválido: ${d.value} (debe ser un entero no negativo)`;
+    case 'InvalidOfferTitle':
+      return `el título es obligatorio (1-${d.max} caracteres)`;
+    case 'OutOfStock':
+      return d.available === 0 ? 'ya no quedan unidades' : `solo quedan ${d.available}`;
+    case 'NotEnoughCoins':
+      return `no alcanza: cuesta ${d.needed} y tienes ${d.available} monedas`;
     case 'TransitionNotAllowed':
       return `${d.actor} no puede hacer ${d.action} en estado ${d.state}`;
     case 'AdvancementNotPending':
