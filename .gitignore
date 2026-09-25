@@ -1,18 +1,11 @@
-# Rust
-/target/
-**/target/
+# Node
+node_modules/
 
-# Flutter / Dart
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-.pub-cache/
-.pub/
-build/
-*.iml
-.idea/
-.vscode/
+# Web (Vite / Wrangler)
+web/dist/
+web/dev-dist/
+.wrangler/
+.dev.vars
 
 # Firebase
 .firebase/
@@ -22,7 +15,6 @@ database-debug.log*
 ui-debug.log*
 pubsub-debug.log*
 emulator-data/
-node_modules/
 
 # Credenciales (nunca subir)
 *service-account*.json
@@ -30,9 +22,8 @@ node_modules/
 .env
 .env.*
 
-# SO
+# Editores y SO
+.idea/
+.vscode/
 Thumbs.db
 .DS_Store
-
-# Paquetes de distribución
-/dist/
