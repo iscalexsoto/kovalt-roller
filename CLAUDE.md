@@ -1,34 +1,59 @@
 # Kovalt Roller
 
-Mesa virtual para jugar **Roll For Shoes** por salas. Motor de reglas en Rust, app Flutter **solo para Windows** y
-backend Firebase (Auth, Firestore y Realtime Database). Setup, comandos y estructura: [README.md](README.md). Reglas
-de juego implementadas: [docs/rules.md](docs/rules.md).
+Mesa virtual para jugar **Roll For Shoes** por salas, en el navegador (roller.kovalt.mx). Web React + Vite con Kovalt
+Design, motor de reglas en TypeScript, backend Firebase (Auth con custom tokens, Firestore y Realtime Database) y un
+Worker de Cloudflare que emite las sesiones. Setup, comandos y estructura: [README.md](README.md). Reglas de juego
+implementadas: [docs/rules.md](docs/rules.md).
 
 ## Git (obligatorio)
 
-- Rama `main`, remoto `https://github.com/iscalexsoto/kovalt-roller.git`.
+- Rama `main`, remoto `git@github-iscalexsoto:iscalexsoto/kovalt-roller.git`.
 - Autor: `iscalexsoto <iscalexsoto@gmail.com>` (configurar `git config user.name/user.email` en el clon).
 - **Nunca** añadir `Co-Authored-By`, ni mencionar a Claude, IA o agentes en commits, PRs ni mensajes.
-- Commits pequeños y frecuentes, en español y con formato convencional (`feat(app): …`, `fix(engine): …`), y
-  `git push origin main` después de cada uno.
-- `dist/` (ejecutables) no se sube.
+- Commits pequeños y frecuentes, en español y con formato convencional (`feat(web): …`, `fix(engine): …`,
+  `feat(worker): …`), y `git push origin main` después de cada uno.
 
 ## Arquitectura
 
-- `crates/r4s_engine`: lógica pura, sin I/O. Es la **fuente de verdad** de las reglas: dados, resolución, avance
-  (skills, XP, slots) y la máquina de estados de tiradas (`roll_flow.rs`).
-- `app/rust`: crate puente de flutter_rust_bridge 2.13.0, con DTOs planos (structs y enums sin datos, para no
-  depender de `freezed`). Tras cambiar `app/rust/src/api`, ejecutar `flutter_rust_bridge_codegen generate` en `app/`.
+- `web/src/engine`: lógica pura, sin I/O. Es la **fuente de verdad** de las reglas: dados, resolución, avance (skills,
+  XP, slots) y la máquina de estados de tiradas (`rollFlow.ts`). Viene de un motor en Rust y conserva sus tests
+  (`rules`, `flow`, `properties` con fast-check).
 - `firebase/firestore.rules` y `database.rules.json` **replican** las invariantes del motor en el servidor. Si cambia
   una regla de juego, hay que cambiar motor, reglas y tests a la vez.
-- App: Riverpod 3 + go_router. Repositorios en `app/lib/src/data`, pantallas en `app/lib/src/features`.
-- Cada paso de una tirada es `rollTransition` (Rust) → `rollFields` (mapeo a Firestore). El historial en
-  Firestore guarda el uid en `por`; el motor trabaja con `Actor` (dm/owner/other).
+- Cada paso de una tirada es `transition` (motor) → `rollFields` (`web/src/data/models.ts`, mapeo a Firestore). Los
+  nombres de campo en español (`estado`, `historial{de,a,por}`, `tirada`, `avance`…) los exige `firestore.rules`. El
+  historial guarda el uid en `por`; el motor trabaja con `Actor` (dm/owner/other).
+- Repositorios en `web/src/data`, pantallas en `web/src/screens`, piezas de la sala en `web/src/components/room`.
+- Presencia en RTDB con `onDisconnect`. RTDB lleva un espejo de la membresía (`roomAccess`, `members`) porque sus reglas
+  no pueden leer Firestore.
 
-## Decisiones de diseño
+## Kovalt Design
 
-- **Autenticación:** el DM se registra con email y contraseña. Los jugadores pueden entrar anónimos y convertirse en
-  cuenta después, conservando el uid.
+- Sistema de diseño de la suite: skill en `D:\Proyectos\Kovalt Design\kovalt-skill`. CSS plano con tokens `--kv-*`, sin
+  Tailwind ni librerías de UI, formas Corte (`clip-path`) en lugar de `border-radius`, íconos Lucide (`GameIcon`).
+- `web/src/styles/tokens.css`, `components.css` y `web/src/components/kv/*` son copia de **Kovalt Notes** (la versión
+  más nueva). No se editan aquí: si la skill cambia, se copian de nuevo. Lo propio de Roller va en `app.css` con el
+  prefijo `rl-`.
+- `web/src/suite/suiteAuth.ts` es un archivo compartido de la suite: idéntico byte a byte al de las demás webs.
+- Íconos: añadir la clave en `tools/icons/keys.json` y ejecutar `node tools/icons/build.mjs` (no editar `paths.ts`).
+- Marca: La Piedra de Roller (un d6 que muestra cinco en la cara izquierda), masters en
+  `kovalt-skill/assets/brand/roller*.svg`; `node tools/brand/render.mjs --install` regenera favicons, íconos PWA y
+  `og.png`.
+- Textos en español, voz de la suite (primera persona del plural, sin mencionar al kobold).
+
+## Acceso (decisión de diseño)
+
+- **Solo el Worker emite sesiones** (`web/worker/sessions.ts`), como custom tokens con claims `name`, `kvExp`, `admin`,
+  `guest` y `room`. En Firebase están **desactivados** los proveedores Correo/Contraseña y Anónimo.
+- **Cuentas:** lista blanca de la suite. La cookie `kv_suite_auth` se valida con `auth-refresh` de Kovalt API, y el uid
+  de Firebase es el id de PocketBase. El login es `kovalt.mx/entrar?volver=…`; Roller no tiene login propio.
+- **Invitados:** código de sala + nombre y uid `g_…`. Solo pueden estar en su sala (`inScope` en las reglas) y no
+  crean salas. Renuevan con su ID token mientras sigan siendo miembros.
+- `kvExp` = 24 h. Las reglas exigen que siga vigente (`authed()`), y la web renueva antes de que venza.
+- Secreto `FIREBASE_SERVICE_ACCOUNT` en Cloudflare (lo carga el usuario con `wrangler secret put`). Nunca en el repo.
+
+## Decisiones de juego
+
 - **Ajustes por sala:** `skillSlots` (por defecto 5), `tieWinner` (por defecto gana el jugador), `xpSameRoll` (por
   defecto sí) y `maxDice` (10).
 - **Do Anything 1:** permanente, no ocupa slot y no se puede reemplazar.
@@ -46,44 +71,27 @@ de juego implementadas: [docs/rules.md](docs/rules.md).
 
 ## Firebase
 
-- Proyecto real: **`kovalt-roller-db`**. La configuración web está en `app/lib/firebase_options.dart`; la `apiKey`
-  es pública por diseño y el usuario aceptó dejarla en el repo.
-- La app usa el proyecto real por defecto; los emuladores (`demo-kovalt`) solo con
-  `--dart-define=USE_EMULATORS=true`.
-- El usuario **no tiene Firebase CLI funcional**: publica las reglas pegándolas en la consola web. Cuando cambien
-  las reglas, recuérdale publicarlas.
-- Cualquier prueba contra el proyecto real crea datos: pide permiso antes. `real_project_smoke_test.dart` solo corre
-  con `--dart-define=CONFIRM_REAL_PROJECT=kovalt-roller-db` y limpia lo que puede.
-
-## Trampas de Windows (ya resueltas; no revertir)
-
-- **`firebase_database`:** el plugin cierra el proceso. RTDB se usa por REST y SSE (`rtdb_rest.dart`) y la presencia
-  va con latidos.
-- **`linkWithCredential`:** falla. Se usa `accounts:update` por REST y luego `signOut` + `signIn`, porque fijar la
-  contraseña revoca la sesión anónima.
-- **Cambio de usuario en el mismo proceso:** Firestore conserva estado y el servidor deniega lecturas legítimas. Al
-  cerrar sesión se ejecuta `AppConfig.resetFirestore` (terminate + clearPersistence).
-- **Varias ventanas:**
-  - Cada ventana toma una plaza con un **mutex con nombre de Windows** (`app/rust/src/api/instance.rs`); la plaza
-    fija la app de Firebase, con su propia sesión y caché.
-  - La app `[DEFAULT]` debe inicializarse siempre, porque cloud_firestore la resuelve internamente.
-  - Los bloqueos de archivo no sirven entre procesos lanzados desde la app de Claude.
-  - Los tests multi-app **en un mismo proceso** no detectan fallos de la app por defecto: usar
-    `second_window_test.dart` con otra ventana abierta.
+- Proyecto real: **`kovalt-roller-db`**. La configuración web está en `web/src/firebase/app.ts`; la `apiKey` es
+  pública por diseño y el usuario aceptó dejarla en el repo.
+- `pnpm dev` usa el proyecto real; `pnpm dev:emu` usa los emuladores (`demo-kovalt`), con login dev (custom tokens sin
+  firmar, que solo acepta el emulador) y la sesión por pestaña.
+- El Firebase CLI es local (`firebase/tests/node_modules`). El usuario publica las reglas pegándolas en la consola web:
+  **cuando cambien las reglas, recuérdale publicarlas**.
+- Cualquier prueba contra el proyecto real crea datos: pide permiso antes.
 - **Firestore rules:** es fácil superar el límite de 1000 expresiones. Las ramas de `updateRoll` comprueban primero el
   par de estados.
-- **Listeners de Firestore:** pueden emitir primero una instantánea vacía de caché; en tests de permisos, leer con
-  `Source.server`.
-- **SDK C++ de Firebase:** se descarga a mano en `C:\dev-sdks\` (`FIREBASE_CPP_SDK_DIR`, ver `scripts/env.sh`).
+
+## Trampas del entorno
+
 - **Instalaciones desde la app de Claude:** lo que se instala en `AppData` (p. ej. `npm -g`) queda virtualizado en la
-  carpeta del paquete MSIX y el usuario no lo ve. Las herramientas globales las instala el usuario desde su terminal.
+  carpeta del paquete MSIX y el usuario no lo ve. Las herramientas globales y los `login` (`wrangler login`) los hace
+  el usuario desde su terminal.
+- El panel de navegador integrado no abre `127.0.0.1`: para dos usuarios a la vez, usa dos pestañas en `localhost` con
+  `pnpm dev:emu`.
 
 ## Verificación
 
-- Motor: `cargo test -p r4s_engine` y `cargo clippy -- -D warnings`.
-- Reglas: `bash firebase/tests/run-emulators.sh`, con JDK 21 y Node; `scripts/env.sh` prepara el entorno.
-- App: `cargo build -p rust_lib_kovalt_roller && cd app && flutter test`, más `flutter analyze` sin avisos.
-- Integración en Windows, con `bash scripts/emulators.sh` corriendo: `game_flow_test`, `multi_window_test` y
-  `second_window_test` (`--dart-define=USE_EMULATORS=true`).
-- Ejecutable: `bash scripts/package.sh` → `dist/Kovalt Roller/`. Falla si el usuario tiene la app abierta.
-- Formato: Rust y Dart a 120 columnas (`rustfmt.toml`; `formatter.page_width` en `analysis_options.yaml`).
+- Web: `cd web && pnpm test && pnpm lint && pnpm build` (sin errores; el único aviso de lint es de `kv/Nav.tsx`, copia
+  de la suite).
+- Reglas: `bash firebase/tests/run-emulators.sh`, con JDK 21.
+- De punta a punta: `bash scripts/emulators.sh` + `pnpm dev:emu` y el flujo completo con dos pestañas (DM e invitado).
