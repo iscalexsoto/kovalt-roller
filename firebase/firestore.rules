@@ -229,7 +229,8 @@ service cloud.firestore {
 
     // ---------- colecciones ----------
 
-    match /users/{userId} {
+    // Perfil e índice personal de salas (users/{uid}/rooms/{roomId}).
+    match /users/{userId}/{document=**} {
       allow read, write: if authed() && userId == uid();
     }
 

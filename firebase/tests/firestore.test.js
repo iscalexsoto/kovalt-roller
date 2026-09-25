@@ -68,6 +68,14 @@ describe('salas', () => {
     await assertFails(updateDoc(doc(p1Db(), `rooms/${ROOM}`), { name: 'Hackeada' }));
   });
 
+  it('cada usuario gestiona solo su índice de salas', async () => {
+    const mine = doc(p1Db(), `users/${P1}/rooms/${ROOM}`);
+    await assertSucceeds(setDoc(mine, { name: 'Mesa', role: 'player' }));
+    await assertSucceeds(getDoc(mine));
+    await assertFails(getDoc(doc(p2Db(), `users/${P1}/rooms/${ROOM}`)));
+    await assertFails(setDoc(doc(p2Db(), `users/${P1}/rooms/x`), { name: 'Intrusa', role: 'dm' }));
+  });
+
   it('los códigos se pueden leer uno a uno pero no listar', async () => {
     await seedRoom(env);
     await assertSucceeds(getDoc(doc(anonymous(env, 'nadie').firestore(), `roomCodes/${CODE}`)));
