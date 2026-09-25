@@ -144,3 +144,13 @@ sala y sus tiradas, que las reglas no dejan borrar):
 ```bash
 cd app && flutter test integration_test/real_project_smoke_test.dart -d windows --dart-define=CONFIRM_REAL_PROJECT=kovalt-roller-db
 ```
+
+## Generar el ejecutable
+
+```bash
+bash scripts/package.sh
+```
+
+Deja la app lista en `dist/Kovalt Roller/Kovalt Roller.exe` (la carpeta entera es necesaria: DLL y `data/`) y un
+`dist/KovaltRoller-windows.zip` para copiarla a otro equipo con Windows 10/11 x64. Incluye el runtime de Visual C++.
+La carpeta `dist/` no se sube al repositorio.
