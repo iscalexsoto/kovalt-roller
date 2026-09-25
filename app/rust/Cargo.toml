@@ -1,0 +1,15 @@
+[package]
+name = "rust_lib_kovalt_roller"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+anyhow = "1"
+flutter_rust_bridge = "=2.13.0"
+r4s_engine = { path = "../../crates/r4s_engine" }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }

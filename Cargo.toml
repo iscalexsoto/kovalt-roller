@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/r4s_engine"]
+members = ["crates/r4s_engine", "app/rust"]
 
 [workspace.package]
 edition = "2024"
