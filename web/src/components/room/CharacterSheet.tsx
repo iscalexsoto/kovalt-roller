@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import { skillLabel, slotUsage } from '../../engine';
 import { dmUpdateSheet, updateCharacterTexts } from '../../data/characters';
 import { useLiveQuery } from '../../data/hooks';
@@ -9,48 +9,97 @@ import { toastError } from '../../state/toast';
 import { Button, IconButton } from '../kv/Button';
 import { Field, TextArea } from '../kv/Field';
 import { EmptyState, KickerDivider } from '../kv/Layout';
-import { Dialog } from '../kv/Overlay';
 import { useRoom } from './context';
 import { GiveItemDialog, ItemEditDialog } from './ItemDialogs';
 
-function EditSheetDialog({ character, onClose }: { character: CharacterDoc; onClose: () => void }) {
+type SheetTexts = { name: string; description: string; notes: string };
+
+/** Sección de la hoja que su dueño edita en su sitio: lápiz → campo con Guardar y Cancelar.
+ *  Enter guarda (Ctrl+Enter en textos largos) y Escape cancela. */
+function InlineText({
+  field,
+  label,
+  value,
+  canEdit,
+  multiline = false,
+  rows,
+  maxLength,
+  addLabel,
+  children,
+}: {
+  field: keyof SheetTexts;
+  label: string;
+  value: string;
+  canEdit: boolean;
+  multiline?: boolean;
+  rows?: number;
+  maxLength: number;
+  /** Texto del botón cuando la sección está vacía; sin él, la sección vacía no se muestra. */
+  addLabel?: string;
+  children: ReactNode;
+}) {
   const ctx = useRoom();
-  const [name, setName] = useState(character.sheet.name);
-  const [description, setDescription] = useState(character.sheet.description);
-  const [notes, setNotes] = useState(character.sheet.notes);
+  const [draft, setDraft] = useState<string | null>(null);
   const [busy, run] = useBusy();
-  return (
-    <Dialog
-      title="Editar personaje"
-      icon="pencil"
-      narrow={false}
-      onClose={onClose}
-      actions={
-        <>
-          <Button variant="text" quiet onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button
-            variant="primary"
-            disabled={!name.trim() || busy}
-            onClick={() =>
-              void run(async () => {
-                await updateCharacterTexts(ctx.room.id, character.id, { name, description, notes });
-                onClose();
-              })
-            }
-          >
-            Guardar
-          </Button>
-        </>
-      }
-    >
-      <div className="kv-form">
-        <Field label="Nombre" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} />
-        <TextArea label="Descripción" value={description} maxLength={4000} rows={3} onChange={(e) => setDescription(e.target.value)} />
-        <TextArea label="Notas" value={notes} maxLength={20000} rows={5} onChange={(e) => setNotes(e.target.value)} />
+  const required = field === 'name';
+
+  if (draft === null) {
+    if (!value) {
+      return canEdit && addLabel ? (
+        <Button variant="text" icon="plus" dense className="rl-editable__add" onClick={() => setDraft('')}>
+          {addLabel}
+        </Button>
+      ) : null;
+    }
+    return (
+      <div className="rl-editable">
+        <div className="rl-grow">{children}</div>
+        {canEdit && <IconButton icon="pencil" small label={`Editar ${label.toLowerCase()}`} onClick={() => setDraft(value)} />}
       </div>
-    </Dialog>
+    );
+  }
+
+  const cancel = () => setDraft(null);
+  const invalid = required && !draft.trim();
+  const save = () => {
+    if (busy || invalid) return;
+    if (draft === value) return cancel();
+    void run(() => updateCharacterTexts(ctx.room.id, ctx.uid, { [field]: draft })).then((ok) => ok && cancel());
+  };
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      cancel();
+    } else if (e.key === 'Enter' && (!multiline || e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      save();
+    }
+  };
+  const common = {
+    'aria-label': label,
+    value: draft,
+    maxLength,
+    autoFocus: true,
+    disabled: busy,
+    onKeyDown,
+  };
+
+  return (
+    <div className="rl-editable rl-editable--open">
+      {multiline ? (
+        <TextArea {...common} rows={rows} onChange={(e) => setDraft(e.target.value)} />
+      ) : (
+        <Field {...common} error={invalid} onChange={(e) => setDraft(e.target.value)} />
+      )}
+      <div className="rl-editable__actions">
+        <Button variant="text" quiet dense onClick={cancel}>
+          Cancelar
+        </Button>
+        <Button variant="primary" dense disabled={busy || invalid} onClick={save}>
+          Guardar
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -119,19 +168,19 @@ export function CharacterSheet({ character }: { character: CharacterDoc }) {
   const { sheet } = character;
   const isOwner = character.id === ctx.uid;
   const usage = slotUsage(sheet, ctx.room.settings);
-  const [editing, setEditing] = useState(false);
   const [busy, run] = useBusy();
 
   return (
     <section className="rl-sheet" aria-label={`Ficha de ${sheet.name}`}>
       <header className="rl-sheet__head">
-        <div className="rl-grow">
+        <InlineText field="name" label="Nombre" value={sheet.name} canEdit={isOwner} maxLength={60}>
           <h2 className="rl-sheet__name">{sheet.name}</h2>
-          <span className="rl-sheet__player">Jugador: {ctx.displayNameOf(character.ownerUid)}</span>
-        </div>
-        {isOwner && <IconButton icon="pencil" label="Editar personaje" onClick={() => setEditing(true)} />}
+        </InlineText>
+        <span className="rl-sheet__player">Jugador: {ctx.displayNameOf(character.ownerUid)}</span>
       </header>
-      {sheet.description && <p className="rl-sheet__desc">{sheet.description}</p>}
+      <InlineText field="description" label="Descripción" value={sheet.description} canEdit={isOwner} multiline rows={3} maxLength={4000} addLabel="Añadir descripción">
+        <p className="rl-sheet__desc">{sheet.description}</p>
+      </InlineText>
 
       <div className="rl-xp">
         <span className="rl-xp__label">XP</span>
@@ -157,13 +206,10 @@ export function CharacterSheet({ character }: { character: CharacterDoc }) {
 
       <Inventory character={character} />
 
-      {sheet.notes && (
-        <>
-          <KickerDivider className="rl-sheet__kicker">Notas</KickerDivider>
-          <p className="rl-sheet__notes">{sheet.notes}</p>
-        </>
-      )}
-      {editing && <EditSheetDialog character={character} onClose={() => setEditing(false)} />}
+      {(sheet.notes || isOwner) && <KickerDivider className="rl-sheet__kicker">Notas</KickerDivider>}
+      <InlineText field="notes" label="Notas" value={sheet.notes} canEdit={isOwner} multiline rows={6} maxLength={20000} addLabel="Añadir notas">
+        <p className="rl-sheet__notes">{sheet.notes}</p>
+      </InlineText>
     </section>
   );
 }

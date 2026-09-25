@@ -15,11 +15,12 @@ export async function createCharacter(roomId: string, uid: string, sheet: Charac
   await batch.commit();
 }
 
-export async function updateCharacterTexts(roomId: string, cid: string, texts: { name: string; description: string; notes: string }): Promise<void> {
+/** Cambia uno o más textos de la hoja (nombre y descripción sin espacios de sobra). */
+export async function updateCharacterTexts(roomId: string, cid: string, texts: Partial<{ name: string; description: string; notes: string }>): Promise<void> {
   await updateDoc(characterRef(roomId, cid), {
-    name: texts.name.trim(),
-    description: texts.description.trim(),
-    notes: texts.notes,
+    ...(texts.name !== undefined && { name: texts.name.trim() }),
+    ...(texts.description !== undefined && { description: texts.description.trim() }),
+    ...(texts.notes !== undefined && { notes: texts.notes }),
     updatedAt: serverTimestamp(),
   });
 }

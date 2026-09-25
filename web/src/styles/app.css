@@ -174,11 +174,15 @@ button.rl-player__main { cursor: pointer; }
 
 /* Ficha */
 .rl-sheet { display: flex; flex-direction: column; gap: 10px; padding: 14px; background: var(--kv-color-surface); clip-path: var(--kv-cut-l); box-shadow: var(--kv-filo); }
-.rl-sheet__head { display: flex; align-items: flex-start; gap: 8px; }
+.rl-sheet__head { display: flex; flex-direction: column; }
 .rl-sheet__name { margin: 0; font: 700 calc(24 * var(--kv-px))/calc(30 * var(--kv-px)) var(--kv-font-heading); overflow-wrap: anywhere; }
 .rl-sheet__player { font: 400 calc(12 * var(--kv-px))/calc(16 * var(--kv-px)) var(--kv-font-body); color: var(--kv-color-on-surface-variant); }
 .rl-sheet__desc, .rl-sheet__notes { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--kv-color-on-surface-variant); }
 .rl-sheet__kicker { margin-top: 6px; }
+.rl-editable { display: flex; align-items: flex-start; gap: 4px; }
+.rl-editable--open { flex-direction: column; align-items: stretch; gap: 6px; }
+.rl-editable__actions { display: flex; justify-content: flex-end; gap: 6px; }
+.rl-editable__add { align-self: flex-start; }
 .rl-xp { display: flex; align-items: center; gap: 8px; }
 .rl-xp__label { font: 400 calc(13 * var(--kv-px))/1 var(--kv-font-heading); letter-spacing: 2px; color: var(--kv-color-on-surface-variant); }
 .rl-xp__value { min-width: 2ch; text-align: center; font: 700 calc(22 * var(--kv-px))/1 var(--kv-font-heading); }
