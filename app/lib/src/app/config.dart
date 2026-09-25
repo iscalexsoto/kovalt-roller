@@ -6,8 +6,8 @@ import '../data/rtdb_rest.dart';
 
 /// Configuración de arranque, vía `--dart-define`.
 abstract final class AppConfig {
-  /// Conectar a Firebase Emulator Suite (por defecto, mientras no hay proyecto real).
-  static const useEmulators = bool.fromEnvironment('USE_EMULATORS', defaultValue: true);
+  /// Conectar a Firebase Emulator Suite en lugar del proyecto real.
+  static const useEmulators = bool.fromEnvironment('USE_EMULATORS');
 
   static const emulatorHost = String.fromEnvironment('EMULATOR_HOST', defaultValue: '127.0.0.1');
 

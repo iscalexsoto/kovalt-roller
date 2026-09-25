@@ -1,5 +1,5 @@
 // Partida completa contra Firebase Emulator Suite (bash scripts/emulators.sh):
-//   flutter test integration_test/game_flow_test.dart -d windows
+//   flutter test integration_test/game_flow_test.dart -d windows --dart-define=USE_EMULATORS=true
 //
 // Ejercita los plugins de Firebase en Windows, las Security Rules y el motor en Rust.
 import 'dart:typed_data';
@@ -36,6 +36,8 @@ void main() {
   late PresenceRepository presence;
 
   setUpAll(() async {
+    // Crea usuarios y salas: nunca contra el proyecto real.
+    if (!AppConfig.useEmulators) fail('Ejecuta con --dart-define=USE_EMULATORS=true');
     await RustLib.init();
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
     await FirebaseAuth.instance.useAuthEmulator('127.0.0.1', 9099);

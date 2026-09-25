@@ -44,16 +44,23 @@ curl --http1.1 -L --retry 10 -C - -o firebase_cpp_sdk_windows_13.12.0.zip https:
 
 ## Desarrollo
 
-En una terminal, los emuladores (Auth, Firestore y RTDB con el proyecto `demo-kovalt`; UI en http://127.0.0.1:4000):
+La app usa por defecto el proyecto real **`kovalt-roller-db`**:
+
+```bash
+bash scripts/run-app.sh
+```
+
+Para desarrollar sin tocar datos reales, usa los emuladores (Auth, Firestore y RTDB con el proyecto `demo-kovalt`; UI
+en http://127.0.0.1:4000). En una terminal:
 
 ```bash
 bash scripts/emulators.sh
 ```
 
-En otra, la app (por defecto se conecta a los emuladores):
+Y en otra:
 
 ```bash
-bash scripts/run-app.sh
+bash scripts/run-app.sh --emu
 ```
 
 Para probar con varios jugadores, abre varias instancias del ejecutable
@@ -80,15 +87,29 @@ cargo build -p rust_lib_kovalt_roller && cd app && flutter test
 bash firebase/tests/run-emulators.sh
 ```
 
-## Proyecto real de Firebase
+Partida completa en Windows contra los emuladores (se niega a correr contra el proyecto real):
 
-Mientras no exista, la app usa el proyecto de demostración contra los emuladores. Para conectarla a uno real:
+```bash
+cd app && flutter test integration_test/game_flow_test.dart -d windows --dart-define=USE_EMULATORS=true
+```
 
-1. Crear el proyecto en la consola de Firebase y activar Authentication (Email/Password y Anónimo), Firestore y
-   Realtime Database.
-2. `flutterfire configure` (o copiar la configuración web en `_production` de `app/lib/firebase_options.dart`).
-3. Desplegar reglas e índices: `firebase deploy --only firestore,database --project <id>`.
-4. Compilar con `--dart-define=USE_EMULATORS=false`.
+## Proyecto de Firebase (`kovalt-roller-db`)
+
+La configuración de la app web está en `app/lib/firebase_options.dart` (en Windows FlutterFire usa la de web). En la
+consola deben estar activados:
+
+- **Authentication:** proveedores Correo electrónico/contraseña y Anónimo.
+- **Firestore Database** y **Realtime Database**.
+
+Las reglas del repositorio hay que publicarlas cada vez que cambian:
+
+- Con la consola: pegar `firebase/firestore.rules` en *Firestore Database → Reglas* y `firebase/database.rules.json`
+  en *Realtime Database → Reglas*, y publicar.
+- O con el CLI (instalado desde una terminal normal, no desde la app de Claude):
+  `firebase deploy --only firestore,database`.
+
+Las consultas de la app solo usan índices de un campo, que Firestore crea solo; `firebase/firestore.indexes.json`
+queda para consultas futuras.
 
 Nota: Firebase marca el soporte de Windows de FlutterFire como beta y no recomendado para producción.
 
@@ -101,10 +122,3 @@ Nota: Firebase marca el soporte de Windows de FlutterFire como beta y no recomen
   API REST de Auth, que conserva el uid.
 - Los listeners de Firestore pueden emitir primero una instantánea vacía de la caché local antes de que el servidor
   deniegue una lectura.
-
-El test de integración `app/integration_test/game_flow_test.dart` juega una partida completa en Windows contra los
-emuladores:
-
-```bash
-cd app && flutter test integration_test/game_flow_test.dart -d windows
-```

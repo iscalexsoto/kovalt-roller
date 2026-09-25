@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "demo-kovalt"
+    "default": "kovalt-roller-db",
+    "demo": "demo-kovalt"
   }
 }
