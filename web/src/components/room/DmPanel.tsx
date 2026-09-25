@@ -81,15 +81,15 @@ function RoomSettingsTab() {
   const newCode = async () => {
     if (!(await confirm('Nuevo código', 'El código actual deja de servir para unirse. Quien ya está en la sala sigue dentro.', { okLabel: 'Cambiar código' }))) return;
     await run(async () => {
-      const code = await rotateCode(room);
-      toast(`Nuevo código: ${code}`);
+      await rotateCode(room);
+      toast('Código cambiado');
     });
   };
 
   return (
     <div className="rl-panel-body kv-form">
       <div className="rl-row">
-        <RoomCode code={room.code} />
+        <RoomCode code={room.code} revealable />
         <Button variant="text" icon="refresh-cw" dense disabled={busy} onClick={() => void newCode()}>
           Nuevo código
         </Button>

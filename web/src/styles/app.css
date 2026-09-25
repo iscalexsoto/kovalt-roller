@@ -85,10 +85,12 @@
 .rl-room__title { display: flex; flex-direction: column; min-width: 0; }
 .rl-room__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rl-room__role { font: 400 calc(12 * var(--kv-px))/calc(16 * var(--kv-px)) var(--kv-font-body); color: var(--kv-color-on-surface-variant); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rl-code-wrap { display: inline-flex; align-items: center; gap: 2px; }
 .rl-code { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 8px; border: none; background: transparent; color: var(--kv-color-on-surface-variant); clip-path: var(--kv-cut-s); cursor: pointer; }
 .rl-code__value { font-size: var(--kv-t-code-l); letter-spacing: 1px; color: var(--kv-color-on-surface); }
 .rl-code:focus-visible { box-shadow: inset 0 0 0 3px var(--kv-color-focus-ring); }
-@media (max-width: 420px) { .rl-code .kv-icon { display: none; } }
+/* En la barra superior de un teléfono el código oculto no aporta: basta el botón de copiar. */
+@media (max-width: 420px) { .kv-top-bar .rl-code__value { display: none; } }
 
 /* Expandido (840+): registro y una columna lateral con jugadores y ficha; grande (1200+): tres columnas. */
 .rl-table { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 340px; grid-template-areas: "log players" "log side"; grid-template-rows: auto 1fr;
