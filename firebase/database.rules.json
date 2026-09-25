@@ -5,17 +5,17 @@
 
     "roomAccess": {
       "$roomId": {
-        ".read": "auth != null && root.child('members/' + $roomId + '/' + auth.uid).exists()",
-        ".write": "auth != null && ((!data.exists() && newData.child('dm').val() === auth.uid && auth.provider !== 'anonymous') || data.child('dm').val() === auth.uid)",
+        ".read": "auth != null && auth.token.kvExp > now && root.child('members/' + $roomId + '/' + auth.uid).exists()",
+        ".write": "auth != null && auth.token.kvExp > now && ((!data.exists() && newData.child('dm').val() === auth.uid && auth.token.guest !== true) || data.child('dm').val() === auth.uid)",
         ".validate": "!newData.exists() || (newData.hasChildren(['dm', 'code']) && newData.child('code').isString())"
       }
     },
 
     "members": {
       "$roomId": {
-        ".read": "auth != null && data.child(auth.uid).exists()",
+        ".read": "auth != null && auth.token.kvExp > now && data.child(auth.uid).exists()",
         "$uid": {
-          ".write": "auth != null && (root.child('roomAccess/' + $roomId + '/dm').val() === auth.uid || (auth.uid === $uid && (!newData.exists() || newData.child('code').val() === root.child('roomAccess/' + $roomId + '/code').val())))",
+          ".write": "auth != null && auth.token.kvExp > now && (auth.token.guest !== true || auth.token.room === $roomId) && (root.child('roomAccess/' + $roomId + '/dm').val() === auth.uid || (auth.uid === $uid && (!newData.exists() || newData.child('code').val() === root.child('roomAccess/' + $roomId + '/code').val())))",
           ".validate": "!newData.exists() || (newData.hasChildren(['role', 'code']) && (newData.child('role').val() === 'player' || (newData.child('role').val() === 'dm' && root.child('roomAccess/' + $roomId + '/dm').val() === $uid)))"
         }
       }
@@ -23,9 +23,9 @@
 
     "presence": {
       "$roomId": {
-        ".read": "auth != null && root.child('members/' + $roomId + '/' + auth.uid).exists()",
+        ".read": "auth != null && auth.token.kvExp > now && root.child('members/' + $roomId + '/' + auth.uid).exists()",
         "$uid": {
-          ".write": "auth != null && auth.uid === $uid && root.child('members/' + $roomId + '/' + auth.uid).exists()",
+          ".write": "auth != null && auth.token.kvExp > now && auth.uid === $uid && root.child('members/' + $roomId + '/' + auth.uid).exists()",
           ".validate": "!newData.exists() || (newData.hasChildren(['state', 'name', 'lastChanged']) && newData.child('state').val().matches(/^(online|away)$/) && newData.child('name').isString() && newData.child('name').val().length <= 40)"
         }
       }
@@ -33,10 +33,10 @@
 
     "live": {
       "$roomId": {
-        ".read": "auth != null && root.child('members/' + $roomId + '/' + auth.uid).exists()",
+        ".read": "auth != null && auth.token.kvExp > now && root.child('members/' + $roomId + '/' + auth.uid).exists()",
         "rollEvents": {
           "$rollId": {
-            ".write": "auth != null && root.child('members/' + $roomId + '/' + auth.uid).exists() && (root.child('roomAccess/' + $roomId + '/dm').val() === auth.uid || !newData.exists() || newData.child('por').val() === auth.uid)",
+            ".write": "auth != null && auth.token.kvExp > now && root.child('members/' + $roomId + '/' + auth.uid).exists() && (root.child('roomAccess/' + $roomId + '/dm').val() === auth.uid || !newData.exists() || newData.child('por').val() === auth.uid)",
             ".validate": "!newData.exists() || (newData.hasChildren(['fase', 'por', 'at']) && newData.child('fase').isString())"
           }
         }

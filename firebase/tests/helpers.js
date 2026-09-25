@@ -31,12 +31,24 @@ export async function createEnv() {
   });
 }
 
+// Las sesiones las emite el Worker (web/worker/sessions.ts) como custom tokens: `kvExp` es hasta cuándo valen
+// y los invitados llevan `guest` y la sala a la que se limitan (`room`).
+const IN_A_DAY = () => Date.now() + 24 * 60 * 60 * 1000;
+const custom = (claims) => ({ firebase: { sign_in_provider: 'custom' }, ...claims });
+
+/** Cuenta de la lista blanca de la suite. */
 export function registered(env, uid) {
-  return env.authenticatedContext(uid, { firebase: { sign_in_provider: 'password' } });
+  return env.authenticatedContext(uid, custom({ name: uid, kvExp: IN_A_DAY() }));
 }
 
-export function anonymous(env, uid) {
-  return env.authenticatedContext(uid, { firebase: { sign_in_provider: 'anonymous' } });
+/** Invitado limitado a la sala `room`. */
+export function guest(env, uid, room = ROOM) {
+  return env.authenticatedContext(uid, custom({ name: uid, guest: true, room, kvExp: IN_A_DAY() }));
+}
+
+/** Sesión con claims arbitrarios (p. ej. `kvExp` vencido o ausente). */
+export function withClaims(env, uid, claims) {
+  return env.authenticatedContext(uid, custom(claims));
 }
 
 /** Crea sala + código + DM + jugadores (con personaje) sin pasar por reglas. */

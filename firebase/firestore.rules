@@ -3,18 +3,36 @@ rules_version = '2';
 // Kovalt Roller — reglas de Firestore.
 // El motor corre en el cliente; estas reglas replican sus invariantes para que
 // un cliente modificado no pueda romper la hoja ni saltarse el flujo de tirada.
-// Ver docs/rules.md y crates/r4s_engine/src/roll_flow.rs.
+// Ver docs/rules.md y web/src/engine/rollFlow.ts.
+//
+// Las sesiones solo las emite el Worker de roller.kovalt.mx (custom tokens):
+// cuentas de la lista blanca de la suite e invitados limitados a una sala
+// (claims `guest` y `room`). `kvExp` es hasta cuándo vale la sesión: pasado ese
+// momento el cliente vuelve a pedirla al Worker, que revisa la lista blanca o
+// la membresía del invitado.
 service cloud.firestore {
   match /databases/{db}/documents {
 
     // ---------- utilidades ----------
 
     function authed() {
-      return request.auth != null;
+      return request.auth != null
+        && request.auth.token.get('kvExp', 0) is int
+        && request.auth.token.kvExp > request.time.toMillis();
     }
 
+    function isGuest() {
+      return request.auth.token.get('guest', false) == true;
+    }
+
+    // Cuenta de la suite (no invitado): puede crear salas y ser DM.
     function registered() {
-      return authed() && request.auth.token.firebase.sign_in_provider != 'anonymous';
+      return authed() && !isGuest();
+    }
+
+    // Un invitado solo existe dentro de su sala.
+    function inScope(r) {
+      return !isGuest() || request.auth.token.get('room', '') == r;
     }
 
     function uid() {
@@ -54,7 +72,7 @@ service cloud.firestore {
     }
 
     function isMember(r) {
-      return authed() && exists(memberPath(r, uid()));
+      return authed() && inScope(r) && exists(memberPath(r, uid()));
     }
 
     function characterPath(r, c) {
@@ -235,7 +253,7 @@ service cloud.firestore {
     }
 
     match /roomCodes/{code} {
-      allow get: if authed();
+      allow get: if authed() && (!isGuest() || resource.data.roomId == request.auth.token.get('room', ''));
       allow list, update: if false;
       allow create: if registered()
         && data().keys().hasOnly(['roomId', 'createdAt'])
@@ -264,7 +282,7 @@ service cloud.firestore {
 
       match /members/{memberId} {
         allow read: if isMember(r);
-        allow create: if authed() && memberId == uid()
+        allow create: if authed() && inScope(r) && memberId == uid()
           && data().keys().hasOnly(['role', 'displayName', 'joinCode', 'characterId', 'joinedAt'])
           && isStr(data().displayName, 1, 40)
           && data().characterId == null

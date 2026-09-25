@@ -2,8 +2,8 @@ import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import { deleteDoc, doc, getDoc, serverTimestamp, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import {
-  anonymous, BASE_SKILL, CODE, createEnv, declaredRoll, DEFAULT_SETTINGS, DM, P1, P2, registered,
-  ROOM, seedRoll, seedRoom,
+  BASE_SKILL, CODE, createEnv, declaredRoll, DEFAULT_SETTINGS, DM, guest, P1, P2, registered,
+  ROOM, seedRoll, seedRoom, withClaims,
 } from './helpers.js';
 
 let env;
@@ -25,8 +25,8 @@ beforeEach(async () => {
 let dbs = {};
 const cached = (key, make) => (dbs[key] ??= make().firestore());
 const dmDb = () => cached(DM, () => registered(env, DM));
-const p1Db = () => cached(P1, () => anonymous(env, P1));
-const p2Db = () => cached(P2, () => anonymous(env, P2));
+const p1Db = () => cached(P1, () => guest(env, P1));
+const p2Db = () => cached(P2, () => registered(env, P2));
 const rollRef = (db, id = 'r1') => doc(db, `rooms/${ROOM}/rolls/${id}`);
 const charRef = (db, uid) => doc(db, `rooms/${ROOM}/characters/${uid}`);
 
@@ -46,9 +46,20 @@ function newRoomBatch(db, uid, roomId, code) {
 }
 
 describe('salas', () => {
-  it('un usuario anónimo no puede crear salas', async () => {
-    const db = anonymous(env, 'anon').firestore();
-    await assertFails(newRoomBatch(db, 'anon', 'r2', 'AAAAAA').commit());
+  it('un invitado no puede crear salas', async () => {
+    const db = guest(env, 'g_anon', 'r2').firestore();
+    await assertFails(newRoomBatch(db, 'g_anon', 'r2', 'AAAAAA').commit());
+  });
+
+  it('sin sesión vigente (kvExp vencido o ausente) no se puede nada', async () => {
+    await seedRoom(env);
+    const expired = withClaims(env, DM, { name: DM, kvExp: Date.now() - 1000 }).firestore();
+    await assertFails(getDoc(doc(expired, `rooms/${ROOM}`)));
+    const noExp = withClaims(env, DM, { name: DM }).firestore();
+    await assertFails(getDoc(doc(noExp, `rooms/${ROOM}`)));
+    const legacy = env.authenticatedContext('nuevoDm', { firebase: { sign_in_provider: 'password' } }).firestore();
+    await assertFails(newRoomBatch(legacy, 'nuevoDm', 'r2', 'AAAAAA').commit());
+    await assertSucceeds(getDoc(doc(dmDb(), `rooms/${ROOM}`)));
   });
 
   it('un usuario registrado crea sala, código y membresía de DM en un batch', async () => {
@@ -78,7 +89,10 @@ describe('salas', () => {
 
   it('los códigos se pueden leer uno a uno pero no listar', async () => {
     await seedRoom(env);
-    await assertSucceeds(getDoc(doc(anonymous(env, 'nadie').firestore(), `roomCodes/${CODE}`)));
+    await assertSucceeds(getDoc(doc(registered(env, 'nadie').firestore(), `roomCodes/${CODE}`)));
+    await assertSucceeds(getDoc(doc(guest(env, 'g_nadie').firestore(), `roomCodes/${CODE}`)));
+    // Un invitado de otra sala no puede leer este código.
+    await assertFails(getDoc(doc(guest(env, 'g_ajeno', 'otra').firestore(), `roomCodes/${CODE}`)));
   });
 });
 
@@ -89,21 +103,28 @@ describe('unirse', () => {
 
   it('con el código correcto sí, con uno incorrecto no', async () => {
     await seedRoom(env, { players: [] });
-    const db = anonymous(env, 'p9').firestore();
+    const db = guest(env, 'p9').firestore();
     await assertFails(setDoc(doc(db, `rooms/${ROOM}/members/p9`), member('ZZZZZZ')));
     await assertSucceeds(setDoc(doc(db, `rooms/${ROOM}/members/p9`), member(CODE)));
   });
 
+  it('un invitado de otra sala no entra aunque tenga el código', async () => {
+    await seedRoom(env, { players: [] });
+    const db = guest(env, 'g_otra', 'otra').firestore();
+    await assertFails(setDoc(doc(db, `rooms/${ROOM}/members/g_otra`), member(CODE)));
+  });
+
   it('no se puede entrar como DM ni inscribir a otro usuario', async () => {
     await seedRoom(env, { players: [] });
-    const db = anonymous(env, 'p9').firestore();
+    const db = guest(env, 'p9').firestore();
     await assertFails(setDoc(doc(db, `rooms/${ROOM}/members/p9`), member(CODE, 'dm')));
     await assertFails(setDoc(doc(db, `rooms/${ROOM}/members/p8`), member(CODE)));
   });
 
   it('un no miembro no puede leer la sala', async () => {
     await seedRoom(env);
-    await assertFails(getDoc(doc(anonymous(env, 'ajeno').firestore(), `rooms/${ROOM}`)));
+    await assertFails(getDoc(doc(registered(env, 'ajeno').firestore(), `rooms/${ROOM}`)));
+    await assertFails(getDoc(doc(guest(env, 'g_ajeno', 'otra').firestore(), `rooms/${ROOM}`)));
     await assertSucceeds(getDoc(doc(p1Db(), `rooms/${ROOM}`)));
   });
 });
@@ -125,7 +146,7 @@ describe('personajes', () => {
   it('un miembro crea su personaje con Do Anything 1', async () => {
     await seedRoom(env, { players: [] });
     await seedMember('p9');
-    const db = anonymous(env, 'p9').firestore();
+    const db = guest(env, 'p9').firestore();
     await assertFails(setDoc(charRef(db, 'p9'), sheet('p9', { xp: 3 })));
     await assertFails(setDoc(charRef(db, 'p9'), sheet('p9', { skills: [TREPAR] })));
     await assertFails(setDoc(charRef(db, 'p9'), sheet('p9', { skills: [BASE_SKILL, TREPAR] })));
