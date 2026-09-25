@@ -1,0 +1,256 @@
+/* Máquina de estados de una tirada:
+ *
+ *   declarada ──(DM)──► aprobada ──(DM)──► oposicion ──(jugador)──► tirada ──► resuelta
+ *       ├──(DM)──► contraoferta ──(jugador acepta / edita)──► declarada
+ *       ├──(DM)──► rechazada ────(jugador edita)────────────► declarada
+ *       ├──(DM)──► sin_tirada ──► resuelta (narración directa)
+ *       └──(jugador)──► retirada (también desde contraoferta o rechazada)
+ *
+ * Los ids de estado son los que se guardan en Firestore (`estado`, `historial.de/a`). */
+
+import type { DiceRoll } from './dice';
+import { EngineError } from './errors';
+import { resolve } from './resolve';
+import type { Character, Skill, TieWinner } from './types';
+
+export const ROLL_STATES = ['declarada', 'aprobada', 'contraoferta', 'rechazada', 'sin_tirada', 'oposicion', 'tirada', 'resuelta', 'retirada'] as const;
+export type RollState = (typeof ROLL_STATES)[number];
+
+export function parseRollState(s: unknown): RollState | null {
+  return typeof s === 'string' && (ROLL_STATES as readonly string[]).includes(s) ? (s as RollState) : null;
+}
+
+export function isTerminal(state: RollState): boolean {
+  return state === 'resuelta' || state === 'retirada';
+}
+
+/** Quién intenta la transición, relativo a la tirada: el DM, el dueño del personaje o cualquier otro miembro. */
+export type Actor = 'dm' | 'owner' | 'other';
+
+/** Referencia a una habilidad del personaje en el momento de declarar. */
+export interface SkillRef {
+  index: number;
+  name: string;
+  level: number;
+}
+
+export function skillRefFrom(character: Character, index: number): SkillRef {
+  const skill: Skill | undefined = character.skills[index];
+  if (!skill) throw new EngineError({ kind: 'SkillIndexOutOfRange', index });
+  return { index, name: skill.name, level: skill.level };
+}
+
+export type RollResult = 'exito' | 'fallo' | 'narrado';
+export type AdvanceState = 'pendiente' | 'aplicado' | 'no_aplica';
+
+/** Lo que se aplicó a la hoja al cerrar la tirada. */
+export interface AppliedAdvance {
+  xpGained: number;
+  xpSpent: number;
+  newSkill: Skill | null;
+  replacedIndex: number | null;
+}
+
+export interface HistoryEntry {
+  from: RollState | null;
+  to: RollState;
+  by: Actor;
+}
+
+export interface RollRecord {
+  state: RollState;
+  action: string;
+  skill: SkillRef;
+  counterOffer: SkillRef | null;
+  dmNote: string | null;
+  opposition: DiceRoll | null;
+  playerRoll: DiceRoll | null;
+  result: RollResult | null;
+  narration: string | null;
+  tieWinner: TieWinner | null;
+  advance: AdvanceState | null;
+  applied: AppliedAdvance | null;
+  history: HistoryEntry[];
+}
+
+export type FlowAction =
+  | { kind: 'approve' }
+  | { kind: 'counterOffer'; skill: SkillRef; note: string | null }
+  | { kind: 'reject'; note: string | null }
+  | { kind: 'narrate'; narration: string }
+  | { kind: 'acceptCounterOffer' }
+  | { kind: 'redeclare'; action: string; skill: SkillRef }
+  | { kind: 'withdraw' }
+  | { kind: 'rollOpposition'; dice: DiceRoll }
+  | { kind: 'rollPlayer'; dice: DiceRoll }
+  | { kind: 'resolve'; tieWinner: TieWinner }
+  | { kind: 'applyAdvance'; applied: AppliedAdvance };
+
+export type FlowActionKind = FlowAction['kind'];
+
+export const FLOW_ACTION_KINDS: readonly FlowActionKind[] = [
+  'approve',
+  'counterOffer',
+  'reject',
+  'narrate',
+  'acceptCounterOffer',
+  'redeclare',
+  'withdraw',
+  'rollOpposition',
+  'rollPlayer',
+  'resolve',
+  'applyAdvance',
+];
+
+function cleanNote(note: string | null): string | null {
+  const n = note?.trim() ?? '';
+  return n === '' ? null : n;
+}
+
+/** Tabla de permisos: estado actual × acción × actor. */
+export function permits(state: RollState, kind: FlowActionKind, actor: Actor): boolean {
+  switch (kind) {
+    case 'approve':
+    case 'counterOffer':
+    case 'reject':
+    case 'narrate':
+      return state === 'declarada' && actor === 'dm';
+    case 'acceptCounterOffer':
+      return state === 'contraoferta' && actor === 'owner';
+    case 'redeclare':
+    case 'withdraw':
+      return (state === 'declarada' || state === 'contraoferta' || state === 'rechazada') && actor === 'owner';
+    case 'rollOpposition':
+      return state === 'aprobada' && actor === 'dm';
+    case 'rollPlayer':
+      return state === 'oposicion' && actor === 'owner';
+    case 'resolve':
+      return state === 'tirada' && (actor === 'owner' || actor === 'dm');
+    case 'applyAdvance':
+      return state === 'resuelta' && (actor === 'owner' || actor === 'dm');
+  }
+}
+
+/** Acciones que `actor` puede hacer ahora mismo sobre una tirada en `state` con avance `advance`. */
+export function allowedActionsFor(state: RollState, advance: AdvanceState | null, actor: Actor): FlowActionKind[] {
+  return FLOW_ACTION_KINDS.filter((k) => permits(state, k, actor)).filter((k) => k !== 'applyAdvance' || advance === 'pendiente');
+}
+
+export function allowedActions(record: Pick<RollRecord, 'state' | 'advance'>, actor: Actor): FlowActionKind[] {
+  return allowedActionsFor(record.state, record.advance, actor);
+}
+
+/** Crea una tirada en estado `declarada`. */
+export function declare(action: string, skill: SkillRef): RollRecord {
+  const text = action.trim();
+  if (text === '') throw new EngineError({ kind: 'EmptyAction' });
+  return {
+    state: 'declarada',
+    action: text,
+    skill,
+    counterOffer: null,
+    dmNote: null,
+    opposition: null,
+    playerRoll: null,
+    result: null,
+    narration: null,
+    tieWinner: null,
+    advance: null,
+    applied: null,
+    history: [{ from: null, to: 'declarada', by: 'owner' }],
+  };
+}
+
+/** Aplica una acción a la tirada y devuelve la tirada nueva (la original no cambia). */
+export function transition(record: RollRecord, action: FlowAction, actor: Actor): RollRecord {
+  const kind = action.kind;
+  const notAllowed = () => new EngineError({ kind: 'TransitionNotAllowed', state: record.state, action: kind, actor });
+  if (!permits(record.state, kind, actor)) throw notAllowed();
+
+  const next: RollRecord = { ...record, history: [...record.history] };
+  const goto = (to: RollState) => {
+    next.history.push({ from: next.state, to, by: actor });
+    next.state = to;
+  };
+
+  switch (action.kind) {
+    case 'approve':
+      goto('aprobada');
+      break;
+    case 'counterOffer':
+      next.counterOffer = action.skill;
+      next.dmNote = cleanNote(action.note);
+      goto('contraoferta');
+      break;
+    case 'reject':
+      next.dmNote = cleanNote(action.note);
+      goto('rechazada');
+      break;
+    case 'narrate': {
+      const narration = action.narration.trim();
+      if (narration === '') throw new EngineError({ kind: 'EmptyNarration' });
+      next.narration = narration;
+      next.result = 'narrado';
+      next.advance = 'no_aplica';
+      goto('sin_tirada');
+      goto('resuelta');
+      break;
+    }
+    case 'acceptCounterOffer': {
+      if (!next.counterOffer) throw notAllowed();
+      next.skill = next.counterOffer;
+      next.counterOffer = null;
+      next.dmNote = null;
+      goto('declarada');
+      break;
+    }
+    case 'redeclare': {
+      const text = action.action.trim();
+      if (text === '') throw new EngineError({ kind: 'EmptyAction' });
+      next.action = text;
+      next.skill = action.skill;
+      next.counterOffer = null;
+      next.dmNote = null;
+      goto('declarada');
+      break;
+    }
+    case 'withdraw':
+      goto('retirada');
+      break;
+    case 'rollOpposition':
+      next.opposition = action.dice;
+      goto('oposicion');
+      break;
+    case 'rollPlayer': {
+      const expected = next.skill.level;
+      if (action.dice.length !== expected) throw new EngineError({ kind: 'DiceCountMismatch', expected, got: action.dice.length });
+      next.playerRoll = action.dice;
+      goto('tirada');
+      break;
+    }
+    case 'resolve': {
+      // En estado `tirada` siempre existen la tirada y la oposición.
+      if (!next.playerRoll || !next.opposition) throw notAllowed();
+      const outcome = resolve(next.playerRoll, next.opposition, action.tieWinner);
+      next.result = outcome.outcome === 'success' ? 'exito' : 'fallo';
+      next.tieWinner = action.tieWinner;
+      next.advance = 'pendiente';
+      goto('resuelta');
+      break;
+    }
+    case 'applyAdvance': {
+      if (next.advance !== 'pendiente') throw new EngineError({ kind: 'AdvancementNotPending' });
+      const { applied } = action;
+      const expectedXp = next.result === 'fallo' ? 1 : 0;
+      if (applied.xpGained !== expectedXp) throw new EngineError({ kind: 'NotEligible' });
+      if (applied.newSkill === null && (applied.xpSpent !== 0 || applied.replacedIndex !== null)) {
+        throw new EngineError({ kind: 'NotEligible' });
+      }
+      next.applied = applied;
+      next.advance = 'aplicado';
+      break;
+    }
+  }
+
+  return next;
+}
