@@ -64,9 +64,15 @@ implementadas: [docs/rules.md](docs/rules.md).
   - La oposición la tira el DM antes que el jugador y es visible para él.
   - "Sin tirada" termina en resuelta con narración y sin XP.
 - **Inventario:**
-  - El catálogo es privado del DM, que entrega copias a los personajes.
-  - Cada inventario lo ven solo su dueño y el DM; el dueño solo cambia la cantidad (≥ 0).
-  - El valor es un entero opcional.
+  - El catálogo es privado del DM y no tiene cantidades: nombre, descripción, valor opcional (precio por defecto),
+    ícono y color (claves `ITEM_ICON_KEYS`/`ITEM_COLOR_KEYS` del motor; las reglas validan el color).
+  - El DM entrega arrastrando (`drag.ts`, eventos de puntero; tocar el asa y luego el destino también sirve). El id
+    de la copia es el del catálogo, así se apilan.
+  - Cada inventario lo ven solo su dueño y el DM; el dueño solo cambia la cantidad (≥ 0). Se muestra en cuadrícula.
+  - Monedas en el personaje (`coins`): el DM las ajusta, el dueño solo puede bajarlas (pagar).
+- **Botín y tienda** (`offers/{id}` + `lines/{catalogId}`): existencias limitadas, el primero que llega se lo lleva.
+  Público `audience` = `['*']` o uids; los jugadores consultan `open == true` + `array-contains` ('*' y su uid).
+  Tomar/comprar es un batch (línea −q, inventario +q, monedas −precio·q) que `claimLine`/`claimedCopy` validan.
 - **Tiradas:** no se pueden borrar (las reglas lo prohíben).
 
 ## Firebase
@@ -93,5 +99,6 @@ implementadas: [docs/rules.md](docs/rules.md).
 
 - Web: `cd web && pnpm test && pnpm lint && pnpm build` (sin errores; el único aviso de lint es de `kv/Nav.tsx`, copia
   de la suite).
-- Reglas: `bash firebase/tests/run-emulators.sh`, con JDK 21.
+- Reglas: `bash firebase/tests/run-emulators.sh`, con JDK 21. Si ya hay emuladores corriendo, usa otra config con
+  otros puertos (`firebase emulators:exec --config …`): los tests leen `FIRESTORE_EMULATOR_HOST` y borran datos.
 - De punta a punta: `bash scripts/emulators.sh` + `pnpm dev:emu` y el flujo completo con dos pestañas (DM e invitado).

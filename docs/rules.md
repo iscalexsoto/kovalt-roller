@@ -39,6 +39,17 @@ declarada ──(DM)──► aprobada ──(DM)──► oposicion ──(juga
 
 ## Inventario
 
-- El DM mantiene un catálogo privado por sala. Un objeto tiene nombre, descripción (incluye el efecto si es mágico), valor opcional (entero) y cantidad (puede ser 0).
-- El DM entrega **copias** a los personajes, con su propia cantidad.
-- Cada inventario lo ven solo su dueño y el DM. El dueño solo puede cambiar la cantidad.
+- El DM mantiene un catálogo privado por sala. Un objeto tiene nombre, descripción (incluye el efecto si es mágico),
+  valor opcional (entero, en monedas: es el precio por defecto), ícono y color. El catálogo **no** maneja cantidades.
+- El DM entrega **copias** a los personajes arrastrando el objeto a un jugador (o a su ficha). Cada entrega suma una
+  unidad; las copias del mismo objeto se apilan.
+- Cada inventario lo ven solo su dueño y el DM. El dueño solo puede cambiar la cantidad (≥ 0).
+- Cada personaje tiene **monedas** (entero ≥ 0). Las ajusta el DM; el jugador solo las gasta en una tienda.
+
+## Botines y tiendas
+
+- El DM arma ventanas de **botín** (gratis) o **tienda** (cobra) soltando objetos del catálogo; cada objeto tiene
+  existencias limitadas y, en la tienda, un precio por unidad que parte de su valor.
+- Una ventana se muestra a todos o solo a algunos personajes, y el DM la oculta o la borra cuando quiere.
+- El primero que llega se lo lleva: tomar o comprar baja las existencias para todos al instante. No se puede tomar más
+  de lo que queda ni comprar sin monedas suficientes (el pago es precio × cantidad).
