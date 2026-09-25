@@ -1,24 +1,27 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/auth_repository.dart';
 import '../data/character_repository.dart';
 import '../data/item_repository.dart';
 import '../data/models.dart';
 import '../data/presence_repository.dart';
 import '../data/roll_repository.dart';
 import '../data/room_repository.dart';
+import 'config.dart';
 
 // ---------- servicios ----------
 
-final authRepositoryProvider = Provider((ref) => AuthRepository(FirebaseAuth.instance));
-final roomRepositoryProvider = Provider((ref) => RoomRepository(FirebaseFirestore.instance, FirebaseDatabase.instance));
+final realtimeDatabaseProvider = Provider((ref) => AppConfig.realtimeDatabase(FirebaseAuth.instance));
+
+final authRepositoryProvider = Provider((ref) => AppConfig.authRepository(FirebaseAuth.instance));
+final roomRepositoryProvider = Provider(
+  (ref) => RoomRepository(FirebaseFirestore.instance, ref.watch(realtimeDatabaseProvider)),
+);
 final characterRepositoryProvider = Provider((ref) => CharacterRepository(FirebaseFirestore.instance));
 final itemRepositoryProvider = Provider((ref) => ItemRepository(FirebaseFirestore.instance));
 final rollRepositoryProvider = Provider((ref) => RollRepository(FirebaseFirestore.instance));
-final presenceRepositoryProvider = Provider((ref) => PresenceRepository(FirebaseDatabase.instance));
+final presenceRepositoryProvider = Provider((ref) => PresenceRepository(ref.watch(realtimeDatabaseProvider)));
 
 // ---------- sesión ----------
 

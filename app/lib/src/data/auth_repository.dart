@@ -1,9 +1,19 @@
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 
 class AuthRepository {
-  AuthRepository(this._auth);
+  /// [identityToolkit] es la base de la API REST de Auth
+  /// (`https://identitytoolkit.googleapis.com/v1` o la del emulador) y [apiKey]
+  /// la clave web del proyecto; se usan cuando el SDK de Windows falla.
+  AuthRepository(this._auth, {required this.identityToolkit, required this.apiKey, http.Client? client})
+    : _client = client ?? http.Client();
 
   final FirebaseAuth _auth;
+  final Uri identityToolkit;
+  final String apiKey;
+  final http.Client _client;
 
   Stream<User?> authStateChanges() => _auth.userChanges();
 
@@ -27,8 +37,44 @@ class AuthRepository {
   /// (y con él sus salas y personajes).
   Future<void> upgradeGuest(String email, String password) async {
     final user = _auth.currentUser!;
-    await user.linkWithCredential(EmailAuthProvider.credential(email: email.trim(), password: password));
+    try {
+      await user.linkWithCredential(EmailAuthProvider.credential(email: email.trim(), password: password));
+    } on FirebaseAuthException catch (e) {
+      // En Windows `linkWithCredential` falla con un error interno: se hace lo
+      // mismo con la API REST (accounts:update sobre la cuenta anónima).
+      if (e.code != 'unknown-error' && e.code != 'internal-error') rethrow;
+      await _upgradeViaRest(user, email.trim(), password);
+      await _auth.signInWithEmailAndPassword(email: email.trim(), password: password);
+    }
   }
+
+  Future<void> _upgradeViaRest(User user, String email, String password) async {
+    final uri = identityToolkit.replace(
+      path: '${identityToolkit.path}/accounts:update',
+      queryParameters: {'key': apiKey},
+    );
+    final response = await _client.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'idToken': await user.getIdToken(),
+        'email': email,
+        'password': password,
+        'returnSecureToken': true,
+      }),
+    );
+    if (response.statusCode != 200) {
+      final message = (jsonDecode(response.body) as Map)['error']?['message'] as String? ?? 'UNKNOWN';
+      throw FirebaseAuthException(code: _restErrorCode(message), message: message);
+    }
+  }
+
+  static String _restErrorCode(String message) => switch (message.split(' ').first) {
+    'EMAIL_EXISTS' => 'email-already-in-use',
+    'INVALID_EMAIL' => 'invalid-email',
+    'WEAK_PASSWORD' => 'weak-password',
+    _ => 'unknown-error',
+  };
 
   Future<void> updateDisplayName(String name) => _auth.currentUser!.updateDisplayName(name.trim());
 

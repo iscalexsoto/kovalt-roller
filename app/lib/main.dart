@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,7 +18,6 @@ Future<void> main() async {
     const host = AppConfig.emulatorHost;
     await FirebaseAuth.instance.useAuthEmulator(host, 9099);
     FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
-    FirebaseDatabase.instance.useDatabaseEmulator(host, 9000);
   }
 
   runApp(const ProviderScope(child: KovaltApp()));

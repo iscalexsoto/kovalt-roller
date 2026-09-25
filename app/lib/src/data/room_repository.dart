@@ -1,10 +1,10 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_database/firebase_database.dart';
 
 import '../rust/api/engine.dart';
 import 'models.dart';
+import 'rtdb_rest.dart';
 
 class RoomException implements Exception {
   RoomException(this.message);
@@ -20,7 +20,7 @@ class RoomRepository {
   RoomRepository(this._db, this._rtdb);
 
   final FirebaseFirestore _db;
-  final FirebaseDatabase _rtdb;
+  final RtdbRest _rtdb;
 
   // Sin 0/O, 1/I/L ni U para evitar confusiones al dictar el código.
   static const _alphabet = '23456789ABCDEFGHJKMNPQRSTVWXYZ';
@@ -86,8 +86,8 @@ class RoomRepository {
       ..set(_myRoom(uid, roomRef.id), {'name': name.trim(), 'role': 'dm', 'joinedAt': FieldValue.serverTimestamp()});
     await batch.commit();
 
-    await _rtdb.ref('roomAccess/${roomRef.id}').set({'dm': uid, 'code': code});
-    await _rtdb.ref('members/${roomRef.id}/$uid').set({'role': 'dm', 'code': code});
+    await _rtdb.set('roomAccess/${roomRef.id}', {'dm': uid, 'code': code});
+    await _rtdb.set('members/${roomRef.id}/$uid', {'role': 'dm', 'code': code});
     return roomRef.id;
   }
 
@@ -108,7 +108,7 @@ class RoomRepository {
         'characterId': null,
         'joinedAt': FieldValue.serverTimestamp(),
       });
-      await _rtdb.ref('members/$roomId/$uid').set({'role': 'player', 'code': normalized});
+      await _rtdb.set('members/$roomId/$uid', {'role': 'player', 'code': normalized});
     }
 
     final room = Room.fromDoc(await _room(roomId).get());
@@ -143,14 +143,14 @@ class RoomRepository {
       ..update(_room(room.id), {'code': code})
       ..delete(_code(room.code));
     await batch.commit();
-    await _rtdb.ref('roomAccess/${room.id}/code').set(code);
+    await _rtdb.set('roomAccess/${room.id}/code', code);
     return code;
   }
 
   /// El DM expulsa a un jugador (su personaje se conserva).
   Future<void> removeMember(String roomId, String uid) async {
     await _member(roomId, uid).delete();
-    await _rtdb.ref('members/$roomId/$uid').remove();
+    await _rtdb.remove('members/$roomId/$uid');
   }
 
   Future<void> leaveRoom(String roomId, String uid) async {
