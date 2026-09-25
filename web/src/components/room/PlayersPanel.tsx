@@ -1,9 +1,30 @@
 import { useDialogs } from '../dialogs';
 import { removeMember } from '../../data/rooms';
-import { toastError } from '../../state/toast';
+import type { ReactNode } from 'react';
+import { give } from '../../data/items';
+import { toast, toastError } from '../../state/toast';
 import { IconButton } from '../kv/Button';
 import { Avatar, KickerDivider } from '../kv/Layout';
 import { useRoom } from './context';
+import { useDropTarget } from './drag';
+
+/** Fila de jugador; para el DM, soltar ahí un objeto del catálogo se lo entrega a su personaje. */
+function DropRow({ uid, enabled, className, children }: { uid: string; enabled: boolean; className: string; children: ReactNode }) {
+  const ctx = useRoom();
+  const target = useDropTarget(`player:${uid}`, ({ item }) => {
+    const character = ctx.characterOf(uid);
+    if (!character) return;
+    give(ctx.room.id, character.id, item, 1, ctx.uid)
+      .then(() => toast(`${item.name} → ${character.sheet.name}`))
+      .catch(toastError);
+  });
+  if (!enabled) return <li className={className}>{children}</li>;
+  return (
+    <li {...target.props} className={`${className} ${target.props.className}`}>
+      {children}
+    </li>
+  );
+}
 
 /** Quién está en la sala: DM primero y luego por nombre, con indicador de conexión. */
 export function PlayersPanel({ selected, onSelect }: { selected: string | null; onSelect?: (uid: string) => void }) {
@@ -39,7 +60,7 @@ export function PlayersPanel({ selected, onSelect }: { selected: string | null; 
             </>
           );
           return (
-            <li key={m.uid} className={`rl-player${selected === m.uid ? ' rl-player--selected' : ''}`}>
+            <DropRow key={m.uid} uid={m.uid} enabled={ctx.isDm && Boolean(character)} className={`rl-player${selected === m.uid ? ' rl-player--selected' : ''}`}>
               {selectable ? (
                 <button type="button" className="rl-player__main kv-state" onClick={() => onSelect(m.uid)}>
                   {body}
@@ -48,7 +69,7 @@ export function PlayersPanel({ selected, onSelect }: { selected: string | null; 
                 <div className="rl-player__main">{body}</div>
               )}
               {ctx.isDm && m.role !== 'dm' && <IconButton icon="user-round-x" small label={`Expulsar a ${m.displayName}`} onClick={() => void kick(m.uid, m.displayName)} />}
-            </li>
+            </DropRow>
           );
         })}
       </ul>

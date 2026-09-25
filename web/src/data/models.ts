@@ -8,7 +8,15 @@ import {
   type AppliedAdvance,
   type Character,
   type HistoryEntry,
+  DEFAULT_ITEM_COLOR,
+  DEFAULT_ITEM_ICON,
+  isItemColor,
+  isItemIcon,
+  type CatalogItem,
   type Item,
+  type ItemLook,
+  type OfferKind,
+  type OfferLine,
   type RollRecord,
   type RollResult,
   type RoomSettings,
@@ -109,6 +117,8 @@ export interface CharacterDoc {
   ownerUid: string;
   sheet: Character;
   lastAppliedRollId: string | null;
+  /** Monedas para la tienda (fuera de la hoja del motor). */
+  coins: number;
 }
 
 export function characterFrom(id: string, m: DocumentData): CharacterDoc {
@@ -116,6 +126,7 @@ export function characterFrom(id: string, m: DocumentData): CharacterDoc {
     id,
     ownerUid: str(m.ownerUid),
     lastAppliedRollId: optStr(m.lastAppliedRollId),
+    coins: int(m.coins),
     sheet: {
       name: str(m.name),
       description: str(m.description),
@@ -141,24 +152,72 @@ export function characterToMap(ownerUid: string, c: Character): Json {
 
 // ---------- objetos ----------
 
+const look = (m: DocumentData): ItemLook => ({
+  icon: isItemIcon(str(m.icon)) ? str(m.icon) : DEFAULT_ITEM_ICON,
+  color: isItemColor(str(m.color)) ? str(m.color) : DEFAULT_ITEM_COLOR,
+});
+
+const catalogFields = (m: DocumentData): CatalogItem => ({ name: str(m.name), description: str(m.description), value: optInt(m.value), ...look(m) });
+
+export interface CatalogDoc extends CatalogItem {
+  id: string;
+}
+
+export function catalogFrom(id: string, m: DocumentData): CatalogDoc {
+  return { id, ...catalogFields(m) };
+}
+
+export function catalogToMap(i: CatalogItem): Json {
+  return { name: i.name.trim(), description: i.description.trim(), value: i.value, icon: i.icon, color: i.color };
+}
+
 export interface ItemDoc extends Item {
   id: string;
   catalogItemId: string | null;
 }
 
 export function itemFrom(id: string, m: DocumentData): ItemDoc {
-  return {
-    id,
-    name: str(m.name),
-    description: str(m.description),
-    value: optInt(m.value),
-    quantity: int(m.quantity),
-    catalogItemId: optStr(m.catalogItemId),
-  };
+  return { id, ...catalogFields(m), quantity: int(m.quantity), catalogItemId: optStr(m.catalogItemId) };
 }
 
 export function itemToMap(i: Item): Json {
-  return { name: i.name.trim(), description: i.description.trim(), value: i.value, quantity: i.quantity };
+  return { ...catalogToMap(i), quantity: i.quantity };
+}
+
+/** Público de un botín o una tienda: todos (`'*'`) o una lista de uids. */
+export const EVERYONE = '*';
+
+export interface OfferDoc {
+  id: string;
+  kind: OfferKind;
+  title: string;
+  open: boolean;
+  audience: string[];
+  createdAt: Date | null;
+}
+
+export function offerFrom(id: string, m: DocumentData): OfferDoc {
+  return {
+    id,
+    kind: m.kind === 'shop' ? 'shop' : 'loot',
+    title: str(m.title),
+    open: m.open === true,
+    audience: list(m.audience).filter((u): u is string => typeof u === 'string'),
+    createdAt: date(m.createdAt),
+  };
+}
+
+/** Línea de un botín o una tienda; su id es el del objeto del catálogo. */
+export interface LineDoc extends OfferLine {
+  id: string;
+}
+
+export function lineFrom(id: string, m: DocumentData): LineDoc {
+  return { id, ...catalogFields(m), price: int(m.price), stock: int(m.stock) };
+}
+
+export function lineToMap(l: OfferLine): Json {
+  return { ...catalogToMap(l), price: l.price, stock: l.stock };
 }
 
 // ---------- tiradas ----------

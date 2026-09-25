@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DiceRoll, declare, transition, type RollRecord } from '../engine';
-import { characterFrom, characterToMap, rollFields, rollFrom, settingsFrom, settingsToMap, type Json, type RawHistory } from './models';
+import { catalogFrom, catalogToMap, characterFrom, characterToMap, itemFrom, itemToMap, lineFrom, lineToMap, offerFrom, rollFields, rollFrom, settingsFrom, settingsToMap, type Json, type RawHistory } from './models';
 
 const dice = (v: number[]) => DiceRoll.fromValues(v, 10);
 const DM = 'dm-uid';
@@ -59,11 +59,29 @@ describe('personaje y ajustes', () => {
   it('ida y vuelta de la hoja', () => {
     const sheet = { name: 'Ana', description: 'x', notes: 'y', xp: 2, skills: [{ name: 'Do Anything', level: 1, permanent: true, derivedFrom: null }] };
     const { updatedAt: _ignored, ...m } = characterToMap(OWNER, sheet);
-    expect(characterFrom(OWNER, m)).toEqual({ id: OWNER, ownerUid: OWNER, lastAppliedRollId: null, sheet });
+    expect(characterFrom(OWNER, m)).toEqual({ id: OWNER, ownerUid: OWNER, lastAppliedRollId: null, coins: 0, sheet });
   });
 
   it('ida y vuelta de los ajustes', () => {
     const s = { skillSlots: 3, tieWinner: 'opposition' as const, xpSameRoll: false, maxDice: 6 };
     expect(settingsFrom(settingsToMap(s))).toEqual(s);
+  });
+});
+
+describe('objetos', () => {
+  it('ida y vuelta de catálogo, copia y línea', () => {
+    const cat = { name: 'Poción', description: 'Cura 1', value: 4, icon: 'flask-round', color: 'rose' };
+    expect(catalogFrom('c1', catalogToMap(cat))).toEqual({ id: 'c1', ...cat });
+    expect(itemFrom('c1', { ...itemToMap({ ...cat, quantity: 2 }), catalogItemId: 'c1' })).toEqual({ id: 'c1', ...cat, quantity: 2, catalogItemId: 'c1' });
+    expect(lineFrom('c1', lineToMap({ ...cat, price: 3, stock: 5 }))).toEqual({ id: 'c1', ...cat, price: 3, stock: 5 });
+  });
+
+  it('objetos viejos sin ícono ni color toman los de siempre', () => {
+    expect(catalogFrom('c1', { name: 'Cuerda', quantity: 3 })).toEqual({ id: 'c1', name: 'Cuerda', description: '', value: null, icon: 'package', color: 'slate' });
+  });
+
+  it('ventanas: tipo, público y abierta', () => {
+    expect(offerFrom('o1', { kind: 'shop', title: 'Herrería', open: true, audience: ['*', 3] })).toMatchObject({ kind: 'shop', open: true, audience: ['*'] });
+    expect(offerFrom('o1', { kind: 'x' }).kind).toBe('loot');
   });
 });

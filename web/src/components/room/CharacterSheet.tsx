@@ -1,16 +1,13 @@
 import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import { skillLabel, slotUsage } from '../../engine';
 import { dmUpdateSheet, updateCharacterTexts } from '../../data/characters';
-import { useLiveQuery } from '../../data/hooks';
-import { catalogQuery, inventoryQuery, removeFromInventory, setQuantity, updateInventoryItem } from '../../data/items';
-import { itemFrom, type CharacterDoc, type ItemDoc } from '../../data/models';
+import type { CharacterDoc } from '../../data/models';
 import { useBusy } from '../../hooks/useBusy';
-import { toastError } from '../../state/toast';
 import { Button, IconButton } from '../kv/Button';
 import { Field, TextArea } from '../kv/Field';
 import { EmptyState, KickerDivider } from '../kv/Layout';
 import { useRoom } from './context';
-import { GiveItemDialog, ItemEditDialog } from './ItemDialogs';
+import { Inventory } from './Inventory';
 
 type SheetTexts = { name: string; description: string; notes: string };
 
@@ -100,65 +97,6 @@ function InlineText({
         </Button>
       </div>
     </div>
-  );
-}
-
-function Inventory({ character }: { character: CharacterDoc }) {
-  const ctx = useRoom();
-  const isOwner = character.id === ctx.uid;
-  const inv = useLiveQuery(`inv/${ctx.room.id}/${character.id}`, inventoryQuery(ctx.room.id, character.id), itemFrom);
-  const catalog = useLiveQuery(ctx.isDm ? `catalog/${ctx.room.id}` : null, ctx.isDm ? catalogQuery(ctx.room.id) : null, itemFrom);
-  const [editing, setEditing] = useState<ItemDoc | null>(null);
-  const [giving, setGiving] = useState(false);
-
-  const change = (item: ItemDoc, delta: number) => {
-    const next = item.quantity + delta;
-    if (next < 0) return;
-    setQuantity(ctx.room.id, character.id, item.id, next).catch(toastError);
-  };
-
-  return (
-    <>
-      <KickerDivider className="rl-sheet__kicker">Inventario</KickerDivider>
-      {inv.data === undefined ? null : inv.data.length === 0 ? (
-        <p className="rl-hint">Sin objetos.</p>
-      ) : (
-        <ul className="rl-items">
-          {inv.data.map((item) => (
-            <li key={item.id} className={`rl-item${item.quantity === 0 ? ' rl-item--empty' : ''}`}>
-              <div className="rl-item__text">
-                <span className="rl-item__name">{item.name}</span>
-                {item.description && <span className="rl-item__desc">{item.description}</span>}
-                {item.value !== null && <span className="rl-item__desc">Valor: {item.value}</span>}
-              </div>
-              {(isOwner || ctx.isDm) && (
-                <span className="rl-qty">
-                  <IconButton icon="minus" small label="Uno menos" disabled={item.quantity === 0} onClick={() => change(item, -1)} />
-                  <span className="rl-qty__value kv-num">{item.quantity}</span>
-                  <IconButton icon="plus" small label="Uno más" onClick={() => change(item, 1)} />
-                </span>
-              )}
-              {ctx.isDm && <IconButton icon="pencil" small label={`Editar ${item.name}`} onClick={() => setEditing(item)} />}
-            </li>
-          ))}
-        </ul>
-      )}
-      {ctx.isDm && (
-        <Button variant="text" icon="gift" dense onClick={() => setGiving(true)}>
-          Entregar objeto
-        </Button>
-      )}
-      {editing && (
-        <ItemEditDialog
-          title="Editar objeto entregado"
-          initial={editing}
-          onClose={() => setEditing(null)}
-          onSave={(item) => updateInventoryItem(ctx.room.id, character.id, editing.id, item)}
-          onDelete={() => removeFromInventory(ctx.room.id, character.id, editing.id)}
-        />
-      )}
-      {giving && catalog.data && <GiveItemDialog catalog={catalog.data} characters={[character]} initialCharacter={character.id} onClose={() => setGiving(false)} />}
-    </>
   );
 }
 

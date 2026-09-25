@@ -1,56 +1,87 @@
 import { useState } from 'react';
 import type { RoomSettings } from '../../engine';
 import { useLiveQuery } from '../../data/hooks';
-import { catalogQuery, deleteCatalogItem, saveCatalogItem } from '../../data/items';
-import { itemFrom, type ItemDoc } from '../../data/models';
+import { catalogQuery, deleteCatalogItem, give, saveCatalogItem } from '../../data/items';
+import { catalogFrom, type CatalogDoc, type CharacterDoc } from '../../data/models';
 import { rotateCode, updateRoom } from '../../data/rooms';
 import { useBusy } from '../../hooks/useBusy';
-import { toast } from '../../state/toast';
+import { GameIcon } from '../../icons/GameIcon';
+import { toast, toastError } from '../../state/toast';
 import { useDialogs } from '../dialogs';
-import { Button, IconButton, Segmented } from '../kv/Button';
+import { Button, Segmented } from '../kv/Button';
 import { Field } from '../kv/Field';
-import { EmptyState, GroupedList, KickerDivider, ListItem } from '../kv/Layout';
+import { EmptyState, GroupedList, KickerDivider } from '../kv/Layout';
 import { CharacterSheet, NoCharacter } from './CharacterSheet';
 import { useRoom } from './context';
-import { GiveItemDialog, ItemEditDialog } from './ItemDialogs';
+import { useDropTarget } from './drag';
+import { DragHandle } from './DragUI';
+import { ItemEditDialog } from './ItemDialogs';
+import { DmOffers } from './Offers';
 import { RoomCode } from './RoomCode';
 import { SettingsForm } from './SettingsForm';
 
 type Tab = 'character' | 'catalog' | 'room';
 
+/** Destino para entregar al personaje una unidad del objeto soltado. */
+function GivePad({ character }: { character: CharacterDoc }) {
+  const ctx = useRoom();
+  const target = useDropTarget(`pad:${character.id}`, ({ item }) => {
+    give(ctx.room.id, character.id, item, 1, ctx.uid)
+      .then(() => toast(`${item.name} → ${character.sheet.name}`))
+      .catch(toastError);
+  });
+  return (
+    <span {...target.props} className={`rl-pad ${target.props.className}`}>
+      <GameIcon name="user-round" />
+      {character.sheet.name}
+    </span>
+  );
+}
+
+const fold = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+
 function Catalog() {
   const ctx = useRoom();
-  const catalog = useLiveQuery(`catalog/${ctx.room.id}`, catalogQuery(ctx.room.id), itemFrom);
-  const [editing, setEditing] = useState<ItemDoc | 'new' | null>(null);
-  const [giving, setGiving] = useState<string | null>(null);
+  const catalog = useLiveQuery(`catalog/${ctx.room.id}`, catalogQuery(ctx.room.id), catalogFrom);
+  const [editing, setEditing] = useState<CatalogDoc | 'new' | null>(null);
+  const [search, setSearch] = useState('');
   const items = catalog.data ?? [];
+  const needle = fold(search.trim());
+  const shown = needle ? items.filter((i) => fold(`${i.name} ${i.description}`).includes(needle)) : items;
 
   return (
     <div className="rl-panel-body">
+      <DmOffers />
+      <KickerDivider>Catálogo</KickerDivider>
       <div className="rl-row">
-        <p className="rl-hint rl-grow">Tu catálogo es privado: los jugadores solo ven las copias que les entregas.</p>
+        <p className="rl-hint rl-grow">Privado. Arrastra un objeto (o tócalo por el ícono y luego el destino) a un jugador, a su ficha o a un botín o tienda.</p>
         <Button variant="tonal" icon="plus" dense onClick={() => setEditing('new')}>
           Objeto
         </Button>
       </div>
+      {ctx.characters.length > 0 && (
+        <div className="rl-pads" aria-label="Entregar a">
+          {ctx.characters.map((c) => (
+            <GivePad key={c.id} character={c} />
+          ))}
+        </div>
+      )}
+      {items.length > 0 && <Field lead="search" placeholder="Buscar en el catálogo" aria-label="Buscar en el catálogo" value={search} onChange={(e) => setSearch(e.target.value)} onClear={() => setSearch('')} dense />}
       {catalog.data !== undefined && items.length === 0 ? (
-        <EmptyState register="empty" icon="package" title="Catálogo vacío" body="Crea objetos para entregarlos a los personajes." />
+        <EmptyState register="empty" icon="package" title="Catálogo vacío" body="Crea objetos para entregarlos o ponerlos en un botín o una tienda." />
+      ) : shown.length === 0 && catalog.data !== undefined ? (
+        <EmptyState register="results" icon="search-x" title="Sin resultados" body={`Nada coincide con «${search.trim()}».`} />
       ) : (
         <GroupedList>
-          {items.map((item) => (
-            <li key={item.id}>
-              <ListItem
-                as="div"
-                lead="package"
-                headline={item.name}
-                support={[item.description, item.value !== null ? `Valor ${item.value}` : '', `×${item.quantity}`].filter(Boolean).join(' · ')}
-                trail={
-                  <span className="rl-row">
-                    <IconButton icon="gift" small label={`Entregar ${item.name}`} onClick={() => setGiving(item.id)} />
-                    <IconButton icon="pencil" small label={`Editar ${item.name}`} onClick={() => setEditing(item)} />
-                  </span>
-                }
-              />
+          {shown.map((item) => (
+            <li key={item.id} className="rl-catalog-row">
+              <DragHandle payload={{ item }} label={`Arrastrar ${item.name}`} />
+              <button type="button" className="rl-catalog-row__main kv-state" onClick={() => setEditing(item)}>
+                <span className="kv-list-item__headline">{item.name}</span>
+                {(item.description || item.value !== null) && (
+                  <span className="kv-list-item__support">{[item.value !== null ? `${item.value} monedas` : '', item.description].filter(Boolean).join(' · ')}</span>
+                )}
+              </button>
             </li>
           ))}
         </GroupedList>
@@ -60,11 +91,10 @@ function Catalog() {
           title={editing === 'new' ? 'Nuevo objeto' : 'Editar objeto'}
           initial={editing === 'new' ? undefined : editing}
           onClose={() => setEditing(null)}
-          onSave={(item) => saveCatalogItem(ctx.room.id, item, editing === 'new' ? undefined : editing.id)}
+          onSave={(item) => saveCatalogItem(ctx.room.id, { name: item.name, description: item.description, value: item.value, icon: item.icon, color: item.color }, editing === 'new' ? undefined : editing.id)}
           onDelete={editing === 'new' ? undefined : () => deleteCatalogItem(ctx.room.id, editing.id)}
         />
       )}
-      {giving && <GiveItemDialog catalog={items} characters={ctx.characters} initialItem={giving} onClose={() => setGiving(null)} />}
     </div>
   );
 }

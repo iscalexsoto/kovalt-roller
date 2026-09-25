@@ -9,6 +9,8 @@ import { CharacterCreate } from '../components/room/CharacterCreate';
 import { CharacterSheet } from '../components/room/CharacterSheet';
 import { buildRoomCtx, RoomContext } from '../components/room/context';
 import { DmPanel } from '../components/room/DmPanel';
+import { DragLayer } from '../components/room/DragUI';
+import { PlayerOffers } from '../components/room/Offers';
 import { PlayersPanel } from '../components/room/PlayersPanel';
 import { RollLog } from '../components/room/RollLog';
 import { copyInvite } from '../components/room/invite';
@@ -148,6 +150,7 @@ export function Room() {
           <div className="rl-table">
             <aside className="rl-table__players">{players}</aside>
             <div className="rl-table__log">
+              {!isDm && <PlayerOffers />}
               <RollLog />
             </div>
             <aside className="rl-table__side">{side}</aside>
@@ -155,13 +158,19 @@ export function Room() {
         ) : (
           <>
             <div className="rl-compact">
-              {view === 'table' && <RollLog />}
+              {view === 'table' && (
+                <>
+                  {!isDm && <PlayerOffers />}
+                  <RollLog />
+                </>
+              )}
               {view === 'players' && players}
               {view === 'side' && side}
             </div>
             <BottomNav view={view} onChange={setView} sideLabel={isDm ? 'DM' : 'Ficha'} sideIcon={isDm ? 'crown' : 'scroll-text'} />
           </>
         )}
+        {isDm && <DragLayer />}
       </div>
     </RoomContext.Provider>
   );
