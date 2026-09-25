@@ -1,0 +1,431 @@
+rules_version = '2';
+
+// Kovalt Roller — reglas de Firestore.
+// El motor corre en el cliente; estas reglas replican sus invariantes para que
+// un cliente modificado no pueda romper la hoja ni saltarse el flujo de tirada.
+// Ver docs/rules.md y crates/r4s_engine/src/roll_flow.rs.
+service cloud.firestore {
+  match /databases/{db}/documents {
+
+    // ---------- utilidades ----------
+
+    function authed() {
+      return request.auth != null;
+    }
+
+    function registered() {
+      return authed() && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function data() {
+      return request.resource.data;
+    }
+
+    function changedOnly(keys) {
+      return data().diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    function isStr(v, min, max) {
+      return v is string && v.size() >= min && v.size() <= max;
+    }
+
+    function optStr(v, max) {
+      return v == null || (v is string && v.size() <= max);
+    }
+
+    function roomPath(r) {
+      return /databases/$(db)/documents/rooms/$(r);
+    }
+
+    function room(r) {
+      return get(roomPath(r)).data;
+    }
+
+    function isDM(r) {
+      return authed() && room(r).dmUid == uid();
+    }
+
+    function memberPath(r, u) {
+      return /databases/$(db)/documents/rooms/$(r)/members/$(u);
+    }
+
+    function isMember(r) {
+      return authed() && exists(memberPath(r, uid()));
+    }
+
+    function characterPath(r, c) {
+      return /databases/$(db)/documents/rooms/$(r)/characters/$(c);
+    }
+
+    // ---------- ajustes de sala ----------
+
+    function validSettings(s) {
+      return s.keys().hasOnly(['skillSlots', 'tieWinner', 'xpSameRoll', 'maxDice'])
+        && s.skillSlots is int && s.skillSlots >= 1 && s.skillSlots <= 20
+        && s.tieWinner in ['player', 'opposition']
+        && s.xpSameRoll is bool
+        && s.maxDice is int && s.maxDice >= 2 && s.maxDice <= 10;
+    }
+
+    // ---------- dados (máx. 10, sin bucles en reglas) ----------
+
+    function die(d, i) {
+      return i >= d.size() || (d[i] is int && d[i] >= 1 && d[i] <= 6);
+    }
+
+    function at(d, i) {
+      return i < d.size() ? d[i] : 0;
+    }
+
+    function nonSix(d, i) {
+      return (i < d.size() && d[i] != 6) ? 1 : 0;
+    }
+
+    function validDice(d, maxDice) {
+      return d is list && d.size() >= 1 && d.size() <= maxDice && d.size() <= 10
+        && die(d, 0) && die(d, 1) && die(d, 2) && die(d, 3) && die(d, 4)
+        && die(d, 5) && die(d, 6) && die(d, 7) && die(d, 8) && die(d, 9);
+    }
+
+    function sum(d) {
+      return at(d, 0) + at(d, 1) + at(d, 2) + at(d, 3) + at(d, 4)
+        + at(d, 5) + at(d, 6) + at(d, 7) + at(d, 8) + at(d, 9);
+    }
+
+    function nonSixes(d) {
+      return nonSix(d, 0) + nonSix(d, 1) + nonSix(d, 2) + nonSix(d, 3) + nonSix(d, 4)
+        + nonSix(d, 5) + nonSix(d, 6) + nonSix(d, 7) + nonSix(d, 8) + nonSix(d, 9);
+    }
+
+    function validRoll(t, maxDice) {
+      return t is map && t.keys().hasOnly(['dados', 'total'])
+        && validDice(t.dados, maxDice) && t.total == sum(t.dados);
+    }
+
+    // ---------- personaje ----------
+
+    function validSkill(s, maxDice) {
+      return s is map && s.keys().hasOnly(['name', 'level', 'permanent', 'derivedFrom'])
+        && isStr(s.name, 1, 40)
+        && s.level is int && s.level >= 1 && s.level <= maxDice
+        && s.permanent is bool
+        && optStr(s.get('derivedFrom', null), 60);
+    }
+
+    function isBaseSkill(s) {
+      return s.name == 'Do Anything' && s.level == 1 && s.permanent == true;
+    }
+
+    // Invariantes baratas de la hoja. La lista completa de habilidades solo se
+    // revalida cuando la escribe el DM (validSkillList); en el avance del jugador
+    // se valida únicamente la habilidad nueva (advancementGuard), para no pasar
+    // del límite de 1000 expresiones por evaluación.
+    function basicCharacter(c, settings) {
+      return c.keys().hasOnly(['ownerUid', 'name', 'description', 'notes', 'xp', 'skills',
+                               'lastAppliedRollId', 'updatedAt'])
+        && isStr(c.name, 1, 60)
+        && optStr(c.get('description', ''), 4000)
+        && optStr(c.get('notes', ''), 20000)
+        && c.xp is int && c.xp >= 0
+        && c.skills is list && c.skills.size() >= 1
+        && c.skills.size() <= settings.skillSlots + 1
+        && isBaseSkill(c.skills[0]);
+    }
+
+    function gainedSkill(s, maxDice) {
+      return validSkill(s, maxDice) && s.permanent == false;
+    }
+
+    // Solo Do Anything 1 es permanente. Máximo 11 habilidades (10 slots + base).
+    function validSkillList(skills, maxDice) {
+      return skills.size() <= 11
+        && (skills.size() < 2 || gainedSkill(skills[1], maxDice))
+        && (skills.size() < 3 || gainedSkill(skills[2], maxDice))
+        && (skills.size() < 4 || gainedSkill(skills[3], maxDice))
+        && (skills.size() < 5 || gainedSkill(skills[4], maxDice))
+        && (skills.size() < 6 || gainedSkill(skills[5], maxDice))
+        && (skills.size() < 7 || gainedSkill(skills[6], maxDice))
+        && (skills.size() < 8 || gainedSkill(skills[7], maxDice))
+        && (skills.size() < 9 || gainedSkill(skills[8], maxDice))
+        && (skills.size() < 10 || gainedSkill(skills[9], maxDice))
+        && (skills.size() < 11 || gainedSkill(skills[10], maxDice));
+    }
+
+    // La hoja solo cambia xp/skills al aplicar el avance de una tirada resuelta,
+    // en el mismo batch que marca la tirada como aplicada.
+    function advancementGuard(r, cid, settings) {
+      let rid = data().lastAppliedRollId;
+      let rollRef = /databases/$(db)/documents/rooms/$(r)/rolls/$(rid);
+      let before = get(rollRef).data;
+      let after = getAfter(rollRef).data;
+      let a = after.avance;
+      let oldC = resource.data;
+      let newC = data();
+      return rid is string
+        && rid != oldC.get('lastAppliedRollId', null)
+        && after.characterId == cid
+        && before.estado == 'resuelta' && after.estado == 'resuelta'
+        && before.avance.estado == 'pendiente' && a.estado == 'aplicado'
+        && a.xpGained == (after.outcome == 'fallo' ? 1 : 0)
+        && newC.xp == oldC.xp + a.xpGained - a.xpSpent
+        && (a.newSkill == null
+              ? (newC.skills == oldC.skills && a.xpSpent == 0 && a.replacedSkillIndex == null)
+              : (a.newSkill.level == after.skillLevel + 1
+                 && gainedSkill(a.newSkill, settings.maxDice)
+                 && a.xpSpent == nonSixes(after.tirada.dados)
+                 && (settings.xpSameRoll || oldC.xp >= a.xpSpent)
+                 && (a.replacedSkillIndex == null
+                       ? newC.skills == oldC.skills.concat([a.newSkill])
+                       : (a.replacedSkillIndex is int
+                          && a.replacedSkillIndex >= 1
+                          && a.replacedSkillIndex < oldC.skills.size()
+                          && newC.skills.size() == oldC.skills.size()
+                          && newC.skills[a.replacedSkillIndex] == a.newSkill
+                          // El resto de la lista queda igual y en el mismo orden.
+                          && newC.skills.removeAll([a.newSkill])
+                               == oldC.skills.removeAll([oldC.skills[a.replacedSkillIndex]])))));
+    }
+
+    // ---------- tiradas ----------
+
+    function skillRefMatches(r, cid, idx, name, level) {
+      let skills = get(characterPath(r, cid)).data.skills;
+      return idx is int && idx >= 0 && idx < skills.size()
+        && skills[idx].name == name && skills[idx].level == level;
+    }
+
+    function historyGrows(n) {
+      let oldH = resource.data.historial;
+      let newH = data().historial;
+      return newH is list && newH.size() == oldH.size() + n
+        && newH[0:oldH.size()] == oldH;
+    }
+
+    function lastHistory(from, to) {
+      let h = data().historial;
+      let e = h[h.size() - 1];
+      return e.keys().hasOnly(['de', 'a', 'por'])
+        && e.de == from && e.a == to && e.por == uid();
+    }
+
+    function step(from, to, keys) {
+      return resource.data.estado == from && data().estado == to
+        && changedOnly(keys.concat(['estado', 'historial', 'updatedAt']))
+        && data().updatedAt == request.time
+        && historyGrows(1) && lastHistory(from, to);
+    }
+
+    function expectedOutcome(p, o, tie) {
+      return (p > o || (p == o && tie == 'player')) ? 'exito' : 'fallo';
+    }
+
+    function isRollOwner() {
+      return resource.data.characterId == uid();
+    }
+
+    // ---------- colecciones ----------
+
+    match /users/{userId} {
+      allow read, write: if authed() && userId == uid();
+    }
+
+    match /roomCodes/{code} {
+      allow get: if authed();
+      allow list, update: if false;
+      allow create: if registered()
+        && data().keys().hasOnly(['roomId', 'createdAt'])
+        && getAfter(roomPath(data().roomId)).data.dmUid == uid()
+        && getAfter(roomPath(data().roomId)).data.code == code;
+      allow delete: if isDM(resource.data.roomId);
+    }
+
+    match /rooms/{r} {
+      allow read: if isMember(r);
+      allow create: if registered()
+        && data().keys().hasOnly(['name', 'dmUid', 'code', 'settings', 'status', 'createdAt'])
+        && data().dmUid == uid()
+        && isStr(data().name, 1, 80)
+        && validSettings(data().settings)
+        && data().status == 'open'
+        && existsAfter(/databases/$(db)/documents/roomCodes/$(data().code));
+      allow update: if isDM(r)
+        && data().dmUid == resource.data.dmUid
+        && isStr(data().name, 1, 80)
+        && validSettings(data().settings)
+        && data().status in ['open', 'closed']
+        && (data().code == resource.data.code
+            || getAfter(/databases/$(db)/documents/roomCodes/$(data().code)).data.roomId == r);
+      allow delete: if isDM(r);
+
+      match /members/{memberId} {
+        allow read: if isMember(r);
+        allow create: if authed() && memberId == uid()
+          && data().keys().hasOnly(['role', 'displayName', 'joinCode', 'characterId', 'joinedAt'])
+          && isStr(data().displayName, 1, 40)
+          && data().characterId == null
+          && data().joinedAt == request.time
+          && ((data().role == 'dm' && getAfter(roomPath(r)).data.dmUid == uid())
+              || (data().role == 'player'
+                  && get(/databases/$(db)/documents/roomCodes/$(data().joinCode)).data.roomId == r));
+        allow update: if (memberId == uid()
+                          && changedOnly(['displayName', 'characterId'])
+                          && isStr(data().displayName, 1, 40)
+                          && (data().characterId == null || data().characterId == uid()))
+                      || isDM(r);
+        allow delete: if memberId == uid() || isDM(r);
+      }
+
+      match /characters/{cid} {
+        allow read: if isMember(r);
+        allow create: if cid == uid() && isMember(r) && !isDM(r)
+          && data().ownerUid == cid
+          && data().xp == 0
+          && data().skills.size() == 1
+          && data().get('lastAppliedRollId', null) == null
+          && basicCharacter(data(), room(r).settings);
+        allow update: if updateCharacter(r, cid, room(r).settings);
+        allow delete: if isDM(r) || cid == uid();
+
+        function updateCharacter(r, cid, settings) {
+          return data().ownerUid == resource.data.ownerUid
+            && basicCharacter(data(), settings)
+            && ((cid == uid() && changedOnly(['name', 'description', 'notes', 'updatedAt']))
+                || (cid == uid() && advancementGuard(r, cid, settings))
+                || (isDM(r) && validSkillList(data().skills, settings.maxDice)));
+        }
+
+        match /inventory/{itemId} {
+          allow read: if cid == uid() || isDM(r);
+          allow create: if isDM(r) && validItem(data());
+          allow update: if (isDM(r) && validItem(data()))
+            || (cid == uid() && changedOnly(['quantity'])
+                && data().quantity is int && data().quantity >= 0);
+          allow delete: if isDM(r);
+        }
+      }
+
+      match /catalog/{itemId} {
+        allow read: if isDM(r);
+        allow create, update: if isDM(r) && validItem(data());
+        allow delete: if isDM(r);
+      }
+
+      match /rolls/{rid} {
+        allow read: if isMember(r);
+        allow delete: if false;
+
+        allow create: if isMember(r) && !isDM(r)
+          && data().keys().hasOnly(['estado', 'characterId', 'declaradoPor', 'accion',
+                                    'skillIndex', 'skillName', 'skillLevel', 'contraoferta', 'notaDm',
+                                    'oposicion', 'tirada', 'outcome', 'narracion', 'tieWinner',
+                                    'avance', 'historial', 'createdAt', 'updatedAt'])
+          && data().estado == 'declarada'
+          && data().characterId == uid()
+          && data().declaradoPor == uid()
+          && isStr(data().accion, 1, 500)
+          && skillRefMatches(r, uid(), data().skillIndex, data().skillName, data().skillLevel)
+          && data().contraoferta == null && data().notaDm == null
+          && data().oposicion == null && data().tirada == null
+          && data().outcome == null && data().narracion == null
+          && data().tieWinner == null && data().avance == null
+          && data().createdAt == request.time && data().updatedAt == request.time
+          && data().historial.size() == 1
+          && data().historial[0].keys().hasOnly(['de', 'a', 'por'])
+          && data().historial[0].de == null && data().historial[0].a == 'declarada'
+          && data().historial[0].por == uid();
+
+        allow update: if isMember(r)
+          && updateRoll(r, rid, resource.data.estado, data().estado);
+
+        // Cada rama comprueba primero el par (estado anterior, estado nuevo) para
+        // cortar la evaluación pronto; luego actor, campos y datos.
+        function updateRoll(r, rid, from, to) {
+          // DM: aprobar
+          return (from == 'declarada' && to == 'aprobada' && isDM(r) && step(from, to, []))
+
+            // DM: contraoferta con otra habilidad del personaje
+            || (from == 'declarada' && to == 'contraoferta' && isDM(r)
+                && step(from, to, ['contraoferta', 'notaDm'])
+                && data().contraoferta.keys().hasOnly(['skillIndex', 'skillName', 'skillLevel'])
+                && skillRefMatches(r, resource.data.characterId, data().contraoferta.skillIndex,
+                                   data().contraoferta.skillName, data().contraoferta.skillLevel)
+                && optStr(data().notaDm, 1000))
+
+            // DM: rechazar
+            || (from == 'declarada' && to == 'rechazada' && isDM(r)
+                && step(from, to, ['notaDm']) && optStr(data().notaDm, 1000))
+
+            // DM: sin tirada → resuelta con narración (dos entradas de historial)
+            || (from == 'declarada' && to == 'resuelta' && isDM(r)
+                && changedOnly(['estado', 'outcome', 'narracion', 'avance', 'historial', 'updatedAt'])
+                && data().updatedAt == request.time
+                && data().outcome == 'narrado'
+                && isStr(data().narracion, 1, 4000)
+                && data().avance == {'estado': 'no_aplica'}
+                && historyGrows(2)
+                && data().historial[data().historial.size() - 2]
+                     == {'de': 'declarada', 'a': 'sin_tirada', 'por': uid()}
+                && lastHistory('sin_tirada', 'resuelta'))
+
+            // Jugador: volver a declarar (aceptar contraoferta o editar)
+            || (from in ['declarada', 'contraoferta', 'rechazada'] && to == 'declarada' && isRollOwner()
+                && changedOnly(['estado', 'accion', 'skillIndex', 'skillName', 'skillLevel',
+                                'contraoferta', 'notaDm', 'historial', 'updatedAt'])
+                && data().updatedAt == request.time
+                && isStr(data().accion, 1, 500)
+                && skillRefMatches(r, uid(), data().skillIndex, data().skillName, data().skillLevel)
+                && data().contraoferta == null && data().notaDm == null
+                && historyGrows(1) && lastHistory(from, to))
+
+            // Jugador: retirar
+            || (from in ['declarada', 'contraoferta', 'rechazada'] && to == 'retirada' && isRollOwner()
+                && step(from, to, []))
+
+            // DM: tirar oposición (visible para el jugador)
+            || (from == 'aprobada' && to == 'oposicion' && isDM(r)
+                && step(from, to, ['oposicion'])
+                && validRoll(data().oposicion, room(r).settings.maxDice))
+
+            // Jugador: tirar tantos dados como el nivel declarado
+            || (from == 'oposicion' && to == 'tirada' && isRollOwner()
+                && step(from, to, ['tirada'])
+                && data().tirada.dados.size() == resource.data.skillLevel
+                && validRoll(data().tirada, room(r).settings.maxDice))
+
+            // Jugador o DM: resolver
+            || (from == 'tirada' && to == 'resuelta' && (isRollOwner() || isDM(r))
+                && step(from, to, ['outcome', 'tieWinner', 'avance'])
+                && data().tieWinner == room(r).settings.tieWinner
+                && data().outcome == expectedOutcome(resource.data.tirada.total,
+                                                     resource.data.oposicion.total,
+                                                     data().tieWinner)
+                && data().avance == {'estado': 'pendiente'})
+
+            // Jugador o DM: aplicar avance (en batch con la hoja; ver advancementGuard)
+            || (from == 'resuelta' && to == 'resuelta' && (isRollOwner() || isDM(r))
+                && resource.data.avance.estado == 'pendiente'
+                && changedOnly(['avance', 'updatedAt'])
+                && data().updatedAt == request.time
+                && data().avance.keys().hasOnly(['estado', 'xpGained', 'xpSpent', 'newSkill', 'replacedSkillIndex'])
+                && data().avance.estado == 'aplicado'
+                && data().avance.xpGained is int
+                && data().avance.xpSpent is int && data().avance.xpSpent >= 0
+                && getAfter(characterPath(r, resource.data.characterId)).data.lastAppliedRollId == rid);
+        }
+      }
+    }
+
+    function validItem(i) {
+      return i.keys().hasOnly(['catalogItemId', 'name', 'description', 'value', 'quantity',
+                               'givenBy', 'givenAt', 'updatedAt'])
+        && isStr(i.name, 1, 80)
+        && optStr(i.get('description', ''), 4000)
+        && (i.get('value', null) == null || (i.value is int && i.value >= 0))
+        && i.quantity is int && i.quantity >= 0;
+    }
+  }
+}
