@@ -12,10 +12,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Nueva tirada en estado `declarada`.
-RollRecordDto declareRoll({
-  required String action,
-  required SkillRefDto skill,
-}) =>
+RollRecordDto declareRoll({required String action, required SkillRefDto skill}) =>
     RustLib.instance.api.crateApiFlowDeclareRoll(action: action, skill: skill);
 
 /// Aplica una acción y devuelve la tirada resultante.
@@ -24,30 +21,19 @@ RollRecordDto rollTransition({
   required FlowActionDto action,
   required ActorDto actor,
   required int maxDice,
-}) => RustLib.instance.api.crateApiFlowRollTransition(
-  record: record,
-  action: action,
-  actor: actor,
-  maxDice: maxDice,
-);
+}) => RustLib.instance.api.crateApiFlowRollTransition(record: record, action: action, actor: actor, maxDice: maxDice);
 
 /// Acciones disponibles para `actor` en el estado actual de la tirada.
 List<FlowActionKindDto> allowedRollActions({
   required RollStateDto state,
   AdvanceStateDto? advance,
   required ActorDto actor,
-}) => RustLib.instance.api.crateApiFlowAllowedRollActions(
-  state: state,
-  advance: advance,
-  actor: actor,
-);
+}) => RustLib.instance.api.crateApiFlowAllowedRollActions(state: state, advance: advance, actor: actor);
 
 /// Identificador del estado tal como se guarda en Firestore.
-String rollStateId({required RollStateDto state}) =>
-    RustLib.instance.api.crateApiFlowRollStateId(state: state);
+String rollStateId({required RollStateDto state}) => RustLib.instance.api.crateApiFlowRollStateId(state: state);
 
-RollStateDto? parseRollState({required String id}) =>
-    RustLib.instance.api.crateApiFlowParseRollState(id: id);
+RollStateDto? parseRollState({required String id}) => RustLib.instance.api.crateApiFlowParseRollState(id: id);
 
 enum ActorDto { dm, owner, other }
 
@@ -59,19 +45,10 @@ class AppliedAdvanceDto {
   final SkillDto? newSkill;
   final int? replacedIndex;
 
-  const AppliedAdvanceDto({
-    required this.xpGained,
-    required this.xpSpent,
-    this.newSkill,
-    this.replacedIndex,
-  });
+  const AppliedAdvanceDto({required this.xpGained, required this.xpSpent, this.newSkill, this.replacedIndex});
 
   @override
-  int get hashCode =>
-      xpGained.hashCode ^
-      xpSpent.hashCode ^
-      newSkill.hashCode ^
-      replacedIndex.hashCode;
+  int get hashCode => xpGained.hashCode ^ xpSpent.hashCode ^ newSkill.hashCode ^ replacedIndex.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -100,23 +77,11 @@ class FlowActionDto {
   final TieWinnerDto? tieWinner;
   final AppliedAdvanceDto? applied;
 
-  const FlowActionDto({
-    required this.kind,
-    this.skill,
-    this.text,
-    this.dice,
-    this.tieWinner,
-    this.applied,
-  });
+  const FlowActionDto({required this.kind, this.skill, this.text, this.dice, this.tieWinner, this.applied});
 
   @override
   int get hashCode =>
-      kind.hashCode ^
-      skill.hashCode ^
-      text.hashCode ^
-      dice.hashCode ^
-      tieWinner.hashCode ^
-      applied.hashCode;
+      kind.hashCode ^ skill.hashCode ^ text.hashCode ^ dice.hashCode ^ tieWinner.hashCode ^ applied.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -234,28 +199,14 @@ class RollRecordDto {
 
 enum RollResultDto { exito, fallo, narrado }
 
-enum RollStateDto {
-  declarada,
-  aprobada,
-  contraoferta,
-  rechazada,
-  sinTirada,
-  oposicion,
-  tirada,
-  resuelta,
-  retirada,
-}
+enum RollStateDto { declarada, aprobada, contraoferta, rechazada, sinTirada, oposicion, tirada, resuelta, retirada }
 
 class SkillRefDto {
   final int index;
   final String name;
   final int level;
 
-  const SkillRefDto({
-    required this.index,
-    required this.name,
-    required this.level,
-  });
+  const SkillRefDto({required this.index, required this.name, required this.level});
 
   @override
   int get hashCode => index.hashCode ^ name.hashCode ^ level.hashCode;

@@ -14,40 +14,23 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 Uint8List rollDice({required int count, required int maxDice}) =>
     RustLib.instance.api.crateApiEngineRollDice(count: count, maxDice: maxDice);
 
-RoomSettingsDto defaultRoomSettings() =>
-    RustLib.instance.api.crateApiEngineDefaultRoomSettings();
+RoomSettingsDto defaultRoomSettings() => RustLib.instance.api.crateApiEngineDefaultRoomSettings();
 
 /// Mensaje de error si los ajustes no son válidos.
 String? validateRoomSettings({required RoomSettingsDto settings}) =>
     RustLib.instance.api.crateApiEngineValidateRoomSettings(settings: settings);
 
-CharacterDto newCharacter({
-  required String name,
-  required String description,
-}) => RustLib.instance.api.crateApiEngineNewCharacter(
-  name: name,
-  description: description,
-);
+CharacterDto newCharacter({required String name, required String description}) =>
+    RustLib.instance.api.crateApiEngineNewCharacter(name: name, description: description);
 
 /// Lista de problemas de la hoja (vacía si es válida).
-List<String> validateCharacter({
-  required CharacterDto character,
-  required RoomSettingsDto settings,
-}) => RustLib.instance.api.crateApiEngineValidateCharacter(
-  character: character,
-  settings: settings,
-);
+List<String> validateCharacter({required CharacterDto character, required RoomSettingsDto settings}) =>
+    RustLib.instance.api.crateApiEngineValidateCharacter(character: character, settings: settings);
 
-SlotUsageDto slotUsage({
-  required CharacterDto character,
-  required RoomSettingsDto settings,
-}) => RustLib.instance.api.crateApiEngineSlotUsage(
-  character: character,
-  settings: settings,
-);
+SlotUsageDto slotUsage({required CharacterDto character, required RoomSettingsDto settings}) =>
+    RustLib.instance.api.crateApiEngineSlotUsage(character: character, settings: settings);
 
-String? validateItem({required ItemDto item}) =>
-    RustLib.instance.api.crateApiEngineValidateItem(item: item);
+String? validateItem({required ItemDto item}) => RustLib.instance.api.crateApiEngineValidateItem(item: item);
 
 RollOutcomeDto resolveRoll({
   required List<int> playerDice,
@@ -98,15 +81,10 @@ class AdvancementChoiceDto {
   /// Solo con `Replace`.
   final int replaceIndex;
 
-  const AdvancementChoiceDto({
-    required this.newSkillName,
-    required this.slot,
-    required this.replaceIndex,
-  });
+  const AdvancementChoiceDto({required this.newSkillName, required this.slot, required this.replaceIndex});
 
   @override
-  int get hashCode =>
-      newSkillName.hashCode ^ slot.hashCode ^ replaceIndex.hashCode;
+  int get hashCode => newSkillName.hashCode ^ slot.hashCode ^ replaceIndex.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -216,12 +194,7 @@ class CharacterDto {
   });
 
   @override
-  int get hashCode =>
-      name.hashCode ^
-      description.hashCode ^
-      notes.hashCode ^
-      xp.hashCode ^
-      skills.hashCode;
+  int get hashCode => name.hashCode ^ description.hashCode ^ notes.hashCode ^ xp.hashCode ^ skills.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -241,16 +214,10 @@ class ItemDto {
   final int? value;
   final int quantity;
 
-  const ItemDto({
-    required this.name,
-    required this.description,
-    this.value,
-    required this.quantity,
-  });
+  const ItemDto({required this.name, required this.description, this.value, required this.quantity});
 
   @override
-  int get hashCode =>
-      name.hashCode ^ description.hashCode ^ value.hashCode ^ quantity.hashCode;
+  int get hashCode => name.hashCode ^ description.hashCode ^ value.hashCode ^ quantity.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -277,11 +244,7 @@ class RollOutcomeDto {
   });
 
   @override
-  int get hashCode =>
-      success.hashCode ^
-      playerTotal.hashCode ^
-      oppositionTotal.hashCode ^
-      xpGained.hashCode;
+  int get hashCode => success.hashCode ^ playerTotal.hashCode ^ oppositionTotal.hashCode ^ xpGained.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -308,11 +271,7 @@ class RoomSettingsDto {
   });
 
   @override
-  int get hashCode =>
-      skillSlots.hashCode ^
-      tieWinner.hashCode ^
-      xpSameRoll.hashCode ^
-      maxDice.hashCode;
+  int get hashCode => skillSlots.hashCode ^ tieWinner.hashCode ^ xpSameRoll.hashCode ^ maxDice.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -331,19 +290,10 @@ class SkillDto {
   final bool permanent;
   final String? derivedFrom;
 
-  const SkillDto({
-    required this.name,
-    required this.level,
-    required this.permanent,
-    this.derivedFrom,
-  });
+  const SkillDto({required this.name, required this.level, required this.permanent, this.derivedFrom});
 
   @override
-  int get hashCode =>
-      name.hashCode ^
-      level.hashCode ^
-      permanent.hashCode ^
-      derivedFrom.hashCode;
+  int get hashCode => name.hashCode ^ level.hashCode ^ permanent.hashCode ^ derivedFrom.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -370,10 +320,7 @@ class SlotUsageDto {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is SlotUsageDto &&
-          runtimeType == other.runtimeType &&
-          used == other.used &&
-          capacity == other.capacity;
+      other is SlotUsageDto && runtimeType == other.runtimeType && used == other.used && capacity == other.capacity;
 }
 
 enum TieWinnerDto { player, opposition }

@@ -9,11 +9,7 @@ void main() {
   late RoomSettingsDto settings;
 
   setUpAll(() async {
-    await RustLib.init(
-      externalLibrary: ExternalLibrary.open(
-        '../target/debug/rust_lib_kovalt_roller.dll',
-      ),
-    );
+    await RustLib.init(externalLibrary: ExternalLibrary.open('../target/debug/rust_lib_kovalt_roller.dll'));
     settings = defaultRoomSettings();
   });
 
@@ -22,10 +18,7 @@ void main() {
     expect(c.name, 'Ana');
     expect(c.skills.single.name, 'Do Anything');
     expect(validateCharacter(character: c, settings: settings), isEmpty);
-    expect(
-      () => newCharacter(name: ' ', description: ''),
-      throwsA(isA<AnyhowException>()),
-    );
+    expect(() => newCharacter(name: ' ', description: ''), throwsA(isA<AnyhowException>()));
   });
 
   test('dados dentro de rango', () {
@@ -50,11 +43,7 @@ void main() {
       playerDice: [6],
       oppositionDice: [2],
       skillIndex: 0,
-      choice: const AdvancementChoiceDto(
-        newSkillName: 'Trepar',
-        slot: SlotChoiceKind.append,
-        replaceIndex: 0,
-      ),
+      choice: const AdvancementChoiceDto(newSkillName: 'Trepar', slot: SlotChoiceKind.append, replaceIndex: 0),
     );
     expect(res.character.skills.last.name, 'Trepar');
     expect(res.character.skills.last.level, 2);
@@ -65,10 +54,7 @@ void main() {
       action: 'Salto',
       skill: const SkillRefDto(index: 0, name: 'Do Anything', level: 1),
     );
-    expect(
-      allowedRollActions(state: r.state, actor: ActorDto.owner),
-      contains(FlowActionKindDto.withdraw),
-    );
+    expect(allowedRollActions(state: r.state, actor: ActorDto.owner), contains(FlowActionKindDto.withdraw));
     r = rollTransition(
       record: r,
       action: const FlowActionDto(kind: FlowActionKindDto.approve),
@@ -80,10 +66,7 @@ void main() {
     expect(
       () => rollTransition(
         record: r,
-        action: FlowActionDto(
-          kind: FlowActionKindDto.rollPlayer,
-          dice: Uint8List.fromList([6]),
-        ),
+        action: FlowActionDto(kind: FlowActionKindDto.rollPlayer, dice: Uint8List.fromList([6])),
         actor: ActorDto.owner,
         maxDice: 10,
       ),

@@ -1,24 +1,26 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'src/rust/api/engine.dart';
+import 'firebase_options.dart';
+import 'src/app/app.dart';
+import 'src/app/config.dart';
 import 'src/rust/frb_generated.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
-  runApp(const KovaltApp());
-}
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-class KovaltApp extends StatelessWidget {
-  const KovaltApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final dice = rollDice(count: 3, maxDice: 10);
-    return MaterialApp(
-      title: 'Kovalt Roller',
-      home: Scaffold(
-        body: Center(child: Text('Kovalt Roller · 3d6: ${dice.join(' ')}')),
-      ),
-    );
+  if (AppConfig.useEmulators) {
+    const host = AppConfig.emulatorHost;
+    await FirebaseAuth.instance.useAuthEmulator(host, 9099);
+    FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
+    FirebaseDatabase.instance.useDatabaseEmulator(host, 9000);
   }
+
+  runApp(const ProviderScope(child: KovaltApp()));
 }

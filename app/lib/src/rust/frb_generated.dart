@@ -10,8 +10,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'frb_generated.dart';
-import 'frb_generated.io.dart'
-    if (dart.library.js_interop) 'frb_generated.web.dart';
+import 'frb_generated.io.dart' if (dart.library.js_interop) 'frb_generated.web.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
@@ -50,12 +49,10 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   static void dispose() => instance.disposeImpl();
 
   @override
-  ApiImplConstructor<RustLibApiImpl, RustLibWire> get apiImplConstructor =>
-      RustLibApiImpl.new;
+  ApiImplConstructor<RustLibApiImpl, RustLibWire> get apiImplConstructor => RustLibApiImpl.new;
 
   @override
-  WireConstructor<RustLibWire> get wireConstructor =>
-      RustLibWire.fromExternalLibrary;
+  WireConstructor<RustLibWire> get wireConstructor => RustLibWire.fromExternalLibrary;
 
   @override
   Future<void> executeRustInitializers() async {
@@ -63,8 +60,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   }
 
   @override
-  ExternalLibraryLoaderConfig get defaultExternalLibraryLoaderConfig =>
-      kDefaultExternalLibraryLoaderConfig;
+  ExternalLibraryLoaderConfig get defaultExternalLibraryLoaderConfig => kDefaultExternalLibraryLoaderConfig;
 
   @override
   String get codegenVersion => '2.13.0';
@@ -72,13 +68,12 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   @override
   int get rustContentHash => -921615055;
 
-  static const kDefaultExternalLibraryLoaderConfig =
-      ExternalLibraryLoaderConfig(
-        stem: 'rust_lib_kovalt_roller',
-        ioDirectory: 'rust/target/release/',
-        webPrefix: 'pkg/',
-        wasmBindgenName: 'wasm_bindgen',
-      );
+  static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
+    stem: 'rust_lib_kovalt_roller',
+    ioDirectory: 'rust/target/release/',
+    webPrefix: 'pkg/',
+    wasmBindgenName: 'wasm_bindgen',
+  );
 }
 
 abstract class RustLibApi extends BaseApi {
@@ -105,19 +100,13 @@ abstract class RustLibApi extends BaseApi {
     AdvancementChoiceDto? choice,
   });
 
-  RollRecordDto crateApiFlowDeclareRoll({
-    required String action,
-    required SkillRefDto skill,
-  });
+  RollRecordDto crateApiFlowDeclareRoll({required String action, required SkillRefDto skill});
 
   RoomSettingsDto crateApiEngineDefaultRoomSettings();
 
   Future<void> crateApiEngineInitApp();
 
-  CharacterDto crateApiEngineNewCharacter({
-    required String name,
-    required String description,
-  });
+  CharacterDto crateApiEngineNewCharacter({required String name, required String description});
 
   RollStateDto? crateApiFlowParseRollState({required String id});
 
@@ -138,21 +127,13 @@ abstract class RustLibApi extends BaseApi {
     required int maxDice,
   });
 
-  SlotUsageDto crateApiEngineSlotUsage({
-    required CharacterDto character,
-    required RoomSettingsDto settings,
-  });
+  SlotUsageDto crateApiEngineSlotUsage({required CharacterDto character, required RoomSettingsDto settings});
 
-  List<String> crateApiEngineValidateCharacter({
-    required CharacterDto character,
-    required RoomSettingsDto settings,
-  });
+  List<String> crateApiEngineValidateCharacter({required CharacterDto character, required RoomSettingsDto settings});
 
   String? crateApiEngineValidateItem({required ItemDto item});
 
-  String? crateApiEngineValidateRoomSettings({
-    required RoomSettingsDto settings,
-  });
+  String? crateApiEngineValidateRoomSettings({required RoomSettingsDto settings});
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -187,29 +168,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateApiEngineAdvancementOptionConstMeta,
-        argValues: [
-          character,
-          settings,
-          playerDice,
-          oppositionDice,
-          skillIndex,
-        ],
+        argValues: [character, settings, playerDice, oppositionDice, skillIndex],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiEngineAdvancementOptionConstMeta =>
-      const TaskConstMeta(
-        debugName: "advancement_option",
-        argNames: [
-          "character",
-          "settings",
-          "playerDice",
-          "oppositionDice",
-          "skillIndex",
-        ],
-      );
+  TaskConstMeta get kCrateApiEngineAdvancementOptionConstMeta => const TaskConstMeta(
+    debugName: "advancement_option",
+    argNames: ["character", "settings", "playerDice", "oppositionDice", "skillIndex"],
+  );
 
   @override
   List<FlowActionKindDto> crateApiFlowAllowedRollActions({
@@ -226,10 +194,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_actor_dto(actor, serializer);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2)!;
         },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_list_flow_action_kind_dto,
-          decodeErrorData: null,
-        ),
+        codec: SseCodec(decodeSuccessData: sse_decode_list_flow_action_kind_dto, decodeErrorData: null),
         constMeta: kCrateApiFlowAllowedRollActionsConstMeta,
         argValues: [state, advance, actor],
         apiImpl: this,
@@ -238,10 +203,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateApiFlowAllowedRollActionsConstMeta =>
-      const TaskConstMeta(
-        debugName: "allowed_roll_actions",
-        argNames: ["state", "advance", "actor"],
-      );
+      const TaskConstMeta(debugName: "allowed_roll_actions", argNames: ["state", "advance", "actor"]);
 
   @override
   ApplyResultDto crateApiEngineApplyRoll({
@@ -264,19 +226,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_opt_box_autoadd_advancement_choice_dto(choice, serializer);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3)!;
         },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_apply_result_dto,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
+        codec: SseCodec(decodeSuccessData: sse_decode_apply_result_dto, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiEngineApplyRollConstMeta,
-        argValues: [
-          character,
-          settings,
-          playerDice,
-          oppositionDice,
-          skillIndex,
-          choice,
-        ],
+        argValues: [character, settings, playerDice, oppositionDice, skillIndex, choice],
         apiImpl: this,
       ),
     );
@@ -284,21 +236,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiEngineApplyRollConstMeta => const TaskConstMeta(
     debugName: "apply_roll",
-    argNames: [
-      "character",
-      "settings",
-      "playerDice",
-      "oppositionDice",
-      "skillIndex",
-      "choice",
-    ],
+    argNames: ["character", "settings", "playerDice", "oppositionDice", "skillIndex", "choice"],
   );
 
   @override
-  RollRecordDto crateApiFlowDeclareRoll({
-    required String action,
-    required SkillRefDto skill,
-  }) {
+  RollRecordDto crateApiFlowDeclareRoll({required String action, required SkillRefDto skill}) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
@@ -307,10 +249,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_box_autoadd_skill_ref_dto(skill, serializer);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
         },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_roll_record_dto,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
+        codec: SseCodec(decodeSuccessData: sse_decode_roll_record_dto, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiFlowDeclareRollConstMeta,
         argValues: [action, skill],
         apiImpl: this,
@@ -318,10 +257,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     );
   }
 
-  TaskConstMeta get kCrateApiFlowDeclareRollConstMeta => const TaskConstMeta(
-    debugName: "declare_roll",
-    argNames: ["action", "skill"],
-  );
+  TaskConstMeta get kCrateApiFlowDeclareRollConstMeta =>
+      const TaskConstMeta(debugName: "declare_roll", argNames: ["action", "skill"]);
 
   @override
   RoomSettingsDto crateApiEngineDefaultRoomSettings() {
@@ -331,10 +268,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
         },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_room_settings_dto,
-          decodeErrorData: null,
-        ),
+        codec: SseCodec(decodeSuccessData: sse_decode_room_settings_dto, decodeErrorData: null),
         constMeta: kCrateApiEngineDefaultRoomSettingsConstMeta,
         argValues: [],
         apiImpl: this,
@@ -351,17 +285,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 6,
-            port: port_,
-          );
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6, port: port_);
         },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: null),
         constMeta: kCrateApiEngineInitAppConstMeta,
         argValues: [],
         apiImpl: this,
@@ -369,14 +295,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     );
   }
 
-  TaskConstMeta get kCrateApiEngineInitAppConstMeta =>
-      const TaskConstMeta(debugName: "init_app", argNames: []);
+  TaskConstMeta get kCrateApiEngineInitAppConstMeta => const TaskConstMeta(debugName: "init_app", argNames: []);
 
   @override
-  CharacterDto crateApiEngineNewCharacter({
-    required String name,
-    required String description,
-  }) {
+  CharacterDto crateApiEngineNewCharacter({required String name, required String description}) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
@@ -385,10 +307,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(description, serializer);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7)!;
         },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_character_dto,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
+        codec: SseCodec(decodeSuccessData: sse_decode_character_dto, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiEngineNewCharacterConstMeta,
         argValues: [name, description],
         apiImpl: this,
@@ -396,10 +315,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     );
   }
 
-  TaskConstMeta get kCrateApiEngineNewCharacterConstMeta => const TaskConstMeta(
-    debugName: "new_character",
-    argNames: ["name", "description"],
-  );
+  TaskConstMeta get kCrateApiEngineNewCharacterConstMeta =>
+      const TaskConstMeta(debugName: "new_character", argNames: ["name", "description"]);
 
   @override
   RollStateDto? crateApiFlowParseRollState({required String id}) {
@@ -410,10 +327,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(id, serializer);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8)!;
         },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_opt_box_autoadd_roll_state_dto,
-          decodeErrorData: null,
-        ),
+        codec: SseCodec(decodeSuccessData: sse_decode_opt_box_autoadd_roll_state_dto, decodeErrorData: null),
         constMeta: kCrateApiFlowParseRollStateConstMeta,
         argValues: [id],
         apiImpl: this,
@@ -439,10 +353,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_box_autoadd_room_settings_dto(settings, serializer);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
         },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_roll_outcome_dto,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
+        codec: SseCodec(decodeSuccessData: sse_decode_roll_outcome_dto, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiEngineResolveRollConstMeta,
         argValues: [playerDice, oppositionDice, settings],
         apiImpl: this,
@@ -450,10 +361,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     );
   }
 
-  TaskConstMeta get kCrateApiEngineResolveRollConstMeta => const TaskConstMeta(
-    debugName: "resolve_roll",
-    argNames: ["playerDice", "oppositionDice", "settings"],
-  );
+  TaskConstMeta get kCrateApiEngineResolveRollConstMeta =>
+      const TaskConstMeta(debugName: "resolve_roll", argNames: ["playerDice", "oppositionDice", "settings"]);
 
   @override
   Uint8List crateApiEngineRollDice({required int count, required int maxDice}) {
@@ -476,10 +385,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     );
   }
 
-  TaskConstMeta get kCrateApiEngineRollDiceConstMeta => const TaskConstMeta(
-    debugName: "roll_dice",
-    argNames: ["count", "maxDice"],
-  );
+  TaskConstMeta get kCrateApiEngineRollDiceConstMeta =>
+      const TaskConstMeta(debugName: "roll_dice", argNames: ["count", "maxDice"]);
 
   @override
   String crateApiFlowRollStateId({required RollStateDto state}) {
@@ -490,10 +397,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_roll_state_dto(state, serializer);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 11)!;
         },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_String,
-          decodeErrorData: null,
-        ),
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: null),
         constMeta: kCrateApiFlowRollStateIdConstMeta,
         argValues: [state],
         apiImpl: this,
@@ -521,10 +425,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_u_8(maxDice, serializer);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 12)!;
         },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_roll_record_dto,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
+        codec: SseCodec(decodeSuccessData: sse_decode_roll_record_dto, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiFlowRollTransitionConstMeta,
         argValues: [record, action, actor, maxDice],
         apiImpl: this,
@@ -532,16 +433,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     );
   }
 
-  TaskConstMeta get kCrateApiFlowRollTransitionConstMeta => const TaskConstMeta(
-    debugName: "roll_transition",
-    argNames: ["record", "action", "actor", "maxDice"],
-  );
+  TaskConstMeta get kCrateApiFlowRollTransitionConstMeta =>
+      const TaskConstMeta(debugName: "roll_transition", argNames: ["record", "action", "actor", "maxDice"]);
 
   @override
-  SlotUsageDto crateApiEngineSlotUsage({
-    required CharacterDto character,
-    required RoomSettingsDto settings,
-  }) {
+  SlotUsageDto crateApiEngineSlotUsage({required CharacterDto character, required RoomSettingsDto settings}) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
@@ -550,10 +446,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_box_autoadd_room_settings_dto(settings, serializer);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 13)!;
         },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_slot_usage_dto,
-          decodeErrorData: null,
-        ),
+        codec: SseCodec(decodeSuccessData: sse_decode_slot_usage_dto, decodeErrorData: null),
         constMeta: kCrateApiEngineSlotUsageConstMeta,
         argValues: [character, settings],
         apiImpl: this,
@@ -561,16 +454,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     );
   }
 
-  TaskConstMeta get kCrateApiEngineSlotUsageConstMeta => const TaskConstMeta(
-    debugName: "slot_usage",
-    argNames: ["character", "settings"],
-  );
+  TaskConstMeta get kCrateApiEngineSlotUsageConstMeta =>
+      const TaskConstMeta(debugName: "slot_usage", argNames: ["character", "settings"]);
 
   @override
-  List<String> crateApiEngineValidateCharacter({
-    required CharacterDto character,
-    required RoomSettingsDto settings,
-  }) {
+  List<String> crateApiEngineValidateCharacter({required CharacterDto character, required RoomSettingsDto settings}) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
@@ -579,10 +467,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_box_autoadd_room_settings_dto(settings, serializer);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 14)!;
         },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_list_String,
-          decodeErrorData: null,
-        ),
+        codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: null),
         constMeta: kCrateApiEngineValidateCharacterConstMeta,
         argValues: [character, settings],
         apiImpl: this,
@@ -591,10 +476,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateApiEngineValidateCharacterConstMeta =>
-      const TaskConstMeta(
-        debugName: "validate_character",
-        argNames: ["character", "settings"],
-      );
+      const TaskConstMeta(debugName: "validate_character", argNames: ["character", "settings"]);
 
   @override
   String? crateApiEngineValidateItem({required ItemDto item}) {
@@ -605,10 +487,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_box_autoadd_item_dto(item, serializer);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 15)!;
         },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_opt_String,
-          decodeErrorData: null,
-        ),
+        codec: SseCodec(decodeSuccessData: sse_decode_opt_String, decodeErrorData: null),
         constMeta: kCrateApiEngineValidateItemConstMeta,
         argValues: [item],
         apiImpl: this,
@@ -620,9 +499,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "validate_item", argNames: ["item"]);
 
   @override
-  String? crateApiEngineValidateRoomSettings({
-    required RoomSettingsDto settings,
-  }) {
+  String? crateApiEngineValidateRoomSettings({required RoomSettingsDto settings}) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
@@ -630,10 +507,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_box_autoadd_room_settings_dto(settings, serializer);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 16)!;
         },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_opt_String,
-          decodeErrorData: null,
-        ),
+        codec: SseCodec(decodeSuccessData: sse_decode_opt_String, decodeErrorData: null),
         constMeta: kCrateApiEngineValidateRoomSettingsConstMeta,
         argValues: [settings],
         apiImpl: this,
@@ -642,10 +516,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateApiEngineValidateRoomSettingsConstMeta =>
-      const TaskConstMeta(
-        debugName: "validate_room_settings",
-        argNames: ["settings"],
-      );
+      const TaskConstMeta(debugName: "validate_room_settings", argNames: ["settings"]);
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
@@ -675,8 +546,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   AdvancementChoiceDto dco_decode_advancement_choice_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return AdvancementChoiceDto(
       newSkillName: dco_decode_String(arr[0]),
       slot: dco_decode_slot_choice_kind(arr[1]),
@@ -688,8 +558,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   AdvancementOptionDto dco_decode_advancement_option_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 7)
-      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return AdvancementOptionDto(
       sourceSkillIndex: dco_decode_u_32(arr[0]),
       sourceLabel: dco_decode_String(arr[1]),
@@ -705,8 +574,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   AppliedAdvanceDto dco_decode_applied_advance_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return AppliedAdvanceDto(
       xpGained: dco_decode_u_32(arr[0]),
       xpSpent: dco_decode_u_32(arr[1]),
@@ -719,8 +587,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ApplyResultDto dco_decode_apply_result_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 6)
-      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return ApplyResultDto(
       character: dco_decode_character_dto(arr[0]),
       xpGained: dco_decode_u_32(arr[1]),
@@ -744,17 +611,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  AdvancementChoiceDto dco_decode_box_autoadd_advancement_choice_dto(
-    dynamic raw,
-  ) {
+  AdvancementChoiceDto dco_decode_box_autoadd_advancement_choice_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_advancement_choice_dto(raw);
   }
 
   @protected
-  AdvancementOptionDto dco_decode_box_autoadd_advancement_option_dto(
-    dynamic raw,
-  ) {
+  AdvancementOptionDto dco_decode_box_autoadd_advancement_option_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_advancement_option_dto(raw);
   }
@@ -835,8 +698,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   CharacterDto dco_decode_character_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return CharacterDto(
       name: dco_decode_String(arr[0]),
       description: dco_decode_String(arr[1]),
@@ -850,8 +712,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   FlowActionDto dco_decode_flow_action_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 6)
-      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return FlowActionDto(
       kind: dco_decode_flow_action_kind_dto(arr[0]),
       skill: dco_decode_opt_box_autoadd_skill_ref_dto(arr[1]),
@@ -872,8 +733,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   HistoryEntryDto dco_decode_history_entry_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return HistoryEntryDto(
       from: dco_decode_opt_box_autoadd_roll_state_dto(arr[0]),
       to: dco_decode_roll_state_dto(arr[1]),
@@ -891,8 +751,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ItemDto dco_decode_item_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return ItemDto(
       name: dco_decode_String(arr[0]),
       description: dco_decode_String(arr[1]),
@@ -950,29 +809,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  AdvancementChoiceDto? dco_decode_opt_box_autoadd_advancement_choice_dto(
-    dynamic raw,
-  ) {
+  AdvancementChoiceDto? dco_decode_opt_box_autoadd_advancement_choice_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw == null
-        ? null
-        : dco_decode_box_autoadd_advancement_choice_dto(raw);
+    return raw == null ? null : dco_decode_box_autoadd_advancement_choice_dto(raw);
   }
 
   @protected
-  AdvancementOptionDto? dco_decode_opt_box_autoadd_advancement_option_dto(
-    dynamic raw,
-  ) {
+  AdvancementOptionDto? dco_decode_opt_box_autoadd_advancement_option_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw == null
-        ? null
-        : dco_decode_box_autoadd_advancement_option_dto(raw);
+    return raw == null ? null : dco_decode_box_autoadd_advancement_option_dto(raw);
   }
 
   @protected
-  AppliedAdvanceDto? dco_decode_opt_box_autoadd_applied_advance_dto(
-    dynamic raw,
-  ) {
+  AppliedAdvanceDto? dco_decode_opt_box_autoadd_applied_advance_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_applied_advance_dto(raw);
   }
@@ -1023,8 +872,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RollOutcomeDto dco_decode_roll_outcome_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return RollOutcomeDto(
       success: dco_decode_bool(arr[0]),
       playerTotal: dco_decode_u_32(arr[1]),
@@ -1037,8 +885,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RollRecordDto dco_decode_roll_record_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 13)
-      throw Exception('unexpected arr length: expect 13 but see ${arr.length}');
+    if (arr.length != 13) throw Exception('unexpected arr length: expect 13 but see ${arr.length}');
     return RollRecordDto(
       state: dco_decode_roll_state_dto(arr[0]),
       action: dco_decode_String(arr[1]),
@@ -1072,8 +919,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RoomSettingsDto dco_decode_room_settings_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return RoomSettingsDto(
       skillSlots: dco_decode_u_8(arr[0]),
       tieWinner: dco_decode_tie_winner_dto(arr[1]),
@@ -1086,8 +932,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   SkillDto dco_decode_skill_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return SkillDto(
       name: dco_decode_String(arr[0]),
       level: dco_decode_u_8(arr[1]),
@@ -1100,13 +945,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   SkillRefDto dco_decode_skill_ref_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-    return SkillRefDto(
-      index: dco_decode_u_32(arr[0]),
-      name: dco_decode_String(arr[1]),
-      level: dco_decode_u_8(arr[2]),
-    );
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return SkillRefDto(index: dco_decode_u_32(arr[0]), name: dco_decode_String(arr[1]), level: dco_decode_u_8(arr[2]));
   }
 
   @protected
@@ -1119,12 +959,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   SlotUsageDto dco_decode_slot_usage_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-    return SlotUsageDto(
-      used: dco_decode_u_32(arr[0]),
-      capacity: dco_decode_u_32(arr[1]),
-    );
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return SlotUsageDto(used: dco_decode_u_32(arr[0]), capacity: dco_decode_u_32(arr[1]));
   }
 
   @protected
@@ -1180,24 +1016,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  AdvancementChoiceDto sse_decode_advancement_choice_dto(
-    SseDeserializer deserializer,
-  ) {
+  AdvancementChoiceDto sse_decode_advancement_choice_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_newSkillName = sse_decode_String(deserializer);
     var var_slot = sse_decode_slot_choice_kind(deserializer);
     var var_replaceIndex = sse_decode_u_32(deserializer);
-    return AdvancementChoiceDto(
-      newSkillName: var_newSkillName,
-      slot: var_slot,
-      replaceIndex: var_replaceIndex,
-    );
+    return AdvancementChoiceDto(newSkillName: var_newSkillName, slot: var_slot, replaceIndex: var_replaceIndex);
   }
 
   @protected
-  AdvancementOptionDto sse_decode_advancement_option_dto(
-    SseDeserializer deserializer,
-  ) {
+  AdvancementOptionDto sse_decode_advancement_option_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_sourceSkillIndex = sse_decode_u_32(deserializer);
     var var_sourceLabel = sse_decode_String(deserializer);
@@ -1218,9 +1046,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  AppliedAdvanceDto sse_decode_applied_advance_dto(
-    SseDeserializer deserializer,
-  ) {
+  AppliedAdvanceDto sse_decode_applied_advance_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_xpGained = sse_decode_u_32(deserializer);
     var var_xpSpent = sse_decode_u_32(deserializer);
@@ -1260,49 +1086,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  AdvanceStateDto sse_decode_box_autoadd_advance_state_dto(
-    SseDeserializer deserializer,
-  ) {
+  AdvanceStateDto sse_decode_box_autoadd_advance_state_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_advance_state_dto(deserializer));
   }
 
   @protected
-  AdvancementChoiceDto sse_decode_box_autoadd_advancement_choice_dto(
-    SseDeserializer deserializer,
-  ) {
+  AdvancementChoiceDto sse_decode_box_autoadd_advancement_choice_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_advancement_choice_dto(deserializer));
   }
 
   @protected
-  AdvancementOptionDto sse_decode_box_autoadd_advancement_option_dto(
-    SseDeserializer deserializer,
-  ) {
+  AdvancementOptionDto sse_decode_box_autoadd_advancement_option_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_advancement_option_dto(deserializer));
   }
 
   @protected
-  AppliedAdvanceDto sse_decode_box_autoadd_applied_advance_dto(
-    SseDeserializer deserializer,
-  ) {
+  AppliedAdvanceDto sse_decode_box_autoadd_applied_advance_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_applied_advance_dto(deserializer));
   }
 
   @protected
-  CharacterDto sse_decode_box_autoadd_character_dto(
-    SseDeserializer deserializer,
-  ) {
+  CharacterDto sse_decode_box_autoadd_character_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_character_dto(deserializer));
   }
 
   @protected
-  FlowActionDto sse_decode_box_autoadd_flow_action_dto(
-    SseDeserializer deserializer,
-  ) {
+  FlowActionDto sse_decode_box_autoadd_flow_action_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_flow_action_dto(deserializer));
   }
@@ -1314,33 +1128,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RollRecordDto sse_decode_box_autoadd_roll_record_dto(
-    SseDeserializer deserializer,
-  ) {
+  RollRecordDto sse_decode_box_autoadd_roll_record_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_roll_record_dto(deserializer));
   }
 
   @protected
-  RollResultDto sse_decode_box_autoadd_roll_result_dto(
-    SseDeserializer deserializer,
-  ) {
+  RollResultDto sse_decode_box_autoadd_roll_result_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_roll_result_dto(deserializer));
   }
 
   @protected
-  RollStateDto sse_decode_box_autoadd_roll_state_dto(
-    SseDeserializer deserializer,
-  ) {
+  RollStateDto sse_decode_box_autoadd_roll_state_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_roll_state_dto(deserializer));
   }
 
   @protected
-  RoomSettingsDto sse_decode_box_autoadd_room_settings_dto(
-    SseDeserializer deserializer,
-  ) {
+  RoomSettingsDto sse_decode_box_autoadd_room_settings_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_room_settings_dto(deserializer));
   }
@@ -1352,17 +1158,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  SkillRefDto sse_decode_box_autoadd_skill_ref_dto(
-    SseDeserializer deserializer,
-  ) {
+  SkillRefDto sse_decode_box_autoadd_skill_ref_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_skill_ref_dto(deserializer));
   }
 
   @protected
-  TieWinnerDto sse_decode_box_autoadd_tie_winner_dto(
-    SseDeserializer deserializer,
-  ) {
+  TieWinnerDto sse_decode_box_autoadd_tie_winner_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_tie_winner_dto(deserializer));
   }
@@ -1381,13 +1183,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_notes = sse_decode_String(deserializer);
     var var_xp = sse_decode_u_32(deserializer);
     var var_skills = sse_decode_list_skill_dto(deserializer);
-    return CharacterDto(
-      name: var_name,
-      description: var_description,
-      notes: var_notes,
-      xp: var_xp,
-      skills: var_skills,
-    );
+    return CharacterDto(name: var_name, description: var_description, notes: var_notes, xp: var_xp, skills: var_skills);
   }
 
   @protected
@@ -1398,9 +1194,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_text = sse_decode_opt_String(deserializer);
     var var_dice = sse_decode_opt_list_prim_u_8_strict(deserializer);
     var var_tieWinner = sse_decode_opt_box_autoadd_tie_winner_dto(deserializer);
-    var var_applied = sse_decode_opt_box_autoadd_applied_advance_dto(
-      deserializer,
-    );
+    var var_applied = sse_decode_opt_box_autoadd_applied_advance_dto(deserializer);
     return FlowActionDto(
       kind: var_kind,
       skill: var_skill,
@@ -1412,9 +1206,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  FlowActionKindDto sse_decode_flow_action_kind_dto(
-    SseDeserializer deserializer,
-  ) {
+  FlowActionKindDto sse_decode_flow_action_kind_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_i_32(deserializer);
     return FlowActionKindDto.values[inner];
@@ -1442,12 +1234,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_description = sse_decode_String(deserializer);
     var var_value = sse_decode_opt_box_autoadd_u_32(deserializer);
     var var_quantity = sse_decode_u_32(deserializer);
-    return ItemDto(
-      name: var_name,
-      description: var_description,
-      value: var_value,
-      quantity: var_quantity,
-    );
+    return ItemDto(name: var_name, description: var_description, value: var_value, quantity: var_quantity);
   }
 
   @protected
@@ -1463,9 +1250,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<FlowActionKindDto> sse_decode_list_flow_action_kind_dto(
-    SseDeserializer deserializer,
-  ) {
+  List<FlowActionKindDto> sse_decode_list_flow_action_kind_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     var len_ = sse_decode_i_32(deserializer);
@@ -1477,9 +1262,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<HistoryEntryDto> sse_decode_list_history_entry_dto(
-    SseDeserializer deserializer,
-  ) {
+  List<HistoryEntryDto> sse_decode_list_history_entry_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     var len_ = sse_decode_i_32(deserializer);
@@ -1528,9 +1311,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  AdvanceStateDto? sse_decode_opt_box_autoadd_advance_state_dto(
-    SseDeserializer deserializer,
-  ) {
+  AdvanceStateDto? sse_decode_opt_box_autoadd_advance_state_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
@@ -1541,9 +1322,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  AdvancementChoiceDto? sse_decode_opt_box_autoadd_advancement_choice_dto(
-    SseDeserializer deserializer,
-  ) {
+  AdvancementChoiceDto? sse_decode_opt_box_autoadd_advancement_choice_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
@@ -1554,9 +1333,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  AdvancementOptionDto? sse_decode_opt_box_autoadd_advancement_option_dto(
-    SseDeserializer deserializer,
-  ) {
+  AdvancementOptionDto? sse_decode_opt_box_autoadd_advancement_option_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
@@ -1567,9 +1344,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  AppliedAdvanceDto? sse_decode_opt_box_autoadd_applied_advance_dto(
-    SseDeserializer deserializer,
-  ) {
+  AppliedAdvanceDto? sse_decode_opt_box_autoadd_applied_advance_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
@@ -1580,9 +1355,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RollResultDto? sse_decode_opt_box_autoadd_roll_result_dto(
-    SseDeserializer deserializer,
-  ) {
+  RollResultDto? sse_decode_opt_box_autoadd_roll_result_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
@@ -1593,9 +1366,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RollStateDto? sse_decode_opt_box_autoadd_roll_state_dto(
-    SseDeserializer deserializer,
-  ) {
+  RollStateDto? sse_decode_opt_box_autoadd_roll_state_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
@@ -1617,9 +1388,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  SkillRefDto? sse_decode_opt_box_autoadd_skill_ref_dto(
-    SseDeserializer deserializer,
-  ) {
+  SkillRefDto? sse_decode_opt_box_autoadd_skill_ref_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
@@ -1630,9 +1399,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  TieWinnerDto? sse_decode_opt_box_autoadd_tie_winner_dto(
-    SseDeserializer deserializer,
-  ) {
+  TieWinnerDto? sse_decode_opt_box_autoadd_tie_winner_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
@@ -1685,21 +1452,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_state = sse_decode_roll_state_dto(deserializer);
     var var_action = sse_decode_String(deserializer);
     var var_skill = sse_decode_skill_ref_dto(deserializer);
-    var var_counterOffer = sse_decode_opt_box_autoadd_skill_ref_dto(
-      deserializer,
-    );
+    var var_counterOffer = sse_decode_opt_box_autoadd_skill_ref_dto(deserializer);
     var var_dmNote = sse_decode_opt_String(deserializer);
     var var_opposition = sse_decode_opt_list_prim_u_8_strict(deserializer);
     var var_playerRoll = sse_decode_opt_list_prim_u_8_strict(deserializer);
     var var_result = sse_decode_opt_box_autoadd_roll_result_dto(deserializer);
     var var_narration = sse_decode_opt_String(deserializer);
     var var_tieWinner = sse_decode_opt_box_autoadd_tie_winner_dto(deserializer);
-    var var_advance = sse_decode_opt_box_autoadd_advance_state_dto(
-      deserializer,
-    );
-    var var_applied = sse_decode_opt_box_autoadd_applied_advance_dto(
-      deserializer,
-    );
+    var var_advance = sse_decode_opt_box_autoadd_advance_state_dto(deserializer);
+    var var_applied = sse_decode_opt_box_autoadd_applied_advance_dto(deserializer);
     var var_history = sse_decode_list_history_entry_dto(deserializer);
     return RollRecordDto(
       state: var_state,
@@ -1754,12 +1515,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_level = sse_decode_u_8(deserializer);
     var var_permanent = sse_decode_bool(deserializer);
     var var_derivedFrom = sse_decode_opt_String(deserializer);
-    return SkillDto(
-      name: var_name,
-      level: var_level,
-      permanent: var_permanent,
-      derivedFrom: var_derivedFrom,
-    );
+    return SkillDto(name: var_name, level: var_level, permanent: var_permanent, derivedFrom: var_derivedFrom);
   }
 
   @protected
@@ -1811,10 +1567,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_AnyhowException(
-    AnyhowException self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_AnyhowException(AnyhowException self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.message, serializer);
   }
@@ -1832,19 +1585,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_advance_state_dto(
-    AdvanceStateDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_advance_state_dto(AdvanceStateDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.index, serializer);
   }
 
   @protected
-  void sse_encode_advancement_choice_dto(
-    AdvancementChoiceDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_advancement_choice_dto(AdvancementChoiceDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.newSkillName, serializer);
     sse_encode_slot_choice_kind(self.slot, serializer);
@@ -1852,10 +1599,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_advancement_option_dto(
-    AdvancementOptionDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_advancement_option_dto(AdvancementOptionDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self.sourceSkillIndex, serializer);
     sse_encode_String(self.sourceLabel, serializer);
@@ -1867,10 +1611,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_applied_advance_dto(
-    AppliedAdvanceDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_applied_advance_dto(AppliedAdvanceDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self.xpGained, serializer);
     sse_encode_u_32(self.xpSpent, serializer);
@@ -1879,10 +1620,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_apply_result_dto(
-    ApplyResultDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_apply_result_dto(ApplyResultDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_character_dto(self.character, serializer);
     sse_encode_u_32(self.xpGained, serializer);
@@ -1899,55 +1637,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_box_autoadd_advance_state_dto(
-    AdvanceStateDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_box_autoadd_advance_state_dto(AdvanceStateDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_advance_state_dto(self, serializer);
   }
 
   @protected
-  void sse_encode_box_autoadd_advancement_choice_dto(
-    AdvancementChoiceDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_box_autoadd_advancement_choice_dto(AdvancementChoiceDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_advancement_choice_dto(self, serializer);
   }
 
   @protected
-  void sse_encode_box_autoadd_advancement_option_dto(
-    AdvancementOptionDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_box_autoadd_advancement_option_dto(AdvancementOptionDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_advancement_option_dto(self, serializer);
   }
 
   @protected
-  void sse_encode_box_autoadd_applied_advance_dto(
-    AppliedAdvanceDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_box_autoadd_applied_advance_dto(AppliedAdvanceDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_applied_advance_dto(self, serializer);
   }
 
   @protected
-  void sse_encode_box_autoadd_character_dto(
-    CharacterDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_box_autoadd_character_dto(CharacterDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_character_dto(self, serializer);
   }
 
   @protected
-  void sse_encode_box_autoadd_flow_action_dto(
-    FlowActionDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_box_autoadd_flow_action_dto(FlowActionDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_flow_action_dto(self, serializer);
   }
@@ -1959,64 +1679,43 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_box_autoadd_roll_record_dto(
-    RollRecordDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_box_autoadd_roll_record_dto(RollRecordDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_roll_record_dto(self, serializer);
   }
 
   @protected
-  void sse_encode_box_autoadd_roll_result_dto(
-    RollResultDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_box_autoadd_roll_result_dto(RollResultDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_roll_result_dto(self, serializer);
   }
 
   @protected
-  void sse_encode_box_autoadd_roll_state_dto(
-    RollStateDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_box_autoadd_roll_state_dto(RollStateDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_roll_state_dto(self, serializer);
   }
 
   @protected
-  void sse_encode_box_autoadd_room_settings_dto(
-    RoomSettingsDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_box_autoadd_room_settings_dto(RoomSettingsDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_room_settings_dto(self, serializer);
   }
 
   @protected
-  void sse_encode_box_autoadd_skill_dto(
-    SkillDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_box_autoadd_skill_dto(SkillDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_skill_dto(self, serializer);
   }
 
   @protected
-  void sse_encode_box_autoadd_skill_ref_dto(
-    SkillRefDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_box_autoadd_skill_ref_dto(SkillRefDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_skill_ref_dto(self, serializer);
   }
 
   @protected
-  void sse_encode_box_autoadd_tie_winner_dto(
-    TieWinnerDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_box_autoadd_tie_winner_dto(TieWinnerDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_tie_winner_dto(self, serializer);
   }
@@ -2038,10 +1737,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_flow_action_dto(
-    FlowActionDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_flow_action_dto(FlowActionDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_flow_action_kind_dto(self.kind, serializer);
     sse_encode_opt_box_autoadd_skill_ref_dto(self.skill, serializer);
@@ -2052,19 +1748,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_flow_action_kind_dto(
-    FlowActionKindDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_flow_action_kind_dto(FlowActionKindDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.index, serializer);
   }
 
   @protected
-  void sse_encode_history_entry_dto(
-    HistoryEntryDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_history_entry_dto(HistoryEntryDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_opt_box_autoadd_roll_state_dto(self.from, serializer);
     sse_encode_roll_state_dto(self.to, serializer);
@@ -2096,10 +1786,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_list_flow_action_kind_dto(
-    List<FlowActionKindDto> self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_list_flow_action_kind_dto(List<FlowActionKindDto> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
@@ -2108,10 +1795,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_list_history_entry_dto(
-    List<HistoryEntryDto> self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_list_history_entry_dto(List<HistoryEntryDto> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
@@ -2120,32 +1804,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_list_prim_u_8_loose(
-    List<int> self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
-    serializer.buffer.putUint8List(
-      self is Uint8List ? self : Uint8List.fromList(self),
-    );
+    serializer.buffer.putUint8List(self is Uint8List ? self : Uint8List.fromList(self));
   }
 
   @protected
-  void sse_encode_list_prim_u_8_strict(
-    Uint8List self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_list_prim_u_8_strict(Uint8List self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putUint8List(self);
   }
 
   @protected
-  void sse_encode_list_skill_dto(
-    List<SkillDto> self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_list_skill_dto(List<SkillDto> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
@@ -2164,10 +1837,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_opt_box_autoadd_advance_state_dto(
-    AdvanceStateDto? self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_opt_box_autoadd_advance_state_dto(AdvanceStateDto? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     sse_encode_bool(self != null, serializer);
@@ -2177,10 +1847,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_opt_box_autoadd_advancement_choice_dto(
-    AdvancementChoiceDto? self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_opt_box_autoadd_advancement_choice_dto(AdvancementChoiceDto? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     sse_encode_bool(self != null, serializer);
@@ -2190,10 +1857,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_opt_box_autoadd_advancement_option_dto(
-    AdvancementOptionDto? self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_opt_box_autoadd_advancement_option_dto(AdvancementOptionDto? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     sse_encode_bool(self != null, serializer);
@@ -2203,10 +1867,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_opt_box_autoadd_applied_advance_dto(
-    AppliedAdvanceDto? self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_opt_box_autoadd_applied_advance_dto(AppliedAdvanceDto? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     sse_encode_bool(self != null, serializer);
@@ -2216,10 +1877,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_opt_box_autoadd_roll_result_dto(
-    RollResultDto? self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_opt_box_autoadd_roll_result_dto(RollResultDto? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     sse_encode_bool(self != null, serializer);
@@ -2229,10 +1887,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_opt_box_autoadd_roll_state_dto(
-    RollStateDto? self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_opt_box_autoadd_roll_state_dto(RollStateDto? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     sse_encode_bool(self != null, serializer);
@@ -2242,10 +1897,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_opt_box_autoadd_skill_dto(
-    SkillDto? self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_opt_box_autoadd_skill_dto(SkillDto? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     sse_encode_bool(self != null, serializer);
@@ -2255,10 +1907,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_opt_box_autoadd_skill_ref_dto(
-    SkillRefDto? self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_opt_box_autoadd_skill_ref_dto(SkillRefDto? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     sse_encode_bool(self != null, serializer);
@@ -2268,10 +1917,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_opt_box_autoadd_tie_winner_dto(
-    TieWinnerDto? self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_opt_box_autoadd_tie_winner_dto(TieWinnerDto? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     sse_encode_bool(self != null, serializer);
@@ -2291,10 +1937,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_opt_list_prim_u_8_strict(
-    Uint8List? self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_opt_list_prim_u_8_strict(Uint8List? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     sse_encode_bool(self != null, serializer);
@@ -2304,10 +1947,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_roll_outcome_dto(
-    RollOutcomeDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_roll_outcome_dto(RollOutcomeDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_bool(self.success, serializer);
     sse_encode_u_32(self.playerTotal, serializer);
@@ -2316,10 +1956,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_roll_record_dto(
-    RollRecordDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_roll_record_dto(RollRecordDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_roll_state_dto(self.state, serializer);
     sse_encode_String(self.action, serializer);
@@ -2337,10 +1974,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_roll_result_dto(
-    RollResultDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_roll_result_dto(RollResultDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.index, serializer);
   }
@@ -2352,10 +1986,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_room_settings_dto(
-    RoomSettingsDto self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_room_settings_dto(RoomSettingsDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_8(self.skillSlots, serializer);
     sse_encode_tie_winner_dto(self.tieWinner, serializer);
@@ -2381,10 +2012,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_slot_choice_kind(
-    SlotChoiceKind self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_slot_choice_kind(SlotChoiceKind self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.index, serializer);
   }

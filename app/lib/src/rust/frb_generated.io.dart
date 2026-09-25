@@ -53,14 +53,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AdvanceStateDto dco_decode_box_autoadd_advance_state_dto(dynamic raw);
 
   @protected
-  AdvancementChoiceDto dco_decode_box_autoadd_advancement_choice_dto(
-    dynamic raw,
-  );
+  AdvancementChoiceDto dco_decode_box_autoadd_advancement_choice_dto(dynamic raw);
 
   @protected
-  AdvancementOptionDto dco_decode_box_autoadd_advancement_option_dto(
-    dynamic raw,
-  );
+  AdvancementOptionDto dco_decode_box_autoadd_advancement_option_dto(dynamic raw);
 
   @protected
   AppliedAdvanceDto dco_decode_box_autoadd_applied_advance_dto(dynamic raw);
@@ -141,19 +137,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AdvanceStateDto? dco_decode_opt_box_autoadd_advance_state_dto(dynamic raw);
 
   @protected
-  AdvancementChoiceDto? dco_decode_opt_box_autoadd_advancement_choice_dto(
-    dynamic raw,
-  );
+  AdvancementChoiceDto? dco_decode_opt_box_autoadd_advancement_choice_dto(dynamic raw);
 
   @protected
-  AdvancementOptionDto? dco_decode_opt_box_autoadd_advancement_option_dto(
-    dynamic raw,
-  );
+  AdvancementOptionDto? dco_decode_opt_box_autoadd_advancement_option_dto(dynamic raw);
 
   @protected
-  AppliedAdvanceDto? dco_decode_opt_box_autoadd_applied_advance_dto(
-    dynamic raw,
-  );
+  AppliedAdvanceDto? dco_decode_opt_box_autoadd_applied_advance_dto(dynamic raw);
 
   @protected
   RollResultDto? dco_decode_opt_box_autoadd_roll_result_dto(dynamic raw);
@@ -228,19 +218,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AdvanceStateDto sse_decode_advance_state_dto(SseDeserializer deserializer);
 
   @protected
-  AdvancementChoiceDto sse_decode_advancement_choice_dto(
-    SseDeserializer deserializer,
-  );
+  AdvancementChoiceDto sse_decode_advancement_choice_dto(SseDeserializer deserializer);
 
   @protected
-  AdvancementOptionDto sse_decode_advancement_option_dto(
-    SseDeserializer deserializer,
-  );
+  AdvancementOptionDto sse_decode_advancement_option_dto(SseDeserializer deserializer);
 
   @protected
-  AppliedAdvanceDto sse_decode_applied_advance_dto(
-    SseDeserializer deserializer,
-  );
+  AppliedAdvanceDto sse_decode_applied_advance_dto(SseDeserializer deserializer);
 
   @protected
   ApplyResultDto sse_decode_apply_result_dto(SseDeserializer deserializer);
@@ -249,70 +233,46 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
-  AdvanceStateDto sse_decode_box_autoadd_advance_state_dto(
-    SseDeserializer deserializer,
-  );
+  AdvanceStateDto sse_decode_box_autoadd_advance_state_dto(SseDeserializer deserializer);
 
   @protected
-  AdvancementChoiceDto sse_decode_box_autoadd_advancement_choice_dto(
-    SseDeserializer deserializer,
-  );
+  AdvancementChoiceDto sse_decode_box_autoadd_advancement_choice_dto(SseDeserializer deserializer);
 
   @protected
-  AdvancementOptionDto sse_decode_box_autoadd_advancement_option_dto(
-    SseDeserializer deserializer,
-  );
+  AdvancementOptionDto sse_decode_box_autoadd_advancement_option_dto(SseDeserializer deserializer);
 
   @protected
-  AppliedAdvanceDto sse_decode_box_autoadd_applied_advance_dto(
-    SseDeserializer deserializer,
-  );
+  AppliedAdvanceDto sse_decode_box_autoadd_applied_advance_dto(SseDeserializer deserializer);
 
   @protected
-  CharacterDto sse_decode_box_autoadd_character_dto(
-    SseDeserializer deserializer,
-  );
+  CharacterDto sse_decode_box_autoadd_character_dto(SseDeserializer deserializer);
 
   @protected
-  FlowActionDto sse_decode_box_autoadd_flow_action_dto(
-    SseDeserializer deserializer,
-  );
+  FlowActionDto sse_decode_box_autoadd_flow_action_dto(SseDeserializer deserializer);
 
   @protected
   ItemDto sse_decode_box_autoadd_item_dto(SseDeserializer deserializer);
 
   @protected
-  RollRecordDto sse_decode_box_autoadd_roll_record_dto(
-    SseDeserializer deserializer,
-  );
+  RollRecordDto sse_decode_box_autoadd_roll_record_dto(SseDeserializer deserializer);
 
   @protected
-  RollResultDto sse_decode_box_autoadd_roll_result_dto(
-    SseDeserializer deserializer,
-  );
+  RollResultDto sse_decode_box_autoadd_roll_result_dto(SseDeserializer deserializer);
 
   @protected
-  RollStateDto sse_decode_box_autoadd_roll_state_dto(
-    SseDeserializer deserializer,
-  );
+  RollStateDto sse_decode_box_autoadd_roll_state_dto(SseDeserializer deserializer);
 
   @protected
-  RoomSettingsDto sse_decode_box_autoadd_room_settings_dto(
-    SseDeserializer deserializer,
-  );
+  RoomSettingsDto sse_decode_box_autoadd_room_settings_dto(SseDeserializer deserializer);
 
   @protected
   SkillDto sse_decode_box_autoadd_skill_dto(SseDeserializer deserializer);
 
   @protected
-  SkillRefDto sse_decode_box_autoadd_skill_ref_dto(
-    SseDeserializer deserializer,
-  );
+  SkillRefDto sse_decode_box_autoadd_skill_ref_dto(SseDeserializer deserializer);
 
   @protected
-  TieWinnerDto sse_decode_box_autoadd_tie_winner_dto(
-    SseDeserializer deserializer,
-  );
+  TieWinnerDto sse_decode_box_autoadd_tie_winner_dto(SseDeserializer deserializer);
 
   @protected
   int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
@@ -324,9 +284,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FlowActionDto sse_decode_flow_action_dto(SseDeserializer deserializer);
 
   @protected
-  FlowActionKindDto sse_decode_flow_action_kind_dto(
-    SseDeserializer deserializer,
-  );
+  FlowActionKindDto sse_decode_flow_action_kind_dto(SseDeserializer deserializer);
 
   @protected
   HistoryEntryDto sse_decode_history_entry_dto(SseDeserializer deserializer);
@@ -341,14 +299,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
-  List<FlowActionKindDto> sse_decode_list_flow_action_kind_dto(
-    SseDeserializer deserializer,
-  );
+  List<FlowActionKindDto> sse_decode_list_flow_action_kind_dto(SseDeserializer deserializer);
 
   @protected
-  List<HistoryEntryDto> sse_decode_list_history_entry_dto(
-    SseDeserializer deserializer,
-  );
+  List<HistoryEntryDto> sse_decode_list_history_entry_dto(SseDeserializer deserializer);
 
   @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
@@ -363,47 +317,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
-  AdvanceStateDto? sse_decode_opt_box_autoadd_advance_state_dto(
-    SseDeserializer deserializer,
-  );
+  AdvanceStateDto? sse_decode_opt_box_autoadd_advance_state_dto(SseDeserializer deserializer);
 
   @protected
-  AdvancementChoiceDto? sse_decode_opt_box_autoadd_advancement_choice_dto(
-    SseDeserializer deserializer,
-  );
+  AdvancementChoiceDto? sse_decode_opt_box_autoadd_advancement_choice_dto(SseDeserializer deserializer);
 
   @protected
-  AdvancementOptionDto? sse_decode_opt_box_autoadd_advancement_option_dto(
-    SseDeserializer deserializer,
-  );
+  AdvancementOptionDto? sse_decode_opt_box_autoadd_advancement_option_dto(SseDeserializer deserializer);
 
   @protected
-  AppliedAdvanceDto? sse_decode_opt_box_autoadd_applied_advance_dto(
-    SseDeserializer deserializer,
-  );
+  AppliedAdvanceDto? sse_decode_opt_box_autoadd_applied_advance_dto(SseDeserializer deserializer);
 
   @protected
-  RollResultDto? sse_decode_opt_box_autoadd_roll_result_dto(
-    SseDeserializer deserializer,
-  );
+  RollResultDto? sse_decode_opt_box_autoadd_roll_result_dto(SseDeserializer deserializer);
 
   @protected
-  RollStateDto? sse_decode_opt_box_autoadd_roll_state_dto(
-    SseDeserializer deserializer,
-  );
+  RollStateDto? sse_decode_opt_box_autoadd_roll_state_dto(SseDeserializer deserializer);
 
   @protected
   SkillDto? sse_decode_opt_box_autoadd_skill_dto(SseDeserializer deserializer);
 
   @protected
-  SkillRefDto? sse_decode_opt_box_autoadd_skill_ref_dto(
-    SseDeserializer deserializer,
-  );
+  SkillRefDto? sse_decode_opt_box_autoadd_skill_ref_dto(SseDeserializer deserializer);
 
   @protected
-  TieWinnerDto? sse_decode_opt_box_autoadd_tie_winner_dto(
-    SseDeserializer deserializer,
-  );
+  TieWinnerDto? sse_decode_opt_box_autoadd_tie_winner_dto(SseDeserializer deserializer);
 
   @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
@@ -451,10 +389,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_decode_unit(SseDeserializer deserializer);
 
   @protected
-  void sse_encode_AnyhowException(
-    AnyhowException self,
-    SseSerializer serializer,
-  );
+  void sse_encode_AnyhowException(AnyhowException self, SseSerializer serializer);
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer);
@@ -463,118 +398,64 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_actor_dto(ActorDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_advance_state_dto(
-    AdvanceStateDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_advance_state_dto(AdvanceStateDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_advancement_choice_dto(
-    AdvancementChoiceDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_advancement_choice_dto(AdvancementChoiceDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_advancement_option_dto(
-    AdvancementOptionDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_advancement_option_dto(AdvancementOptionDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_applied_advance_dto(
-    AppliedAdvanceDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_applied_advance_dto(AppliedAdvanceDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_apply_result_dto(
-    ApplyResultDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_apply_result_dto(ApplyResultDto self, SseSerializer serializer);
 
   @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_advance_state_dto(
-    AdvanceStateDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_box_autoadd_advance_state_dto(AdvanceStateDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_advancement_choice_dto(
-    AdvancementChoiceDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_box_autoadd_advancement_choice_dto(AdvancementChoiceDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_advancement_option_dto(
-    AdvancementOptionDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_box_autoadd_advancement_option_dto(AdvancementOptionDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_applied_advance_dto(
-    AppliedAdvanceDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_box_autoadd_applied_advance_dto(AppliedAdvanceDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_character_dto(
-    CharacterDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_box_autoadd_character_dto(CharacterDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_flow_action_dto(
-    FlowActionDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_box_autoadd_flow_action_dto(FlowActionDto self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_item_dto(ItemDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_roll_record_dto(
-    RollRecordDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_box_autoadd_roll_record_dto(RollRecordDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_roll_result_dto(
-    RollResultDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_box_autoadd_roll_result_dto(RollResultDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_roll_state_dto(
-    RollStateDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_box_autoadd_roll_state_dto(RollStateDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_room_settings_dto(
-    RoomSettingsDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_box_autoadd_room_settings_dto(RoomSettingsDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_skill_dto(
-    SkillDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_box_autoadd_skill_dto(SkillDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_skill_ref_dto(
-    SkillRefDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_box_autoadd_skill_ref_dto(SkillRefDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_tie_winner_dto(
-    TieWinnerDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_box_autoadd_tie_winner_dto(TieWinnerDto self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
@@ -586,16 +467,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_flow_action_dto(FlowActionDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_flow_action_kind_dto(
-    FlowActionKindDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_flow_action_kind_dto(FlowActionKindDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_history_entry_dto(
-    HistoryEntryDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_history_entry_dto(HistoryEntryDto self, SseSerializer serializer);
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
@@ -607,25 +482,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
-  void sse_encode_list_flow_action_kind_dto(
-    List<FlowActionKindDto> self,
-    SseSerializer serializer,
-  );
+  void sse_encode_list_flow_action_kind_dto(List<FlowActionKindDto> self, SseSerializer serializer);
 
   @protected
-  void sse_encode_list_history_entry_dto(
-    List<HistoryEntryDto> self,
-    SseSerializer serializer,
-  );
+  void sse_encode_list_history_entry_dto(List<HistoryEntryDto> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer);
 
   @protected
-  void sse_encode_list_prim_u_8_strict(
-    Uint8List self,
-    SseSerializer serializer,
-  );
+  void sse_encode_list_prim_u_8_strict(Uint8List self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_skill_dto(List<SkillDto> self, SseSerializer serializer);
@@ -634,73 +500,40 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_String(String? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_box_autoadd_advance_state_dto(
-    AdvanceStateDto? self,
-    SseSerializer serializer,
-  );
+  void sse_encode_opt_box_autoadd_advance_state_dto(AdvanceStateDto? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_box_autoadd_advancement_choice_dto(
-    AdvancementChoiceDto? self,
-    SseSerializer serializer,
-  );
+  void sse_encode_opt_box_autoadd_advancement_choice_dto(AdvancementChoiceDto? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_box_autoadd_advancement_option_dto(
-    AdvancementOptionDto? self,
-    SseSerializer serializer,
-  );
+  void sse_encode_opt_box_autoadd_advancement_option_dto(AdvancementOptionDto? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_box_autoadd_applied_advance_dto(
-    AppliedAdvanceDto? self,
-    SseSerializer serializer,
-  );
+  void sse_encode_opt_box_autoadd_applied_advance_dto(AppliedAdvanceDto? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_box_autoadd_roll_result_dto(
-    RollResultDto? self,
-    SseSerializer serializer,
-  );
+  void sse_encode_opt_box_autoadd_roll_result_dto(RollResultDto? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_box_autoadd_roll_state_dto(
-    RollStateDto? self,
-    SseSerializer serializer,
-  );
+  void sse_encode_opt_box_autoadd_roll_state_dto(RollStateDto? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_box_autoadd_skill_dto(
-    SkillDto? self,
-    SseSerializer serializer,
-  );
+  void sse_encode_opt_box_autoadd_skill_dto(SkillDto? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_box_autoadd_skill_ref_dto(
-    SkillRefDto? self,
-    SseSerializer serializer,
-  );
+  void sse_encode_opt_box_autoadd_skill_ref_dto(SkillRefDto? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_box_autoadd_tie_winner_dto(
-    TieWinnerDto? self,
-    SseSerializer serializer,
-  );
+  void sse_encode_opt_box_autoadd_tie_winner_dto(TieWinnerDto? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_list_prim_u_8_strict(
-    Uint8List? self,
-    SseSerializer serializer,
-  );
+  void sse_encode_opt_list_prim_u_8_strict(Uint8List? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_roll_outcome_dto(
-    RollOutcomeDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_roll_outcome_dto(RollOutcomeDto self, SseSerializer serializer);
 
   @protected
   void sse_encode_roll_record_dto(RollRecordDto self, SseSerializer serializer);
@@ -712,10 +545,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_roll_state_dto(RollStateDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_room_settings_dto(
-    RoomSettingsDto self,
-    SseSerializer serializer,
-  );
+  void sse_encode_room_settings_dto(RoomSettingsDto self, SseSerializer serializer);
 
   @protected
   void sse_encode_skill_dto(SkillDto self, SseSerializer serializer);
@@ -724,10 +554,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_skill_ref_dto(SkillRefDto self, SseSerializer serializer);
 
   @protected
-  void sse_encode_slot_choice_kind(
-    SlotChoiceKind self,
-    SseSerializer serializer,
-  );
+  void sse_encode_slot_choice_kind(SlotChoiceKind self, SseSerializer serializer);
 
   @protected
   void sse_encode_slot_usage_dto(SlotUsageDto self, SseSerializer serializer);
@@ -748,14 +575,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 // Section: wire_class
 
 class RustLibWire implements BaseWire {
-  factory RustLibWire.fromExternalLibrary(ExternalLibrary lib) =>
-      RustLibWire(lib.ffiDynamicLibrary);
+  factory RustLibWire.fromExternalLibrary(ExternalLibrary lib) => RustLibWire(lib.ffiDynamicLibrary);
 
   /// Holds the symbol lookup function.
-  final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
-  _lookup;
+  final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName) _lookup;
 
   /// The symbols are looked up in [dynamicLibrary].
-  RustLibWire(ffi.DynamicLibrary dynamicLibrary)
-    : _lookup = dynamicLibrary.lookup;
+  RustLibWire(ffi.DynamicLibrary dynamicLibrary) : _lookup = dynamicLibrary.lookup;
 }
