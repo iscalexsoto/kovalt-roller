@@ -98,7 +98,7 @@
 .rl-table__side { grid-area: side; }
 @media (min-width: 1200px) {
   .rl-table { grid-template-columns: 260px minmax(0, 1fr) 380px; grid-template-areas: "players log side"; grid-template-rows: auto; }
-  .rl-table__players, .rl-table__side { position: sticky; top: 80px; max-height: calc(100dvh - 96px); overflow-y: auto; }
+  .rl-table__players, .rl-table__side { position: sticky; top: 80px; max-height: calc(100dvh - 96px); overflow-y: auto; overflow-x: hidden; }
 }
 .rl-compact { flex: 1; padding: 12px var(--kv-margin) calc(100px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 12px; }
 /* La barra inferior de la sala usa botones (vistas), no enlaces. */
