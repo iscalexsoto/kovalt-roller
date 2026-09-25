@@ -165,3 +165,10 @@ número de ventana se ve en la barra superior.
 ```bash
 cd app && flutter test integration_test/multi_window_test.dart -d windows --dart-define=USE_EMULATORS=true
 ```
+
+La prueba anterior abre las dos plazas en un mismo proceso. Para probar una segunda ventana en su propio proceso (como
+en uso real), abre antes una ventana de la app y ejecuta:
+
+```bash
+cd app && flutter test integration_test/second_window_test.dart -d windows --dart-define=USE_EMULATORS=true
+```

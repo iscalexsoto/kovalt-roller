@@ -47,6 +47,12 @@ class FirebaseSession {
   final FirebaseFirestore db;
 
   static Future<FirebaseSession> start(InstanceSlot slot) async {
+    // El plugin de Firestore resuelve internamente la app por defecto incluso
+    // al usar otra (FirebaseFirestorePlatform.instance). Se registra siempre,
+    // aunque esta ventana no use su sesión ni su caché.
+    if (slot.firebaseAppName != null && !Firebase.apps.any((a) => a.name == defaultFirebaseAppName)) {
+      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    }
     final app = await Firebase.initializeApp(
       name: slot.firebaseAppName,
       options: DefaultFirebaseOptions.currentPlatform,
