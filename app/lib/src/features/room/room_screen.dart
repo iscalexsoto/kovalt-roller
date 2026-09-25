@@ -96,6 +96,7 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
     _goOnline(me.displayName);
 
     final ctx = RoomContext(room: room, me: me, members: members, characters: characters);
+    final slot = ref.watch(instanceSlotProvider);
     final needsCharacter = !ctx.isDm && ctx.myCharacter == null;
 
     return Scaffold(
@@ -105,7 +106,7 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/'),
         ),
-        title: Text(room.name),
+        title: Text(slot.index == 0 ? room.name : '${room.name} · ventana ${slot.number}'),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),

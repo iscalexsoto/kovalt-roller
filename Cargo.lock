@@ -1059,6 +1059,7 @@ dependencies = [
  "anyhow",
  "flutter_rust_bridge",
  "r4s_engine",
+ "windows-sys",
 ]
 
 [[package]]

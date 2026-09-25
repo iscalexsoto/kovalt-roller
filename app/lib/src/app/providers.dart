@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,18 +8,25 @@ import '../data/presence_repository.dart';
 import '../data/roll_repository.dart';
 import '../data/room_repository.dart';
 import 'config.dart';
+import 'instance.dart';
 
 // ---------- servicios ----------
 
-final realtimeDatabaseProvider = Provider((ref) => AppConfig.realtimeDatabase(FirebaseAuth.instance));
+/// Firebase de la ventana actual; se inyecta en `main` según su plaza.
+final firebaseSessionProvider = Provider<FirebaseSession>((ref) => throw UnimplementedError('Se inyecta en main'));
 
-final authRepositoryProvider = Provider((ref) => AppConfig.authRepository(FirebaseAuth.instance));
-final roomRepositoryProvider = Provider(
-  (ref) => RoomRepository(FirebaseFirestore.instance, ref.watch(realtimeDatabaseProvider)),
-);
-final characterRepositoryProvider = Provider((ref) => CharacterRepository(FirebaseFirestore.instance));
-final itemRepositoryProvider = Provider((ref) => ItemRepository(FirebaseFirestore.instance));
-final rollRepositoryProvider = Provider((ref) => RollRepository(FirebaseFirestore.instance));
+/// Plaza de la ventana actual (se inyecta en `main`).
+final instanceSlotProvider = Provider<InstanceSlot>((ref) => InstanceSlot.single);
+final _auth = Provider((ref) => ref.watch(firebaseSessionProvider).auth);
+final _db = Provider((ref) => ref.watch(firebaseSessionProvider).db);
+
+final realtimeDatabaseProvider = Provider((ref) => AppConfig.realtimeDatabase(ref.watch(_auth)));
+
+final authRepositoryProvider = Provider((ref) => AppConfig.authRepository(ref.watch(_auth), ref.watch(_db)));
+final roomRepositoryProvider = Provider((ref) => RoomRepository(ref.watch(_db), ref.watch(realtimeDatabaseProvider)));
+final characterRepositoryProvider = Provider((ref) => CharacterRepository(ref.watch(_db)));
+final itemRepositoryProvider = Provider((ref) => ItemRepository(ref.watch(_db)));
+final rollRepositoryProvider = Provider((ref) => RollRepository(ref.watch(_db)));
 final presenceRepositoryProvider = Provider((ref) => PresenceRepository(ref.watch(realtimeDatabaseProvider)));
 
 // ---------- sesión ----------

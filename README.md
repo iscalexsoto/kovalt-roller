@@ -154,3 +154,14 @@ bash scripts/package.sh
 Deja la app lista en `dist/Kovalt Roller/Kovalt Roller.exe` (la carpeta entera es necesaria: DLL y `data/`) y un
 `dist/KovaltRoller-windows.zip` para copiarla a otro equipo con Windows 10/11 x64. Incluye el runtime de Visual C++.
 La carpeta `dist/` no se sube al repositorio.
+
+## Varias ventanas en el mismo equipo
+
+Se pueden abrir varias ventanas de la app a la vez, por ejemplo el DM en una y un jugador en otra. Cada ventana toma
+una plaza libre (1, 2, 3…, hasta 8) reservada con un mutex de Windows (`app/rust/src/api/instance.rs`). Cada plaza
+tiene su propia sesión de Firebase y su propia caché, y las recuerda al volver a abrirse. A partir de la segunda, el
+número de ventana se ve en la barra superior.
+
+```bash
+cd app && flutter test integration_test/multi_window_test.dart -d windows --dart-define=USE_EMULATORS=true
+```

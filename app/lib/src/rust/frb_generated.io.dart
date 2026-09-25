@@ -5,6 +5,7 @@
 
 import 'api/engine.dart';
 import 'api/flow.dart';
+import 'api/instance.dart';
 
 import 'dart:async';
 import 'dart:convert';

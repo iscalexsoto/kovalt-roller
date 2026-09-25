@@ -5,6 +5,7 @@
 
 import 'api/engine.dart';
 import 'api/flow.dart';
+import 'api/instance.dart';
 
 import 'dart:async';
 import 'dart:convert';
@@ -66,7 +67,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -921615055;
+  int get rustContentHash => 1623926203;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'rust_lib_kovalt_roller',
@@ -77,6 +78,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
+  int? crateApiInstanceAcquireInstanceSlot({required int maxSlots});
+
   AdvancementOptionDto? crateApiEngineAdvancementOption({
     required CharacterDto character,
     required RoomSettingsDto settings,
@@ -145,6 +148,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
+  int? crateApiInstanceAcquireInstanceSlot({required int maxSlots}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_32(maxSlots, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 1)!;
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_opt_box_autoadd_u_32, decodeErrorData: null),
+        constMeta: kCrateApiInstanceAcquireInstanceSlotConstMeta,
+        argValues: [maxSlots],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiInstanceAcquireInstanceSlotConstMeta =>
+      const TaskConstMeta(debugName: "acquire_instance_slot", argNames: ["maxSlots"]);
+
+  @override
   AdvancementOptionDto? crateApiEngineAdvancementOption({
     required CharacterDto character,
     required RoomSettingsDto settings,
@@ -161,7 +184,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_list_prim_u_8_loose(playerDice, serializer);
           sse_encode_list_prim_u_8_loose(oppositionDice, serializer);
           sse_encode_u_32(skillIndex, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 1)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_opt_box_autoadd_advancement_option_dto,
@@ -192,7 +215,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_roll_state_dto(state, serializer);
           sse_encode_opt_box_autoadd_advance_state_dto(advance, serializer);
           sse_encode_actor_dto(actor, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_flow_action_kind_dto, decodeErrorData: null),
         constMeta: kCrateApiFlowAllowedRollActionsConstMeta,
@@ -224,7 +247,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_list_prim_u_8_loose(oppositionDice, serializer);
           sse_encode_u_32(skillIndex, serializer);
           sse_encode_opt_box_autoadd_advancement_choice_dto(choice, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_apply_result_dto, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiEngineApplyRollConstMeta,
@@ -247,7 +270,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(action, serializer);
           sse_encode_box_autoadd_skill_ref_dto(skill, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_roll_record_dto, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiFlowDeclareRollConstMeta,
@@ -266,7 +289,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_room_settings_dto, decodeErrorData: null),
         constMeta: kCrateApiEngineDefaultRoomSettingsConstMeta,
@@ -285,7 +308,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: null),
         constMeta: kCrateApiEngineInitAppConstMeta,
@@ -305,7 +328,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(name, serializer);
           sse_encode_String(description, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_character_dto, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiEngineNewCharacterConstMeta,
@@ -325,7 +348,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(id, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_opt_box_autoadd_roll_state_dto, decodeErrorData: null),
         constMeta: kCrateApiFlowParseRollStateConstMeta,
@@ -351,7 +374,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_list_prim_u_8_loose(playerDice, serializer);
           sse_encode_list_prim_u_8_loose(oppositionDice, serializer);
           sse_encode_box_autoadd_room_settings_dto(settings, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 10)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_roll_outcome_dto, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiEngineResolveRollConstMeta,
@@ -372,7 +395,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_u_8(count, serializer);
           sse_encode_u_8(maxDice, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 10)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 11)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_list_prim_u_8_strict,
@@ -395,7 +418,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_roll_state_dto(state, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 11)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 12)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: null),
         constMeta: kCrateApiFlowRollStateIdConstMeta,
@@ -423,7 +446,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_box_autoadd_flow_action_dto(action, serializer);
           sse_encode_actor_dto(actor, serializer);
           sse_encode_u_8(maxDice, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 12)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 13)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_roll_record_dto, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiFlowRollTransitionConstMeta,
@@ -444,7 +467,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_box_autoadd_character_dto(character, serializer);
           sse_encode_box_autoadd_room_settings_dto(settings, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 13)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 14)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_slot_usage_dto, decodeErrorData: null),
         constMeta: kCrateApiEngineSlotUsageConstMeta,
@@ -465,7 +488,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_box_autoadd_character_dto(character, serializer);
           sse_encode_box_autoadd_room_settings_dto(settings, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 14)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 15)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: null),
         constMeta: kCrateApiEngineValidateCharacterConstMeta,
@@ -485,7 +508,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_box_autoadd_item_dto(item, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 15)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 16)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_opt_String, decodeErrorData: null),
         constMeta: kCrateApiEngineValidateItemConstMeta,
@@ -505,7 +528,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_box_autoadd_room_settings_dto(settings, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 16)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 17)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_opt_String, decodeErrorData: null),
         constMeta: kCrateApiEngineValidateRoomSettingsConstMeta,

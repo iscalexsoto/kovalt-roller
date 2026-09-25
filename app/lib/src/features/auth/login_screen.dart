@@ -23,6 +23,16 @@ class LoginScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text('Kovalt Roller', style: text.displaySmall, textAlign: TextAlign.center),
                 Text('Mesa virtual de Roll For Shoes', style: text.titleMedium, textAlign: TextAlign.center),
+                Consumer(
+                  builder: (context, ref, _) {
+                    final slot = ref.watch(instanceSlotProvider);
+                    if (slot.index == 0) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Center(child: Chip(label: Text('Ventana ${slot.number}'))),
+                    );
+                  },
+                ),
                 const SizedBox(height: 24),
                 const Card(
                   child: DefaultTabController(

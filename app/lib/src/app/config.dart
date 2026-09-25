@@ -12,13 +12,13 @@ abstract final class AppConfig {
 
   static const emulatorHost = String.fromEnvironment('EMULATOR_HOST', defaultValue: '127.0.0.1');
 
-  static AuthRepository authRepository(FirebaseAuth auth) => AuthRepository(
+  static AuthRepository authRepository(FirebaseAuth auth, FirebaseFirestore db) => AuthRepository(
     auth,
     identityToolkit: useEmulators
         ? Uri.parse('http://$emulatorHost:9099/identitytoolkit.googleapis.com/v1')
         : Uri.parse('https://identitytoolkit.googleapis.com/v1'),
     apiKey: DefaultFirebaseOptions.currentPlatform.apiKey,
-    onSignedOut: resetFirestore,
+    onSignedOut: () => resetFirestore(db),
   );
 
   /// Reinicia el cliente de Firestore y borra su caché local.
@@ -26,8 +26,7 @@ abstract final class AppConfig {
   /// En Windows, el SDK conserva estado del usuario anterior sobre documentos
   /// ya leídos y el servidor rechaza esas lecturas al nuevo usuario aunque
   /// tenga permiso. Además evita dejar datos de otro usuario en el equipo.
-  static Future<void> resetFirestore() async {
-    final db = FirebaseFirestore.instance;
+  static Future<void> resetFirestore(FirebaseFirestore db) async {
     await db.terminate();
     await db.clearPersistence();
     if (useEmulators) db.useFirestoreEmulator(emulatorHost, 8080);

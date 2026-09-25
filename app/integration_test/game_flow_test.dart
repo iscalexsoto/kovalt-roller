@@ -43,7 +43,7 @@ void main() {
     await FirebaseAuth.instance.useAuthEmulator('127.0.0.1', 9099);
     db = FirebaseFirestore.instance..useFirestoreEmulator('127.0.0.1', 8080);
     rtdb = AppConfig.realtimeDatabase(FirebaseAuth.instance);
-    auth = AppConfig.authRepository(FirebaseAuth.instance);
+    auth = AppConfig.authRepository(FirebaseAuth.instance, db);
     rooms = RoomRepository(db, rtdb);
     characters = CharacterRepository(db);
     items = ItemRepository(db);

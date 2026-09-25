@@ -15,13 +15,14 @@ class LobbyScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final slot = ref.watch(instanceSlotProvider);
     if (user == null) return const SizedBox.shrink();
     final rooms = ref.watch(myRoomsProvider);
 
     return Scaffold(
       appBar: AppBar(
         leading: Padding(padding: const EdgeInsets.all(10), child: Image.asset('assets/icon.png')),
-        title: const Text('Kovalt Roller'),
+        title: Text(slot.index == 0 ? 'Kovalt Roller' : 'Kovalt Roller · ventana ${slot.number}'),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),

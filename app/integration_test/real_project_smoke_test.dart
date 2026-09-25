@@ -55,7 +55,7 @@ void main() {
     final fbAuth = FirebaseAuth.instance;
     final db = FirebaseFirestore.instance;
     final rtdb = AppConfig.realtimeDatabase(fbAuth);
-    final auth = AppConfig.authRepository(fbAuth);
+    final auth = AppConfig.authRepository(fbAuth, db);
     final rooms = RoomRepository(db, rtdb);
     final characters = CharacterRepository(db);
     final items = ItemRepository(db);
@@ -87,7 +87,7 @@ void main() {
 
     Future<void> deleteCurrentAccount() async {
       await fbAuth.currentUser!.delete();
-      await AppConfig.resetFirestore();
+      await AppConfig.resetFirestore(db);
     }
 
     Future<void> cleanup() async {
