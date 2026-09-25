@@ -1,5 +1,5 @@
 import { initializeApp, type FirebaseOptions } from 'firebase/app';
-import { connectAuthEmulator, getAuth } from 'firebase/auth';
+import { browserSessionPersistence, connectAuthEmulator, getAuth, initializeAuth } from 'firebase/auth';
 import { connectDatabaseEmulator, getDatabase } from 'firebase/database';
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 
@@ -30,7 +30,11 @@ const DEMO: FirebaseOptions = {
 };
 
 export const firebaseApp = initializeApp(IS_EMULATOR ? DEMO : PRODUCTION);
-export const auth = getAuth(firebaseApp);
+// Con emuladores, la sesión vive en la pestaña (sessionStorage): cada pestaña puede ser otro usuario (DM y
+// jugadores a la vez). En producción se comparte entre pestañas, como en cualquier web.
+export const auth = IS_EMULATOR
+  ? initializeAuth(firebaseApp, { persistence: browserSessionPersistence })
+  : getAuth(firebaseApp);
 export const db = getFirestore(firebaseApp);
 export const rtdb = getDatabase(firebaseApp);
 

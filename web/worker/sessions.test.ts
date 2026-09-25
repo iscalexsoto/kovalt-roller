@@ -38,14 +38,14 @@ function setup(opts: { pbStatus?: number; pbRecord?: Record<string, unknown>; do
     const url = String(input);
     calls.push(url);
     if (url.endsWith('/api/collections/auth_users/auth-refresh')) {
-      expect((init?.headers as Record<string, string>).Authorization).toBe('pb-token');
+      expect((init?.headers as Record<string, string> | undefined)?.Authorization).toBe('pb-token');
       const status = opts.pbStatus ?? 200;
       if (status !== 200) return new Response('{"message":"Cuenta no permitida."}', { status });
       return Response.json({ token: 'pb-token-2', record: opts.pbRecord ?? { id: 'abc123def456ghi', email: 'ana@example.com', name: 'Ana', is_admin: true } });
     }
     if (url === 'https://oauth2.googleapis.com/token') return Response.json({ access_token: 'at', expires_in: 3600 });
     if (url.startsWith('https://firestore.googleapis.com/')) {
-      expect((init?.headers as Record<string, string>).Authorization).toBe('Bearer at');
+      expect((init?.headers as Record<string, string> | undefined)?.Authorization).toBe('Bearer at');
       const path = url.split('/documents/')[1]!;
       const fields = opts.docs?.[path];
       if (!fields) return new Response('{}', { status: 404 });

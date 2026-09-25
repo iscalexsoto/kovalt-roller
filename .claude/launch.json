@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "roller-emu",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "web", "dev:emu"],
+      "port": 5179
+    },
+    {
+      "name": "roller",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "web", "dev"],
+      "port": 5179
+    }
+  ]
+}
