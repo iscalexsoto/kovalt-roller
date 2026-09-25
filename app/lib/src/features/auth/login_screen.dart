@@ -19,6 +19,8 @@ class LoginScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Center(child: Image.asset('assets/icon.png', width: 112, height: 112)),
+                const SizedBox(height: 12),
                 Text('Kovalt Roller', style: text.displaySmall, textAlign: TextAlign.center),
                 Text('Mesa virtual de Roll For Shoes', style: text.titleMedium, textAlign: TextAlign.center),
                 const SizedBox(height: 24),

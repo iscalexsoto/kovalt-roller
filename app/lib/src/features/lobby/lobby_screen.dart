@@ -20,6 +20,7 @@ class LobbyScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: Padding(padding: const EdgeInsets.all(10), child: Image.asset('assets/icon.png')),
         title: const Text('Kovalt Roller'),
         actions: [
           Padding(

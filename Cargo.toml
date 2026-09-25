@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/r4s_engine", "app/rust"]
+members = ["crates/r4s_engine", "app/rust", "tools/icongen"]
 
 [workspace.package]
 edition = "2024"

@@ -23,6 +23,7 @@ app/                 app Flutter (Windows)
 app/rust/            crate puente para flutter_rust_bridge
 firebase/            reglas de Firestore y RTDB, índices y tests de reglas
 scripts/             utilidades de desarrollo (Git Bash)
+tools/icongen/       genera el ícono de Windows y el PNG de la app desde el SVG
 docs/rules.md        reglas implementadas
 ```
 
@@ -71,6 +72,15 @@ Tras cambiar la API de `app/rust/src/api`, regenera los bindings:
 
 ```bash
 cd app && flutter_rust_bridge_codegen generate
+```
+
+### Ícono
+
+El ícono fuente es `kovalt_roller_icon.svg`. Si cambia, regenera el `.ico` de Windows (16 a 256 px) y el PNG que usa
+la app:
+
+```bash
+cargo run -p icongen -- kovalt_roller_icon.svg app/windows/runner/resources/app_icon.ico app/assets/icon.png
 ```
 
 ## Tests
