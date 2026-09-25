@@ -122,3 +122,14 @@ Nota: Firebase marca el soporte de Windows de FlutterFire como beta y no recomen
   API REST de Auth, que conserva el uid.
 - Los listeners de Firestore pueden emitir primero una instantánea vacía de la caché local antes de que el servidor
   deniegue una lectura.
+- Al cambiar de usuario en el mismo proceso, el cliente de Firestore conserva estado del usuario anterior y el servidor
+  rechaza lecturas legítimas del nuevo. Al cerrar sesión la app reinicia Firestore y borra su caché
+  (`AppConfig.resetFirestore`). Los emuladores no reproducen este fallo.
+- Convertir un invitado en cuenta por REST revoca su sesión anónima: la app cierra sesión y vuelve a entrar con email.
+
+Prueba de humo contra el proyecto real (crea dos cuentas `@example.com` y una sala, y lo borra al terminar salvo la
+sala y sus tiradas, que las reglas no dejan borrar):
+
+```bash
+cd app && flutter test integration_test/real_project_smoke_test.dart -d windows --dart-define=CONFIRM_REAL_PROJECT=kovalt-roller-db
+```

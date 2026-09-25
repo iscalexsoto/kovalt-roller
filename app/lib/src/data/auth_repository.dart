@@ -7,12 +7,20 @@ class AuthRepository {
   /// [identityToolkit] es la base de la API REST de Auth
   /// (`https://identitytoolkit.googleapis.com/v1` o la del emulador) y [apiKey]
   /// la clave web del proyecto; se usan cuando el SDK de Windows falla.
-  AuthRepository(this._auth, {required this.identityToolkit, required this.apiKey, http.Client? client})
-    : _client = client ?? http.Client();
+  ///
+  /// [onSignedOut] se ejecuta tras cerrar sesión (p. ej. reiniciar Firestore).
+  AuthRepository(
+    this._auth, {
+    required this.identityToolkit,
+    required this.apiKey,
+    this.onSignedOut,
+    http.Client? client,
+  }) : _client = client ?? http.Client();
 
   final FirebaseAuth _auth;
   final Uri identityToolkit;
   final String apiKey;
+  final Future<void> Function()? onSignedOut;
   final http.Client _client;
 
   Stream<User?> authStateChanges() => _auth.userChanges();
@@ -44,6 +52,9 @@ class AuthRepository {
       // mismo con la API REST (accounts:update sobre la cuenta anónima).
       if (e.code != 'unknown-error' && e.code != 'internal-error') rethrow;
       await _upgradeViaRest(user, email.trim(), password);
+      // Fijar la contraseña revoca la sesión anónima: hay que salir del todo
+      // antes de entrar con email, o el SDK sigue usando el token revocado.
+      await _auth.signOut();
       await _auth.signInWithEmailAndPassword(email: email.trim(), password: password);
     }
   }
@@ -78,7 +89,10 @@ class AuthRepository {
 
   Future<void> updateDisplayName(String name) => _auth.currentUser!.updateDisplayName(name.trim());
 
-  Future<void> signOut() => _auth.signOut();
+  Future<void> signOut() async {
+    await _auth.signOut();
+    await onSignedOut?.call();
+  }
 }
 
 /// Mensaje legible para errores de autenticación.
