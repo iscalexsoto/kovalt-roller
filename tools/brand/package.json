@@ -1,0 +1,13 @@
+{
+  "name": "kovalt-roller-brand",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "node render.mjs",
+    "install-assets": "node render.mjs --install"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2"
+  }
+}

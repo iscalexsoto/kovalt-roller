@@ -102,11 +102,11 @@ export function Avatar({ initials, icon, iconColor, size = 40 }: { initials?: st
   );
 }
 
-/** Marca: La Piedra de Notes (brand-and-iconography.md § Brand mark / App icons; master
- *  `kovalt-skill/assets/brand/notes.svg`). Hexágono partido en cuatro caras por tres grietas que forman una K;
- *  en Notes la cara izquierda lleva la esquina doblada y tres renglones. Las caras son gradientes cobalto fijos:
- *  la piedra no cambia con el tema, y nunca va dentro de una Gema, círculo ni Corte. 28 en la barra superior,
- *  40 en login y primera sincronización, 72 en la landing. */
+/** Marca: La Piedra de Roller (brand-and-iconography.md § Brand mark / App icons; master
+ *  `kovalt-skill/assets/brand/roller.svg`). Hexágono partido en cuatro caras por tres grietas que forman una K;
+ *  en Roller la cara izquierda lleva un d6 que muestra cinco, cizallado al borde de la cara. Las caras son
+ *  gradientes cobalto fijos: la piedra no cambia con el tema, y nunca va dentro de una Gema, círculo ni Corte.
+ *  28 en la barra superior, 72 en la entrada. */
 export function BrandMark({ size = 28 }: { size?: 28 | 40 | 72 }) {
   const id = useId();
   const g = (n: number) => `${id}s${n}`;
@@ -129,20 +129,32 @@ export function BrandMark({ size = 28 }: { size?: 28 | 40 | 72 }) {
           <stop offset="0" stopColor="#0D327A" />
           <stop offset="1" stopColor="#050D1E" />
         </linearGradient>
+        <linearGradient id={g(6)} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#93BEFF" />
+          <stop offset="1" stopColor="#4886FE" />
+        </linearGradient>
         <clipPath id={g(5)}>
           <polygon points="102,10 22,56 22,148 102,194 102,102" />
         </clipPath>
       </defs>
-      <polygon points="102,10 182,56 182,148 102,194 22,148 22,100 62,33" fill="#0A54DD" />
-      <polygon points="102,10 62,33 22,100 22,148 102,194 102,102" fill={`url(#${g(1)})`} />
+      <polygon points="102,10 182,56 182,148 102,194 22,148 22,56" fill="#0A54DD" />
+      <polygon points="102,10 22,56 22,148 102,194 102,102" fill={`url(#${g(1)})`} />
       <polygon points="102,10 182,56 102,102" fill={`url(#${g(2)})`} />
       <polygon points="102,102 182,56 182,148" fill={`url(#${g(3)})`} />
       <polygon points="102,102 182,148 102,194" fill={`url(#${g(4)})`} />
-      <polygon points="62,33 22,100 60.7,79.1" fill="#CFE6FF" />
-      <g clipPath={`url(#${g(5)})`} stroke="#CFE6FF" strokeOpacity="0.7" strokeWidth="7" strokeLinecap="butt">
-        <line x1="36" y1="78" x2="90" y2="78" />
-        <line x1="36" y1="102" x2="90" y2="102" />
-        <line x1="36" y1="126" x2="72" y2="126" />
+      <g clipPath={`url(#${g(5)})`}>
+        <g transform="matrix(1 -0.575 0 1 0 0)">
+          <rect x="38" y="113.65" width="48" height="48" fill={`url(#${g(6)})`} />
+          {[
+            [50, 125.65],
+            [74, 125.65],
+            [62, 137.65],
+            [50, 149.65],
+            [74, 149.65],
+          ].map(([cx, cy]) => (
+            <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="5.5" fill="#0A3FA8" />
+          ))}
+        </g>
       </g>
     </svg>
   );
