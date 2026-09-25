@@ -1,0 +1,25 @@
+// Worker de roller.kovalt.mx: assets estáticos (la SPA) y /api/* (sesiones de Firebase).
+// Uso: pnpm deploy  (requiere `pnpm exec wrangler login` una vez)
+// Secreto: `pnpm exec wrangler secret put FIREBASE_SERVICE_ACCOUNT` (el JSON de la cuenta de servicio).
+{
+  "name": "kovalt-roller-web",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-08-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "vars": {
+    "PB_URL": "https://api.kovalt.mx",
+    "FIREBASE_PROJECT_ID": "kovalt-roller-db"
+  },
+  // Frena la fuerza bruta de códigos de sala: 20 intentos de invitado por minuto e IP.
+  "ratelimits": [
+    { "name": "GUEST_LIMIT", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } }
+  ],
+  "routes": [
+    { "pattern": "roller.kovalt.mx", "custom_domain": true }
+  ]
+}

@@ -1,0 +1,34 @@
+/* Pantallas de Kovalt Roller (prefijo rl-). Tokens y primitivas kv-* en tokens.css / components.css (copia de
+   Kovalt Notes). Todo tamaño de texto es N × --kv-px. */
+
+.kv-form { display: flex; flex-direction: column; gap: 16px; }
+.kv-form__error { display: flex; align-items: center; gap: 8px; color: var(--kv-color-error); }
+.kv-form__error .kv-icon { width: 18px; height: 18px; }
+.kv-link { color: var(--kv-color-link); text-decoration: none; }
+.kv-link:hover { color: var(--kv-color-link-hover); text-decoration: underline; }
+/* La fila del campo de código comparte clase con el código en línea (`.kv-code`); se anula su chip. */
+.kv-code-field .kv-code { padding: 0; background: none; clip-path: none; white-space: normal; }
+
+/* ---------- Selector de tema (component-catalog.md § Selector de tema; mismas medidas que Notes/Home) ---------- */
+.rl-theme { width: min(320px, calc(100vw - 16px)); max-height: calc(100dvh - 88px); overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 12px;
+  background: var(--kv-color-surface-container-high); clip-path: var(--kv-cut-l); box-shadow: var(--kv-filo); }
+.rl-theme__mode { display: flex; flex-direction: column; gap: 6px; }
+.rl-theme__mode .kv-rim, .rl-theme__mode .kv-seg { display: flex; }
+.rl-theme__mode .kv-seg__opt { flex: 1; min-height: 38px; }
+.rl-theme__caption { font: 400 calc(12 * var(--kv-px))/calc(16 * var(--kv-px)) var(--kv-font-body); color: var(--kv-color-on-surface-variant); }
+.rl-theme__palettes { display: flex; flex-direction: column; gap: 8px; }
+.rl-theme__row { position: relative; display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 10px 12px; border: none; text-align: left;
+  clip-path: var(--kv-cut-m); background: var(--kv-color-surface); color: var(--kv-color-on-surface); cursor: pointer;
+  transition: background var(--kv-duration-short) var(--kv-easing-standard); }
+.rl-theme__row::after { content: ""; position: absolute; inset: 0; pointer-events: none; clip-path: var(--kv-ring-m); background: var(--kv-color-outline); }
+.rl-theme__row:hover { background: color-mix(in oklab, var(--kv-color-on-surface) calc(var(--kv-state-hover) * 100%), var(--kv-color-surface)); }
+.rl-theme__row[aria-checked="true"] { background: var(--kv-color-primary-container); }
+.rl-theme__row[aria-checked="true"]::after { background: var(--kv-color-primary); }
+.rl-theme__row[aria-checked="true"] .rl-theme__name, .rl-theme__row[aria-checked="true"] .rl-theme__desc { color: var(--kv-color-on-primary-container); }
+.rl-theme__row:focus-visible { box-shadow: inset 0 0 0 3px var(--kv-color-focus-ring); }
+.rl-theme__swatch { flex-shrink: 0; width: 30px; height: 30px; clip-path: var(--kv-shape-gema);
+  background: linear-gradient(135deg, var(--kv-color-primary) 0 52%, var(--kv-color-surface-container) 52% 100%); }
+.rl-theme__text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.rl-theme__name { font: 700 calc(13 * var(--kv-px))/calc(18 * var(--kv-px)) var(--kv-font-body); }
+.rl-theme__desc { font: 400 calc(12 * var(--kv-px))/calc(16 * var(--kv-px)) var(--kv-font-body); color: var(--kv-color-on-surface-variant); }
+.rl-theme__check { width: 16px; height: 16px; flex-shrink: 0; stroke-width: 2.6; color: var(--kv-color-on-primary-container); }

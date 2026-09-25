@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#050D1E" />
+    <meta name="description" content="Kovalt Roller: mesa virtual para jugar Roll For Shoes con tus amigos." />
+    <title>Kovalt Roller</title>
+    <link rel="preload" as="font" type="font/ttf" href="/fonts/Amaranth-Regular.ttf" crossorigin />
+    <link rel="preload" as="font" type="font/ttf" href="/fonts/NunitoSans-Variable.ttf" crossorigin />
+    <script>
+      // Tema antes del primer pintado (evita el destello): kv-palette × kv-mode (o el esquema del
+      // sistema). Migra `kv-theme` de v1.2. Misma tabla que src/state/theme.ts.
+      (function () {
+        try {
+          var ls = localStorage, old = ls.getItem('kv-theme');
+          if (old !== null) {
+            if (ls.getItem('kv-palette') === null && ls.getItem('kv-mode') === null) {
+              if (old === 'grafito') ls.setItem('kv-palette', 'grafito');
+              if (old === 'cobalto' || old === 'grafito') ls.setItem('kv-mode', 'dark');
+              if (old === 'claro') ls.setItem('kv-mode', 'light');
+            }
+            ls.removeItem('kv-theme');
+          }
+          var bg = {
+            cobalto: ['#050D1E', '#F9EFDF'], grafito: ['#0C0D10', '#EDEFF3'], fosforo: ['#020C04', '#DFF6E4'],
+            brasa: ['#180806', '#FDEBDA'], azafran: ['#160D07', '#F9EED5'], pizarra: ['#0B1014', '#E9F0F7'],
+          };
+          var p = ls.getItem('kv-palette');
+          if (!bg[p]) p = 'cobalto';
+          var m = ls.getItem('kv-mode');
+          if (m !== 'dark' && m !== 'light') m = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          document.documentElement.dataset.theme = p + '-' + m;
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', bg[p][m === 'dark' ? 0 : 1]);
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

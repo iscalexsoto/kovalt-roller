@@ -1,0 +1,578 @@
+/* Tokens del sistema de diseño Kovalt (DESIGN.md §5.2; fuente normativa: kovalt-skill/references/theming.md).
+   Doce temas = seis paletas × dos modos, `<paleta>-<modo>` en `data-theme` de <html>: cobalto (por defecto) y
+   grafito (núcleo, acento cobalto) y fosforo, brasa, azafran y pizarra (extendidas: mueven el acento y nada
+   más; brasa y azafran son planas). Las extendidas redefinen los acentos semánticos, `ink`, `error` y
+   `--kv-metal-edge` (su anillo lleva el tono del acento). Los temas claros son pastel: ninguna superficie
+   llega al blanco puro (techo 0.975 L). */
+
+/* ===== Compartido (todos los temas) ===== */
+:root {
+  --kv-font-heading: 'Amaranth', Georgia, serif;
+  --kv-font-body: 'Nunito Sans', system-ui, sans-serif;
+  --kv-font-mono: 'Cascadia Mono', ui-monospace, Consolas, monospace;   /* solo código */
+
+  --kv-color-success: oklch(0.85 0.16 162);
+  --kv-color-info: oklch(0.85 0.14 199);
+  --kv-color-warning: oklch(0.88 0.19 101);
+  --kv-color-highlight: oklch(0.80 0.19 349);
+  --kv-color-ink: oklch(0.16 0.01 280);
+  --kv-color-error: oklch(0.60 0.20 25);
+  --kv-color-on-error: oklch(0.98 0.01 25);
+  --kv-color-on-primary: oklch(0.99 0.005 262);
+  --kv-metal-edge: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.25), 0 0 0 1px oklch(0.45 0.20 262 / 60%);
+
+  /* Dynamic Type — un solo factor mueve tipografía Y forma. En web el factor lo pone el navegador
+     (tamaño de fuente del usuario, vía `rem`) multiplicado por `--kv-scale` (0.85 – 2.0). */
+  --kv-scale: 1;
+  --kv-px: calc(0.0625rem * var(--kv-scale));  /* "píxel escalado": 1px al 100 % con la fuente del navegador en 16 */
+  --kv-u: calc(14 * var(--kv-px));             /* 1u = Label Large */
+  --kv-t-label-s: calc(12 * var(--kv-px));
+  --kv-t-label: calc(14 * var(--kv-px));
+  --kv-t-body: calc(16 * var(--kv-px));
+  --kv-t-title: calc(22 * var(--kv-px));
+  --kv-t-code-l: calc(14 * var(--kv-px));   /* Code Large 14/22: bloques y editor en modo Código */
+  --kv-t-code: calc(13 * var(--kv-px));     /* Code Medium 13/20: código inline dentro de Body Large */
+  --kv-t-code-s: calc(12 * var(--kv-px));   /* Code Small 12/18 */
+
+  /* Profundidad del Corte como proporción de u. B = A × 0.28, calculado. El corte se topa al 200 %
+     (28px de A en Corte L): por encima crece el texto, no el chaflán. */
+  --kv-uc: min(var(--kv-u), 28px);
+  --kv-a-xsc: calc(var(--kv-uc) * 0.43); --kv-b-xsc: calc(var(--kv-a-xsc) * 0.28);
+  --kv-a-xs: calc(var(--kv-uc) * 0.57); --kv-b-xs: calc(var(--kv-a-xs) * 0.28);
+  --kv-a-thumb: calc(var(--kv-uc) * 0.64); --kv-b-thumb: calc(var(--kv-a-thumb) * 0.28);
+  --kv-a-s: calc(var(--kv-uc) * 0.86); --kv-b-s: calc(var(--kv-a-s) * 0.28);
+  --kv-a-m: calc(var(--kv-uc) * 1.00); --kv-b-m: calc(var(--kv-a-m) * 0.28);
+  --kv-a-l: calc(var(--kv-uc) * 1.43); --kv-b-l: calc(var(--kv-a-l) * 0.28);
+  --kv-a-xl: calc(var(--kv-uc) * 2.00); --kv-b-xl: calc(var(--kv-a-xl) * 0.28);
+
+  /* Corte: chaflanes a 45°. A = profundo (TL/BR), B = leve (TR/BL). Se aplica con clip-path.
+     Escritos contra --kv-a-* / --kv-b-*: al 100 % resuelven a 6/2, 8/2, 12/3, 14/4, 20/6 y 28/8. */
+  --kv-cut-xsc: polygon(var(--kv-a-xsc) 0, calc(100% - var(--kv-b-xsc)) 0, 100% var(--kv-b-xsc), 100% calc(100% - var(--kv-a-xsc)), calc(100% - var(--kv-a-xsc)) 100%, var(--kv-b-xsc) 100%, 0 calc(100% - var(--kv-b-xsc)), 0 var(--kv-a-xsc));
+  --kv-cut-xs: polygon(var(--kv-a-xs) 0, calc(100% - var(--kv-b-xs)) 0, 100% var(--kv-b-xs), 100% calc(100% - var(--kv-a-xs)), calc(100% - var(--kv-a-xs)) 100%, var(--kv-b-xs) 100%, 0 calc(100% - var(--kv-b-xs)), 0 var(--kv-a-xs));
+  --kv-cut-thumb: polygon(var(--kv-a-thumb) 0, calc(100% - var(--kv-b-thumb)) 0, 100% var(--kv-b-thumb), 100% calc(100% - var(--kv-a-thumb)), calc(100% - var(--kv-a-thumb)) 100%, var(--kv-b-thumb) 100%, 0 calc(100% - var(--kv-b-thumb)), 0 var(--kv-a-thumb));
+  --kv-cut-s: polygon(var(--kv-a-s) 0, calc(100% - var(--kv-b-s)) 0, 100% var(--kv-b-s), 100% calc(100% - var(--kv-a-s)), calc(100% - var(--kv-a-s)) 100%, var(--kv-b-s) 100%, 0 calc(100% - var(--kv-b-s)), 0 var(--kv-a-s));
+  --kv-cut-m: polygon(var(--kv-a-m) 0, calc(100% - var(--kv-b-m)) 0, 100% var(--kv-b-m), 100% calc(100% - var(--kv-a-m)), calc(100% - var(--kv-a-m)) 100%, var(--kv-b-m) 100%, 0 calc(100% - var(--kv-b-m)), 0 var(--kv-a-m));
+  --kv-cut-l: polygon(var(--kv-a-l) 0, calc(100% - var(--kv-b-l)) 0, 100% var(--kv-b-l), 100% calc(100% - var(--kv-a-l)), calc(100% - var(--kv-a-l)) 100%, var(--kv-b-l) 100%, 0 calc(100% - var(--kv-b-l)), 0 var(--kv-a-l));
+  --kv-cut-xl: polygon(var(--kv-a-xl) 0, calc(100% - var(--kv-b-xl)) 0, 100% var(--kv-b-xl), 100% calc(100% - var(--kv-a-xl)), calc(100% - var(--kv-a-xl)) 100%, var(--kv-b-xl) 100%, 0 calc(100% - var(--kv-b-xl)), 0 var(--kv-a-xl));
+  /* Solo arriba (la superficie toca un borde recto): cierran con el vértice `0 A`. */
+  --kv-cut-xsc-top: polygon(var(--kv-a-xsc) 0, calc(100% - var(--kv-b-xsc)) 0, 100% var(--kv-b-xsc), 100% 100%, 0 100%, 0 var(--kv-a-xsc));
+  --kv-cut-m-top: polygon(var(--kv-a-m) 0, calc(100% - var(--kv-b-m)) 0, 100% var(--kv-b-m), 100% 100%, 0 100%, 0 var(--kv-a-m));
+  --kv-cut-l-top: polygon(var(--kv-a-l) 0, calc(100% - var(--kv-b-l)) 0, 100% var(--kv-b-l), 100% 100%, 0 100%, 0 var(--kv-a-l));
+  --kv-cut-xl-top: polygon(var(--kv-a-xl) 0, calc(100% - var(--kv-b-xl)) 0, 100% var(--kv-b-xl), 100% 100%, 0 100%, 0 var(--kv-a-xl));
+  --kv-cut-m-start: polygon(var(--kv-a-m) 0, 100% 0, 100% 100%, var(--kv-b-m) 100%, 0 calc(100% - var(--kv-b-m)), 0 var(--kv-a-m));
+  --kv-cut-m-end: polygon(0 0, calc(100% - var(--kv-b-m)) 0, 100% var(--kv-b-m), 100% calc(100% - var(--kv-a-m)), calc(100% - var(--kv-a-m)) 100%, 0 100%);
+
+  /* Ring: el borde de 1px de un elemento cortado, como `::after` recortado a polygon(evenodd, exterior…, interior…).
+     Cada lazo repite su primer vértice (si no, el lado izquierdo pierde el borde) y los vértices interiores del
+     chaflán van a A + 0.414px (desplazar una recta a 45° un píxel mueve su vértice √2 − 1). Es la única opción
+     bajo una capa traslúcida: un `filter` (rim) en un ancestro mata el backdrop-filter. */
+  --kv-ring-xsc: polygon(evenodd, 0 var(--kv-a-xsc), var(--kv-a-xsc) 0, calc(100% - var(--kv-b-xsc)) 0, 100% var(--kv-b-xsc), 100% calc(100% - var(--kv-a-xsc)), calc(100% - var(--kv-a-xsc)) 100%, var(--kv-b-xsc) 100%, 0 calc(100% - var(--kv-b-xsc)), 0 var(--kv-a-xsc), 1px calc(var(--kv-a-xsc) + 0.414px), 1px calc(100% - var(--kv-b-xsc) - 0.414px), calc(var(--kv-b-xsc) + 0.414px) calc(100% - 1px), calc(100% - var(--kv-a-xsc) - 0.414px) calc(100% - 1px), calc(100% - 1px) calc(100% - var(--kv-a-xsc) - 0.414px), calc(100% - 1px) calc(var(--kv-b-xsc) + 0.414px), calc(100% - var(--kv-b-xsc) - 0.414px) 1px, calc(var(--kv-a-xsc) + 0.414px) 1px, 1px calc(var(--kv-a-xsc) + 0.414px));
+  --kv-ring-xs: polygon(evenodd, 0 var(--kv-a-xs), var(--kv-a-xs) 0, calc(100% - var(--kv-b-xs)) 0, 100% var(--kv-b-xs), 100% calc(100% - var(--kv-a-xs)), calc(100% - var(--kv-a-xs)) 100%, var(--kv-b-xs) 100%, 0 calc(100% - var(--kv-b-xs)), 0 var(--kv-a-xs), 1px calc(var(--kv-a-xs) + 0.414px), 1px calc(100% - var(--kv-b-xs) - 0.414px), calc(var(--kv-b-xs) + 0.414px) calc(100% - 1px), calc(100% - var(--kv-a-xs) - 0.414px) calc(100% - 1px), calc(100% - 1px) calc(100% - var(--kv-a-xs) - 0.414px), calc(100% - 1px) calc(var(--kv-b-xs) + 0.414px), calc(100% - var(--kv-b-xs) - 0.414px) 1px, calc(var(--kv-a-xs) + 0.414px) 1px, 1px calc(var(--kv-a-xs) + 0.414px));
+  --kv-ring-s: polygon(evenodd, 0 var(--kv-a-s), var(--kv-a-s) 0, calc(100% - var(--kv-b-s)) 0, 100% var(--kv-b-s), 100% calc(100% - var(--kv-a-s)), calc(100% - var(--kv-a-s)) 100%, var(--kv-b-s) 100%, 0 calc(100% - var(--kv-b-s)), 0 var(--kv-a-s), 1px calc(var(--kv-a-s) + 0.414px), 1px calc(100% - var(--kv-b-s) - 0.414px), calc(var(--kv-b-s) + 0.414px) calc(100% - 1px), calc(100% - var(--kv-a-s) - 0.414px) calc(100% - 1px), calc(100% - 1px) calc(100% - var(--kv-a-s) - 0.414px), calc(100% - 1px) calc(var(--kv-b-s) + 0.414px), calc(100% - var(--kv-b-s) - 0.414px) 1px, calc(var(--kv-a-s) + 0.414px) 1px, 1px calc(var(--kv-a-s) + 0.414px));
+  --kv-ring-m: polygon(evenodd, 0 var(--kv-a-m), var(--kv-a-m) 0, calc(100% - var(--kv-b-m)) 0, 100% var(--kv-b-m), 100% calc(100% - var(--kv-a-m)), calc(100% - var(--kv-a-m)) 100%, var(--kv-b-m) 100%, 0 calc(100% - var(--kv-b-m)), 0 var(--kv-a-m), 1px calc(var(--kv-a-m) + 0.414px), 1px calc(100% - var(--kv-b-m) - 0.414px), calc(var(--kv-b-m) + 0.414px) calc(100% - 1px), calc(100% - var(--kv-a-m) - 0.414px) calc(100% - 1px), calc(100% - 1px) calc(100% - var(--kv-a-m) - 0.414px), calc(100% - 1px) calc(var(--kv-b-m) + 0.414px), calc(100% - var(--kv-b-m) - 0.414px) 1px, calc(var(--kv-a-m) + 0.414px) 1px, 1px calc(var(--kv-a-m) + 0.414px));
+  --kv-ring-l: polygon(evenodd, 0 var(--kv-a-l), var(--kv-a-l) 0, calc(100% - var(--kv-b-l)) 0, 100% var(--kv-b-l), 100% calc(100% - var(--kv-a-l)), calc(100% - var(--kv-a-l)) 100%, var(--kv-b-l) 100%, 0 calc(100% - var(--kv-b-l)), 0 var(--kv-a-l), 1px calc(var(--kv-a-l) + 0.414px), 1px calc(100% - var(--kv-b-l) - 0.414px), calc(var(--kv-b-l) + 0.414px) calc(100% - 1px), calc(100% - var(--kv-a-l) - 0.414px) calc(100% - 1px), calc(100% - 1px) calc(100% - var(--kv-a-l) - 0.414px), calc(100% - 1px) calc(var(--kv-b-l) + 0.414px), calc(100% - var(--kv-b-l) - 0.414px) 1px, calc(var(--kv-a-l) + 0.414px) 1px, 1px calc(var(--kv-a-l) + 0.414px));
+  /* Ring solo arriba (sheet, campo relleno): tres lados; abajo el borde lo pone la pantalla o el subrayado. */
+  --kv-ring-xsc-top: polygon(evenodd, 0 var(--kv-a-xsc), var(--kv-a-xsc) 0, calc(100% - var(--kv-b-xsc)) 0, 100% var(--kv-b-xsc), 100% 100%, 0 100%, 0 var(--kv-a-xsc), 1px calc(var(--kv-a-xsc) + 0.414px), 1px 100%, calc(100% - 1px) 100%, calc(100% - 1px) calc(var(--kv-b-xsc) + 0.414px), calc(100% - var(--kv-b-xsc) - 0.414px) 1px, calc(var(--kv-a-xsc) + 0.414px) 1px, 1px calc(var(--kv-a-xsc) + 0.414px));
+
+  /* Rim: el borde de 1px de un elemento cortado sobre superficie OPACA. Va en un WRAPPER, nunca en el elemento
+     cortado. */
+  --kv-rim: drop-shadow(1px 0 0 var(--kv-color-outline)) drop-shadow(-1px 0 0 var(--kv-color-outline)) drop-shadow(0 1px 0 var(--kv-color-outline)) drop-shadow(0 -1px 0 var(--kv-color-outline));
+  --kv-rim-strong: drop-shadow(1px 0 0 var(--kv-color-outline-strong)) drop-shadow(-1px 0 0 var(--kv-color-outline-strong)) drop-shadow(0 1px 0 var(--kv-color-outline-strong)) drop-shadow(0 -1px 0 var(--kv-color-outline-strong));
+  --kv-rim-primary: drop-shadow(1px 0 0 var(--kv-color-primary)) drop-shadow(-1px 0 0 var(--kv-color-primary)) drop-shadow(0 1px 0 var(--kv-color-primary)) drop-shadow(0 -1px 0 var(--kv-color-primary));
+  --kv-rim-error: drop-shadow(1px 0 0 var(--kv-color-error)) drop-shadow(-1px 0 0 var(--kv-color-error)) drop-shadow(0 1px 0 var(--kv-color-error)) drop-shadow(0 -1px 0 var(--kv-color-error));
+  --kv-rim-success: drop-shadow(1px 0 0 var(--kv-color-success)) drop-shadow(-1px 0 0 var(--kv-color-success)) drop-shadow(0 1px 0 var(--kv-color-success)) drop-shadow(0 -1px 0 var(--kv-color-success));
+  /* La skill lo usa (caja activa del campo de código) sin definirlo: anillo del acento, como `--kv-rim-primary`. */
+  --kv-rim-focus: var(--kv-rim-primary);
+  --kv-lift: drop-shadow(0 10px 20px rgba(0,0,0,.45));
+  --kv-lift-up: drop-shadow(0 -4px 14px rgba(0,0,0,.32));
+  --kv-shape-gema: polygon(28% 0,72% 0,100% 28%,100% 72%,72% 100%,28% 100%,0 72%,0 28%);
+  --kv-shape-gema-small: polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);
+  --kv-shape-parallelogram: polygon(3px 0,100% 0,calc(100% - 3px) 100%,0 100%);
+  --kv-shape-circle: 999px;
+
+  --kv-space-1: 4px; --kv-space-2: 8px; --kv-space-3: 12px; --kv-space-4: 16px; --kv-space-5: 20px;
+  --kv-space-6: 24px; --kv-space-8: 32px; --kv-space-10: 40px; --kv-space-12: 48px; --kv-space-16: 64px;
+  --kv-margin: 16px; --kv-gutter: 12px;
+
+  --kv-duration-short: 120ms; --kv-duration-medium: 220ms; --kv-duration-long: 320ms;
+  --kv-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --kv-easing-exit: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --kv-easing-kobold: cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+/* ===== Cobalto Noche (dark) ===== */
+:root, [data-theme="cobalto-dark"] {
+  color-scheme: dark;
+  --kv-color-bg: oklch(0.16 0.04 262);
+  --kv-color-surface: oklch(0.20 0.04 262);
+  --kv-color-surface-container: oklch(0.24 0.045 262);
+  --kv-color-surface-container-high: oklch(0.29 0.05 262);
+  --kv-color-on-surface: oklch(0.96 0.01 262);
+  --kv-color-on-surface-variant: oklch(0.76 0.03 262);
+  --kv-color-on-surface-faint: oklch(0.66 0.03 262);
+  --kv-color-outline: oklch(0.36 0.06 262);
+  --kv-color-outline-strong: oklch(0.52 0.08 262);
+  --kv-color-primary: oklch(0.58 0.21 262);
+  --kv-color-primary-bright: oklch(0.80 0.12 262);
+  --kv-color-on-primary: oklch(0.99 0.005 262);
+  --kv-color-primary-container: oklch(0.34 0.13 262);
+  --kv-color-on-primary-container: oklch(0.92 0.06 262);
+  --kv-color-error-container: oklch(0.30 0.09 25);
+  --kv-color-focus-ring: oklch(0.58 0.21 262 / 30%);
+  --kv-color-link: oklch(0.72 0.12 262);
+  --kv-color-link-hover: oklch(0.86 0.12 262);
+  --kv-color-success-text: var(--kv-color-success);
+  --kv-color-info-text: var(--kv-color-info);
+  --kv-color-warning-text: var(--kv-color-warning);
+  --kv-color-highlight-text: var(--kv-color-highlight);
+  --kv-color-glow: oklch(0.32 0.12 262 / 55%);
+  --kv-glow: radial-gradient(ellipse 60% 40% at 15% 0%, var(--kv-color-glow), transparent 70%);
+  --kv-metal: linear-gradient(180deg, oklch(0.64 0.19 262), oklch(0.50 0.22 262));
+  --kv-metal-edge: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.25), 0 0 0 1px oklch(0.46 0.21 262 / 60%);
+  --kv-filo: inset 0 1px 0 oklch(0.8 0.1 262 / 22%), inset 0 -1px 0 rgba(0,0,0,.30);
+  --kv-scrim: rgba(0,0,0,.45);
+  --kv-state-hover: .06; --kv-state-pressed: .10; --kv-state-dragged: .14;
+}
+
+/* ===== Cobalto Crema (light) ===== */
+[data-theme="cobalto-light"] {
+  color-scheme: light;
+  --kv-color-bg: oklch(0.955 0.024 80);
+  --kv-color-surface: oklch(0.975 0.018 80);
+  --kv-color-surface-container: oklch(0.925 0.032 285);
+  --kv-color-surface-container-high: oklch(0.88 0.044 285);
+  --kv-color-on-surface: oklch(0.24 0.03 275);
+  --kv-color-on-surface-variant: oklch(0.46 0.03 275);
+  --kv-color-on-surface-faint: oklch(0.50 0.03 275);
+  --kv-color-outline: oklch(0.825 0.038 285);
+  --kv-color-outline-strong: oklch(0.62 0.05 275);
+  --kv-color-primary: oklch(0.50 0.22 262);
+  --kv-color-primary-bright: oklch(0.42 0.2 262);
+  --kv-color-on-primary: oklch(0.99 0.005 262);
+  --kv-color-primary-container: oklch(0.90 0.06 262);
+  --kv-color-on-primary-container: oklch(0.32 0.15 262);
+  --kv-color-error-container: oklch(0.92 0.05 25);
+  --kv-color-focus-ring: oklch(0.50 0.22 262 / 25%);
+  --kv-color-link: oklch(0.48 0.2 262);
+  --kv-color-link-hover: oklch(0.42 0.2 262);
+  --kv-color-success-text: oklch(0.50 0.14 162);
+  --kv-color-info-text: oklch(0.50 0.12 199);
+  --kv-color-warning-text: oklch(0.55 0.15 95);
+  --kv-color-highlight-text: oklch(0.55 0.19 349);
+  --kv-color-glow: oklch(0.88 0.06 262 / 60%);
+  --kv-glow: radial-gradient(ellipse 60% 40% at 15% 0%, var(--kv-color-glow), transparent 70%);
+  --kv-metal: linear-gradient(180deg, oklch(0.58 0.21 262), oklch(0.46 0.22 262));
+  --kv-metal-edge: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.25), 0 0 0 1px oklch(0.38 0.22 262 / 60%);
+  --kv-filo: inset 0 1px 0 oklch(0.99 0.012 80 / 85%), 0 1px 2px oklch(0.30 0.05 275 / 10%);
+  --kv-scrim: oklch(0.24 0.03 275 / 35%);
+  --kv-state-hover: .05; --kv-state-pressed: .09; --kv-state-dragged: .12;
+}
+
+/* ===== Grafito Noche (dark) ===== */
+[data-theme="grafito-dark"] {
+  color-scheme: dark;
+  --kv-color-bg: oklch(0.16 0.006 262);
+  --kv-color-surface: oklch(0.20 0.006 262);
+  --kv-color-surface-container: oklch(0.24 0.007 262);
+  --kv-color-surface-container-high: oklch(0.29 0.008 262);
+  --kv-color-on-surface: oklch(0.96 0.003 262);
+  --kv-color-on-surface-variant: oklch(0.72 0.005 262);
+  --kv-color-on-surface-faint: oklch(0.66 0.005 262);
+  --kv-color-outline: oklch(0.34 0.008 262);
+  --kv-color-outline-strong: oklch(0.50 0.01 262);
+  --kv-color-primary: oklch(0.58 0.21 262);
+  --kv-color-primary-bright: oklch(0.80 0.12 262);
+  --kv-color-on-primary: oklch(0.99 0.005 262);
+  --kv-color-primary-container: oklch(0.32 0.11 262);
+  --kv-color-on-primary-container: oklch(0.92 0.06 262);
+  --kv-color-error-container: oklch(0.30 0.09 25);
+  --kv-color-focus-ring: oklch(0.58 0.21 262 / 30%);
+  --kv-color-link: oklch(0.72 0.12 262);
+  --kv-color-link-hover: oklch(0.86 0.12 262);
+  --kv-color-success-text: var(--kv-color-success);
+  --kv-color-info-text: var(--kv-color-info);
+  --kv-color-warning-text: var(--kv-color-warning);
+  --kv-color-highlight-text: var(--kv-color-highlight);
+  --kv-color-glow: oklch(0.26 0.02 262 / 60%);
+  --kv-glow: radial-gradient(ellipse 60% 40% at 15% 0%, var(--kv-color-glow), transparent 70%);
+  --kv-metal: linear-gradient(180deg, oklch(0.64 0.19 262), oklch(0.50 0.22 262));
+  --kv-metal-edge: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.25), 0 0 0 1px oklch(0.46 0.21 262 / 60%);
+  --kv-filo: inset 0 1px 0 oklch(0.8 0.1 262 / 22%), inset 0 -1px 0 rgba(0,0,0,.30);
+  --kv-scrim: rgba(0,0,0,.45);
+  --kv-state-hover: .06; --kv-state-pressed: .10; --kv-state-dragged: .14;
+}
+
+/* ===== Grafito Claro (light) ===== */
+[data-theme="grafito-light"] {
+  color-scheme: light;
+  --kv-color-bg: oklch(0.952 0.005 262);
+  --kv-color-surface: oklch(0.974 0.004 262);
+  --kv-color-surface-container: oklch(0.925 0.006 262);
+  --kv-color-surface-container-high: oklch(0.875 0.008 262);
+  --kv-color-on-surface: oklch(0.26 0.01 262);
+  --kv-color-on-surface-variant: oklch(0.46 0.01 262);
+  --kv-color-on-surface-faint: oklch(0.50 0.01 262);
+  --kv-color-outline: oklch(0.845 0.008 262);
+  --kv-color-outline-strong: oklch(0.62 0.015 262);
+  --kv-color-primary: oklch(0.50 0.22 262);
+  --kv-color-primary-bright: oklch(0.42 0.20 262);
+  --kv-color-on-primary: oklch(0.99 0.005 262);
+  --kv-color-primary-container: oklch(0.90 0.055 262);
+  --kv-color-on-primary-container: oklch(0.32 0.15 262);
+  --kv-color-error-container: oklch(0.92 0.05 25);
+  --kv-color-focus-ring: oklch(0.50 0.22 262 / 25%);
+  --kv-color-link: oklch(0.48 0.2 262);
+  --kv-color-link-hover: oklch(0.42 0.20 262);
+  --kv-color-success-text: oklch(0.50 0.14 162);
+  --kv-color-info-text: oklch(0.50 0.12 199);
+  --kv-color-warning-text: oklch(0.55 0.15 95);
+  --kv-color-highlight-text: oklch(0.55 0.19 349);
+  --kv-color-glow: oklch(0.90 0.03 262 / 55%);
+  --kv-glow: radial-gradient(ellipse 60% 40% at 15% 0%, var(--kv-color-glow), transparent 70%);
+  --kv-metal: linear-gradient(180deg, oklch(0.58 0.21 262), oklch(0.46 0.22 262));
+  --kv-metal-edge: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.25), 0 0 0 1px oklch(0.38 0.22 262 / 60%);
+  --kv-filo: inset 0 1px 0 oklch(0.99 0.004 262 / 85%), 0 1px 2px oklch(0.30 0.05 275 / 10%);
+  --kv-scrim: oklch(0.26 0.01 262 / 35%);
+  --kv-state-hover: .05; --kv-state-pressed: .09; --kv-state-dragged: .12;
+}
+
+/* ===== Fósforo Noche (dark) ===== */
+[data-theme="fosforo-dark"] {
+  color-scheme: dark;
+  --kv-color-bg: oklch(0.14 0.03 150);
+  --kv-color-surface: oklch(0.18 0.035 150);
+  --kv-color-surface-container: oklch(0.22 0.04 150);
+  --kv-color-surface-container-high: oklch(0.27 0.045 150);
+  --kv-color-on-surface: oklch(0.92 0.17 150);
+  --kv-color-on-surface-variant: oklch(0.78 0.14 150);
+  --kv-color-on-surface-faint: oklch(0.68 0.12 150);
+  --kv-color-outline: oklch(0.34 0.07 150);
+  --kv-color-outline-strong: oklch(0.52 0.13 150);
+  --kv-color-primary: oklch(0.78 0.22 150);
+  --kv-color-primary-bright: oklch(0.88 0.20 150);
+  --kv-color-on-primary: oklch(0.15 0.04 150);
+  --kv-color-primary-container: oklch(0.30 0.10 150);
+  --kv-color-on-primary-container: oklch(0.90 0.18 150);
+  --kv-color-ink: oklch(0.15 0.04 150);
+  --kv-color-error: oklch(0.70 0.19 32);
+  --kv-color-on-error: oklch(0.16 0.03 32);
+  --kv-color-error-container: oklch(0.30 0.09 32);
+  --kv-color-focus-ring: oklch(0.78 0.22 150 / 30%);
+  --kv-color-link: oklch(0.8 0.2 150);
+  --kv-color-link-hover: oklch(0.94 0.2 150);
+  --kv-color-success: oklch(0.86 0.20 150);
+  --kv-color-info: oklch(0.85 0.11 186);
+  --kv-color-warning: oklch(0.86 0.17 88);
+  --kv-color-highlight: oklch(0.93 0.10 150);
+  --kv-color-success-text: var(--kv-color-success);
+  --kv-color-info-text: var(--kv-color-info);
+  --kv-color-warning-text: var(--kv-color-warning);
+  --kv-color-highlight-text: var(--kv-color-highlight);
+  --kv-color-glow: oklch(0.42 0.16 150 / 45%);
+  --kv-glow: radial-gradient(ellipse 65% 45% at 15% 0%, var(--kv-color-glow), transparent 70%);
+  --kv-metal: linear-gradient(180deg, oklch(0.84 0.22 150), oklch(0.70 0.21 150));
+  --kv-metal-edge: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.25), 0 0 0 1px oklch(0.66 0.22 150 / 60%);
+  --kv-filo: inset 0 1px 0 oklch(0.90 0.18 150 / 24%), inset 0 -1px 0 rgba(0,0,0,.30);
+  --kv-scrim: rgba(0,0,0,.45);
+  --kv-state-hover: .06; --kv-state-pressed: .10; --kv-state-dragged: .14;
+}
+
+/* ===== Fósforo Claro (light) ===== */
+[data-theme="fosforo-light"] {
+  color-scheme: light;
+  --kv-color-bg: oklch(0.952 0.035 152);
+  --kv-color-surface: oklch(0.974 0.026 152);
+  --kv-color-surface-container: oklch(0.92 0.05 152);
+  --kv-color-surface-container-high: oklch(0.872 0.065 152);
+  --kv-color-on-surface: oklch(0.26 0.06 152);
+  --kv-color-on-surface-variant: oklch(0.44 0.06 152);
+  --kv-color-on-surface-faint: oklch(0.50 0.055 152);
+  --kv-color-outline: oklch(0.845 0.045 152);
+  --kv-color-outline-strong: oklch(0.58 0.09 152);
+  --kv-color-primary: oklch(0.48 0.15 152);
+  --kv-color-primary-bright: oklch(0.40 0.13 152);
+  --kv-color-on-primary: oklch(0.985 0.012 150);
+  --kv-color-primary-container: oklch(0.90 0.07 152);
+  --kv-color-on-primary-container: oklch(0.30 0.10 152);
+  --kv-color-ink: oklch(0.20 0.04 150);
+  --kv-color-error: oklch(0.50 0.20 25);
+  --kv-color-on-error: oklch(0.99 0.01 25);
+  --kv-color-error-container: oklch(0.92 0.05 25);
+  --kv-color-focus-ring: oklch(0.48 0.15 152 / 25%);
+  --kv-color-link: oklch(0.46 0.13 152);
+  --kv-color-link-hover: oklch(0.40 0.13 152);
+  --kv-color-success: oklch(0.84 0.15 150);
+  --kv-color-info: oklch(0.85 0.10 186);
+  --kv-color-warning: oklch(0.88 0.16 88);
+  --kv-color-highlight: oklch(0.90 0.09 150);
+  --kv-color-success-text: oklch(0.46 0.13 150);
+  --kv-color-info-text: oklch(0.45 0.09 195);
+  --kv-color-warning-text: oklch(0.52 0.13 80);
+  --kv-color-highlight-text: oklch(0.44 0.10 158);
+  --kv-color-glow: oklch(0.90 0.06 152 / 55%);
+  --kv-glow: radial-gradient(ellipse 65% 45% at 15% 0%, var(--kv-color-glow), transparent 70%);
+  --kv-metal: linear-gradient(180deg, oklch(0.54 0.15 152), oklch(0.44 0.15 152));
+  --kv-metal-edge: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.25), 0 0 0 1px oklch(0.36 0.15 152 / 60%);
+  --kv-filo: inset 0 1px 0 oklch(0.99 0.015 150 / 85%), 0 1px 2px oklch(0.30 0.05 275 / 10%);
+  --kv-scrim: oklch(0.26 0.06 152 / 35%);
+  --kv-state-hover: .05; --kv-state-pressed: .09; --kv-state-dragged: .12;
+}
+
+/* ===== Brasa Noche (dark, flat) ===== */
+[data-theme="brasa-dark"] {
+  color-scheme: dark;
+  --kv-color-bg: oklch(0.16 0.03 30);
+  --kv-color-surface: oklch(0.20 0.035 30);
+  --kv-color-surface-container: oklch(0.24 0.04 28);
+  --kv-color-surface-container-high: oklch(0.29 0.045 28);
+  --kv-color-on-surface: oklch(0.95 0.02 40);
+  --kv-color-on-surface-variant: oklch(0.76 0.035 35);
+  --kv-color-on-surface-faint: oklch(0.67 0.035 35);
+  --kv-color-outline: oklch(0.35 0.05 30);
+  --kv-color-outline-strong: oklch(0.52 0.08 30);
+  --kv-color-primary: oklch(0.68 0.19 30);
+  --kv-color-primary-bright: oklch(0.80 0.14 32);
+  --kv-color-on-primary: oklch(0.16 0.03 30);
+  --kv-color-primary-container: oklch(0.33 0.10 28);
+  --kv-color-on-primary-container: oklch(0.92 0.07 32);
+  --kv-color-ink: oklch(0.16 0.03 30);
+  --kv-color-error: oklch(0.70 0.20 18);
+  --kv-color-on-error: oklch(0.16 0.03 18);
+  --kv-color-error-container: oklch(0.30 0.09 18);
+  --kv-color-focus-ring: oklch(0.68 0.19 30 / 30%);
+  --kv-color-link: oklch(0.72 0.14 32);
+  --kv-color-link-hover: oklch(0.86 0.14 32);
+  --kv-color-success: oklch(0.84 0.15 148);
+  --kv-color-info: oklch(0.84 0.11 212);
+  --kv-color-warning: oklch(0.86 0.17 88);
+  --kv-color-highlight: oklch(0.82 0.13 8);
+  --kv-color-success-text: var(--kv-color-success);
+  --kv-color-info-text: var(--kv-color-info);
+  --kv-color-warning-text: var(--kv-color-warning);
+  --kv-color-highlight-text: var(--kv-color-highlight);
+  --kv-color-glow: oklch(0.34 0.09 30 / 50%);
+  --kv-glow: radial-gradient(ellipse 65% 45% at 15% 0%, var(--kv-color-glow), transparent 70%);
+  --kv-metal: oklch(0.68 0.19 30);                       /* plano: color sólido */
+  --kv-metal-edge: 0 0 0 1px oklch(0.58 0.19 30);        /* plano: solo el anillo */
+  --kv-filo: 0 0 #0000;                                  /* plano: sin filo */
+  --kv-scrim: rgba(0,0,0,.45);
+  --kv-state-hover: .06; --kv-state-pressed: .10; --kv-state-dragged: .14;
+}
+
+/* ===== Brasa Claro (light, flat) ===== */
+[data-theme="brasa-light"] {
+  color-scheme: light;
+  --kv-color-bg: oklch(0.95 0.03 65);
+  --kv-color-surface: oklch(0.972 0.022 70);
+  --kv-color-surface-container: oklch(0.925 0.042 42);
+  --kv-color-surface-container-high: oklch(0.875 0.058 38);
+  --kv-color-on-surface: oklch(0.25 0.045 35);
+  --kv-color-on-surface-variant: oklch(0.45 0.05 35);
+  --kv-color-on-surface-faint: oklch(0.50 0.045 35);
+  --kv-color-outline: oklch(0.84 0.048 45);
+  --kv-color-outline-strong: oklch(0.60 0.07 38);
+  --kv-color-primary: oklch(0.52 0.20 27);
+  --kv-color-primary-bright: oklch(0.46 0.20 27);
+  --kv-color-on-primary: oklch(0.99 0.01 40);
+  --kv-color-primary-container: oklch(0.91 0.06 32);
+  --kv-color-on-primary-container: oklch(0.34 0.16 28);
+  --kv-color-ink: oklch(0.23 0.05 35);
+  --kv-color-error: oklch(0.50 0.20 25);
+  --kv-color-on-error: oklch(0.99 0.01 25);
+  --kv-color-error-container: oklch(0.92 0.05 25);
+  --kv-color-focus-ring: oklch(0.52 0.20 27 / 25%);
+  --kv-color-link: oklch(0.52 0.2 27);
+  --kv-color-link-hover: oklch(0.46 0.20 27);
+  --kv-color-success: oklch(0.82 0.14 150);
+  --kv-color-info: oklch(0.84 0.13 220);
+  --kv-color-warning: oklch(0.88 0.17 88);
+  --kv-color-highlight: oklch(0.82 0.15 20);
+  --kv-color-success-text: oklch(0.48 0.14 150);
+  --kv-color-info-text: oklch(0.48 0.13 220);
+  --kv-color-warning-text: oklch(0.52 0.14 75);
+  --kv-color-highlight-text: oklch(0.48 0.17 20);
+  --kv-color-glow: oklch(0.90 0.06 45 / 55%);
+  --kv-glow: radial-gradient(ellipse 65% 45% at 15% 0%, var(--kv-color-glow), transparent 70%);
+  --kv-metal: oklch(0.52 0.20 27);                       /* plano: color sólido */
+  --kv-metal-edge: 0 0 0 1px oklch(0.42 0.2 27);        /* plano: solo el anillo */
+  --kv-filo: 0 0 #0000;                                  /* plano: sin filo */
+  --kv-scrim: oklch(0.25 0.045 35 / 35%);
+  --kv-state-hover: .05; --kv-state-pressed: .09; --kv-state-dragged: .12;
+}
+
+/* ===== Azafrán Noche (dark, flat) ===== */
+[data-theme="azafran-dark"] {
+  color-scheme: dark;
+  --kv-color-bg: oklch(0.17 0.02 62);
+  --kv-color-surface: oklch(0.21 0.024 62);
+  --kv-color-surface-container: oklch(0.25 0.028 62);
+  --kv-color-surface-container-high: oklch(0.30 0.032 62);
+  --kv-color-on-surface: oklch(0.95 0.02 80);
+  --kv-color-on-surface-variant: oklch(0.76 0.03 80);
+  --kv-color-on-surface-faint: oklch(0.67 0.03 80);
+  --kv-color-outline: oklch(0.35 0.035 62);
+  --kv-color-outline-strong: oklch(0.52 0.05 68);
+  --kv-color-primary: oklch(0.80 0.17 82);
+  --kv-color-primary-bright: oklch(0.88 0.15 85);
+  --kv-color-on-primary: oklch(0.18 0.02 70);
+  --kv-color-primary-container: oklch(0.34 0.08 75);
+  --kv-color-on-primary-container: oklch(0.92 0.10 85);
+  --kv-color-ink: oklch(0.18 0.02 70);
+  --kv-color-error: oklch(0.66 0.19 30);
+  --kv-color-on-error: oklch(0.16 0.03 30);
+  --kv-color-error-container: oklch(0.30 0.09 30);
+  --kv-color-focus-ring: oklch(0.80 0.17 82 / 30%);
+  --kv-color-link: oklch(0.8 0.15 85);
+  --kv-color-link-hover: oklch(0.94 0.15 85);
+  --kv-color-success: oklch(0.84 0.15 148);
+  --kv-color-info: oklch(0.84 0.11 212);
+  --kv-color-warning: oklch(0.86 0.17 88);
+  --kv-color-highlight: oklch(0.78 0.18 28);
+  --kv-color-success-text: var(--kv-color-success);
+  --kv-color-info-text: var(--kv-color-info);
+  --kv-color-warning-text: var(--kv-color-warning);
+  --kv-color-highlight-text: var(--kv-color-highlight);
+  --kv-color-glow: oklch(0.36 0.08 70 / 50%);
+  --kv-glow: radial-gradient(ellipse 65% 45% at 15% 0%, var(--kv-color-glow), transparent 70%);
+  --kv-metal: oklch(0.80 0.17 82);                       /* plano: color sólido */
+  --kv-metal-edge: 0 0 0 1px oklch(0.7 0.17 82);        /* plano: solo el anillo */
+  --kv-filo: 0 0 #0000;                                  /* plano: sin filo */
+  --kv-scrim: rgba(0,0,0,.45);
+  --kv-state-hover: .06; --kv-state-pressed: .10; --kv-state-dragged: .14;
+}
+
+/* ===== Azafrán Claro (light, flat) ===== */
+[data-theme="azafran-light"] {
+  color-scheme: light;
+  --kv-color-bg: oklch(0.952 0.035 88);
+  --kv-color-surface: oklch(0.974 0.025 88);
+  --kv-color-surface-container: oklch(0.925 0.05 80);
+  --kv-color-surface-container-high: oklch(0.872 0.065 78);
+  --kv-color-on-surface: oklch(0.27 0.045 70);
+  --kv-color-on-surface-variant: oklch(0.45 0.05 70);
+  --kv-color-on-surface-faint: oklch(0.51 0.045 70);
+  --kv-color-outline: oklch(0.845 0.045 82);
+  --kv-color-outline-strong: oklch(0.60 0.07 75);
+  --kv-color-primary: oklch(0.52 0.14 68);
+  --kv-color-primary-bright: oklch(0.45 0.13 65);
+  --kv-color-on-primary: oklch(0.99 0.012 85);
+  --kv-color-primary-container: oklch(0.91 0.07 85);
+  --kv-color-on-primary-container: oklch(0.33 0.10 70);
+  --kv-color-ink: oklch(0.24 0.04 70);
+  --kv-color-error: oklch(0.50 0.20 25);
+  --kv-color-on-error: oklch(0.99 0.01 25);
+  --kv-color-error-container: oklch(0.92 0.05 25);
+  --kv-color-focus-ring: oklch(0.52 0.14 68 / 25%);
+  --kv-color-link: oklch(0.51 0.13 65);
+  --kv-color-link-hover: oklch(0.45 0.13 65);
+  --kv-color-success: oklch(0.84 0.14 148);
+  --kv-color-info: oklch(0.84 0.11 212);
+  --kv-color-warning: oklch(0.88 0.16 88);
+  --kv-color-highlight: oklch(0.80 0.16 28);
+  --kv-color-success-text: oklch(0.47 0.13 148);
+  --kv-color-info-text: oklch(0.46 0.11 222);
+  --kv-color-warning-text: oklch(0.50 0.13 72);
+  --kv-color-highlight-text: oklch(0.48 0.18 28);
+  --kv-color-glow: oklch(0.91 0.07 88 / 55%);
+  --kv-glow: radial-gradient(ellipse 65% 45% at 15% 0%, var(--kv-color-glow), transparent 70%);
+  --kv-metal: oklch(0.52 0.14 68);                       /* plano: color sólido */
+  --kv-metal-edge: 0 0 0 1px oklch(0.42 0.14 68);        /* plano: solo el anillo */
+  --kv-filo: 0 0 #0000;                                  /* plano: sin filo */
+  --kv-scrim: oklch(0.27 0.045 70 / 35%);
+  --kv-state-hover: .05; --kv-state-pressed: .09; --kv-state-dragged: .12;
+}
+
+/* ===== Pizarra Noche (dark) ===== */
+[data-theme="pizarra-dark"] {
+  color-scheme: dark;
+  --kv-color-bg: oklch(0.17 0.012 240);
+  --kv-color-surface: oklch(0.21 0.014 240);
+  --kv-color-surface-container: oklch(0.25 0.016 240);
+  --kv-color-surface-container-high: oklch(0.30 0.018 240);
+  --kv-color-on-surface: oklch(0.95 0.008 240);
+  --kv-color-on-surface-variant: oklch(0.74 0.012 240);
+  --kv-color-on-surface-faint: oklch(0.66 0.012 240);
+  --kv-color-outline: oklch(0.35 0.018 240);
+  --kv-color-outline-strong: oklch(0.51 0.028 240);
+  --kv-color-primary: oklch(0.53 0.11 235);
+  --kv-color-primary-bright: oklch(0.80 0.07 235);
+  --kv-color-on-primary: oklch(0.99 0.004 250);
+  --kv-color-primary-container: oklch(0.33 0.07 235);
+  --kv-color-on-primary-container: oklch(0.91 0.04 235);
+  --kv-color-ink: oklch(0.16 0.012 250);
+  --kv-color-error-container: oklch(0.30 0.09 25);
+  --kv-color-focus-ring: oklch(0.60 0.11 235 / 30%);
+  --kv-color-link: oklch(0.72 0.07 235);
+  --kv-color-link-hover: oklch(0.86 0.07 235);
+  --kv-color-success: oklch(0.84 0.12 152);
+  --kv-color-info: oklch(0.85 0.10 220);
+  --kv-color-warning: oklch(0.88 0.15 90);
+  --kv-color-highlight: oklch(0.82 0.12 300);
+  --kv-color-success-text: var(--kv-color-success);
+  --kv-color-info-text: var(--kv-color-info);
+  --kv-color-warning-text: var(--kv-color-warning);
+  --kv-color-highlight-text: var(--kv-color-highlight);
+  --kv-color-glow: oklch(0.28 0.05 240 / 55%);
+  --kv-glow: radial-gradient(ellipse 65% 45% at 15% 0%, var(--kv-color-glow), transparent 70%);
+  --kv-metal: linear-gradient(180deg, oklch(0.58 0.11 235), oklch(0.48 0.11 235));
+  --kv-metal-edge: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.25), 0 0 0 1px oklch(0.48 0.11 235 / 60%);
+  --kv-filo: inset 0 1px 0 oklch(0.85 0.06 235 / 22%), inset 0 -1px 0 rgba(0,0,0,.30);
+  --kv-scrim: rgba(0,0,0,.45);
+  --kv-state-hover: .06; --kv-state-pressed: .10; --kv-state-dragged: .14;
+}
+
+/* ===== Pizarra Claro (light) ===== */
+[data-theme="pizarra-light"] {
+  color-scheme: light;
+  --kv-color-bg: oklch(0.952 0.012 250);
+  --kv-color-surface: oklch(0.974 0.009 250);
+  --kv-color-surface-container: oklch(0.925 0.016 250);
+  --kv-color-surface-container-high: oklch(0.875 0.020 250);
+  --kv-color-on-surface: oklch(0.26 0.015 250);
+  --kv-color-on-surface-variant: oklch(0.46 0.015 250);
+  --kv-color-on-surface-faint: oklch(0.51 0.015 250);
+  --kv-color-outline: oklch(0.845 0.016 250);
+  --kv-color-outline-strong: oklch(0.62 0.020 250);
+  --kv-color-primary: oklch(0.43 0.085 235);
+  --kv-color-primary-bright: oklch(0.37 0.085 235);
+  --kv-color-on-primary: oklch(0.99 0.004 250);
+  --kv-color-primary-container: oklch(0.91 0.030 235);
+  --kv-color-on-primary-container: oklch(0.30 0.070 235);
+  --kv-color-ink: oklch(0.20 0.01 250);
+  --kv-color-error: oklch(0.50 0.19 25);
+  --kv-color-on-error: oklch(0.99 0.01 25);
+  --kv-color-error-container: oklch(0.92 0.05 25);
+  --kv-color-focus-ring: oklch(0.43 0.085 235 / 25%);
+  --kv-color-link: oklch(0.43 0.085 235);
+  --kv-color-link-hover: oklch(0.37 0.085 235);
+  --kv-color-success: oklch(0.84 0.12 152);
+  --kv-color-info: oklch(0.85 0.10 220);
+  --kv-color-warning: oklch(0.88 0.15 90);
+  --kv-color-highlight: oklch(0.82 0.12 300);
+  --kv-color-success-text: oklch(0.46 0.11 152);
+  --kv-color-info-text: oklch(0.46 0.10 235);
+  --kv-color-warning-text: oklch(0.52 0.12 80);
+  --kv-color-highlight-text: oklch(0.46 0.14 300);
+  --kv-color-glow: oklch(0.92 0.02 235 / 60%);
+  --kv-glow: radial-gradient(ellipse 65% 45% at 15% 0%, var(--kv-color-glow), transparent 70%);
+  --kv-metal: linear-gradient(180deg, oklch(0.49 0.085 235), oklch(0.39 0.085 235));
+  --kv-metal-edge: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.25), 0 0 0 1px oklch(0.31 0.085 235 / 60%);
+  --kv-filo: inset 0 1px 0 oklch(0.99 0.008 250 / 80%), 0 1px 2px oklch(0.30 0.05 275 / 10%);
+  --kv-scrim: oklch(0.26 0.015 250 / 35%);
+  --kv-state-hover: .05; --kv-state-pressed: .09; --kv-state-dragged: .12;
+}
+
+/* ===== Base ===== */
+* { box-sizing: border-box; }
+/* `font-size: 100%` en html: así `rem` (y con él --kv-px) es el tamaño de fuente del navegador, no el 14px del cuerpo. */
+html { background: var(--kv-color-bg); color: var(--kv-color-on-surface); font-size: 100%; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; min-height: 100dvh; position: relative; font: 400 var(--kv-t-label)/1.43 var(--kv-font-body); }
+body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1; background: var(--kv-glow); }
+a { color: var(--kv-color-link); } a:hover { color: var(--kv-color-link-hover); }
+::selection { background: color-mix(in oklab, var(--kv-color-primary) 45%, transparent); }
+:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--kv-color-focus-ring); }
+button, input, select, textarea { font: inherit; color: inherit; }
+p { text-wrap: pretty; }
+h1, h2, h3 { text-wrap: balance; }
+@media (prefers-reduced-motion: reduce) { :root { --kv-duration-short: 0ms; --kv-duration-medium: 0ms; --kv-duration-long: 0ms; } }
+@media (min-width: 600px) { :root { --kv-margin: 24px; --kv-gutter: 16px; } }
