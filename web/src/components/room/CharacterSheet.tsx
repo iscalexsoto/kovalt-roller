@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent, type ReactNode } from 'react';
-import { skillLabel, slotUsage } from '../../engine';
+import { slotUsage } from '../../engine';
 import { dmUpdateSheet, updateCharacterTexts } from '../../data/characters';
 import type { CharacterDoc } from '../../data/models';
 import { useBusy } from '../../hooks/useBusy';
@@ -8,6 +8,7 @@ import { Field, TextArea } from '../kv/Field';
 import { EmptyState, KickerDivider } from '../kv/Layout';
 import { useRoom } from './context';
 import { Inventory } from './Inventory';
+import { skillLabel, skillLabelText, skillName } from './labels';
 
 type SheetTexts = { name: string; description: string; notes: string };
 
@@ -135,8 +136,8 @@ export function CharacterSheet({ character }: { character: CharacterDoc }) {
           <li key={i} className={`rl-skill${s.permanent ? ' rl-skill--base' : ''}`}>
             <span className="rl-skill__level kv-num">{s.level}</span>
             <span className="rl-skill__text">
-              <span className="rl-skill__name">{s.name}</span>
-              <span className="rl-skill__from">{s.permanent ? 'Permanente' : s.derivedFrom ? `De ${s.derivedFrom}` : skillLabel(s)}</span>
+              <span className="rl-skill__name">{skillName(s.name)}</span>
+              <span className="rl-skill__from">{s.permanent ? 'Permanente' : s.derivedFrom ? `De ${skillLabelText(s.derivedFrom)}` : skillLabel(s)}</span>
             </span>
           </li>
         ))}

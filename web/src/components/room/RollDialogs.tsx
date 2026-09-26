@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { skillLabel, skillRefFrom, type AdvancementChoice, type AdvancementOption, type Character, type SkillRef } from '../../engine';
+import { skillRefFrom, type AdvancementChoice, type AdvancementOption, type Character, type SkillRef } from '../../engine';
 import { Button } from '../kv/Button';
 import { Field, Stepper, TextArea } from '../kv/Field';
 import { Dialog } from '../kv/Overlay';
 import { Select } from '../kv/Select';
-import { skillOptions } from './labels';
+import { skillLabel, skillLabelText, skillOptions } from './labels';
 
 /* Diálogos del flujo de tirada (useRollActions.tsx los monta y espera su resultado). */
 
@@ -147,8 +147,8 @@ export function AdvancementDialog({ option, sheet, forDm, onDone }: { option: Ad
         <p>
           {forDm ? 'Decides por el jugador. ' : ''}
           {option.natural
-            ? `Ganas una habilidad nueva de nivel ${option.newLevel}, derivada de ${option.sourceLabel}.`
-            : `Convierte ${option.xpCost} dado(s) en 6 gastando ${option.xpCost} XP (disponibles: ${option.xpAvailable}) y gana una habilidad de nivel ${option.newLevel} derivada de ${option.sourceLabel}. El resultado de la tirada no cambia.`}
+            ? `Ganas una habilidad nueva de nivel ${option.newLevel}, derivada de ${skillLabelText(option.sourceLabel)}.`
+            : `Convierte ${option.xpCost} dado(s) en 6 gastando ${option.xpCost} XP (disponibles: ${option.xpAvailable}) y gana una habilidad de nivel ${option.newLevel} derivada de ${skillLabelText(option.sourceLabel)}. El resultado de la tirada no cambia.`}
         </p>
         <Field label="Nombre de la habilidad" value={name} maxLength={40} autoFocus unit={String(option.newLevel)} onChange={(e) => setName(e.target.value)} />
         {option.slotsFull && (

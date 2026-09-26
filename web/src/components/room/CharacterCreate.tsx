@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { newCharacter } from '../../engine';
+import { BASE_SKILL_NAME, newCharacter } from '../../engine';
 import { createCharacter } from '../../data/characters';
 import { useBusy } from '../../hooks/useBusy';
 import { Button } from '../kv/Button';
 import { Field, TextArea } from '../kv/Field';
 import { Card } from '../kv/Layout';
 import { useRoom } from './context';
+import { skillName } from './labels';
 
 /** Primer paso de un jugador en la sala: su personaje, que empieza con "Do Anything 1". */
 export function CharacterCreate() {
@@ -26,7 +27,7 @@ export function CharacterCreate() {
           <div className="rl-skill rl-skill--base">
             <span className="rl-skill__level kv-num">1</span>
             <span className="rl-skill__text">
-              <span className="rl-skill__name">Do Anything</span>
+              <span className="rl-skill__name">{skillName(BASE_SKILL_NAME)}</span>
               <span className="rl-skill__from">Permanente · no ocupa slot</span>
             </span>
           </div>
