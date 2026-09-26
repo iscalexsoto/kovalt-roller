@@ -40,6 +40,23 @@ export interface Character {
 
 export type TieWinner = 'player' | 'opposition';
 
+/** Tabla de dificultad de Roll For Shoes: el DM tira `dice` d6 o usa el objetivo fijo `target`. */
+export interface Difficulty {
+  key: 'easy' | 'moderate' | 'hard' | 'veryHard';
+  dice: number;
+  target: number;
+}
+
+export const DIFFICULTIES: readonly Difficulty[] = [
+  { key: 'easy', dice: 1, target: 3 },
+  { key: 'moderate', dice: 2, target: 6 },
+  { key: 'hard', dice: 3, target: 9 },
+  { key: 'veryHard', dice: 4, target: 12 },
+];
+
+/** Objetivo fijo máximo: lo que darían `MAX_DICE_LIMIT` seises. */
+export const MAX_FIXED_TARGET = MAX_DICE_LIMIT * 6;
+
 export interface RoomSettings {
   /** Slots para habilidades ganadas; "Do Anything 1" no cuenta. */
   skillSlots: number;

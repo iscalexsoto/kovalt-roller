@@ -192,6 +192,13 @@ button.rl-player__main { cursor: pointer; }
 .rl-die--land { animation: rl-die-land var(--kv-duration-long) var(--kv-easing-kobold) both; }
 .rl-total { min-width: 2ch; font: 700 calc(34 * var(--kv-px))/1 var(--kv-font-heading); color: var(--kv-color-on-surface); }
 .rl-total--empty { color: var(--kv-color-outline-strong); }
+/* Oposición con objetivo fijo: una placa en lugar de dados. */
+.rl-fixed { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; clip-path: var(--kv-cut-m); background: var(--kv-color-surface-container-high); color: var(--kv-color-on-surface-variant); font: 400 calc(12 * var(--kv-px))/1 var(--kv-font-heading); letter-spacing: 2px; text-transform: uppercase; }
+.rl-fixed .kv-icon { width: 20px; height: 20px; }
+.rl-fixed--live { animation: rl-die-land var(--kv-duration-long) var(--kv-easing-kobold) both; }
+/* El DM prepara la oposición: dificultad de la tabla, modo (tirar o fijo) y el número. */
+.rl-difficulty .kv-chip { font-size: calc(12 * var(--kv-px)); }
+.rl-oppose { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 
 /* El sello. */
 .rl-verdict { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; padding: 10px 16px; clip-path: var(--kv-cut-m); }

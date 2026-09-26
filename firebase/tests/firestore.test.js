@@ -378,6 +378,19 @@ describe('tiradas: flujo completo', () => {
     await assertFails(updateDoc(rollRef(dmDb()), upd({
       estado: 'oposicion', oposicion: { dados: [3, 7], total: 10 }, historial: hOpp,
     })));
+    // Objetivo fijo: sin dados; entero entre 1 y maxDice·6, y solo el DM.
+    await assertFails(updateDoc(rollRef(dmDb()), upd({
+      estado: 'oposicion', oposicion: { dados: [], total: 0 }, historial: hOpp,
+    })));
+    await assertFails(updateDoc(rollRef(dmDb()), upd({
+      estado: 'oposicion', oposicion: { dados: [], total: 61 }, historial: hOpp,
+    })));
+    await assertFails(updateDoc(rollRef(dmDb()), upd({
+      estado: 'oposicion', oposicion: { dados: [], total: 9, fijo: true }, historial: hOpp,
+    })));
+    await assertFails(updateDoc(rollRef(p1Db()), upd({
+      estado: 'oposicion', oposicion: { dados: [], total: 9 }, historial: [...h, { de: 'aprobada', a: 'oposicion', por: P1 }],
+    })));
     await assertSucceeds(updateDoc(rollRef(dmDb()), upd({
       estado: 'oposicion', oposicion: { dados: [3, 3], total: 6 }, historial: hOpp,
     })));
@@ -472,6 +485,27 @@ describe('tiradas: flujo completo', () => {
       avance: { estado: 'aplicado', xpGained: 1, xpSpent: 1, newSkill: correr, replacedSkillIndex: null },
     }));
     await assertFails(b.commit());
+  });
+
+  it('objetivo fijo: se resuelve contra el total sin dados', async () => {
+    await seedRoom(env);
+    const h = [{ de: null, a: 'declarada', por: P1 }, { de: 'declarada', a: 'aprobada', por: DM }];
+    await seedRoll(env, 'r1', { characterId: P1, estado: 'aprobada', historial: h });
+    const hOpp = [...h, { de: 'aprobada', a: 'oposicion', por: DM }];
+    await assertSucceeds(updateDoc(rollRef(dmDb(), 'r1'), upd({
+      estado: 'oposicion', oposicion: { dados: [], total: 3 }, historial: hOpp,
+    })));
+    const hRoll = [...hOpp, { de: 'oposicion', a: 'tirada', por: P1 }];
+    await assertSucceeds(updateDoc(rollRef(p1Db(), 'r1'), upd({
+      estado: 'tirada', tirada: { dados: [2], total: 2 }, historial: hRoll,
+    })));
+    const hRes = [...hRoll, { de: 'tirada', a: 'resuelta', por: P1 }];
+    await assertFails(updateDoc(rollRef(p1Db(), 'r1'), upd({
+      estado: 'resuelta', outcome: 'exito', tieWinner: 'player', avance: { estado: 'pendiente' }, historial: hRes,
+    })));
+    await assertSucceeds(updateDoc(rollRef(p1Db(), 'r1'), upd({
+      estado: 'resuelta', outcome: 'fallo', tieWinner: 'player', avance: { estado: 'pendiente' }, historial: hRes,
+    })));
   });
 
   it('slots llenos: reemplazar cualquier habilidad menos Do Anything 1', async () => {

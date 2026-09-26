@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { isTerminal } from '../../engine';
+import { DIFFICULTIES, MAX_FIXED_TARGET, isTerminal, oppositionTotal } from '../../engine';
 import type { RollDoc } from '../../data/models';
 import { GameIcon } from '../../icons/GameIcon';
 import { playStamp } from '../../state/sound';
-import { Button } from '../kv/Button';
+import { Button, Chip, Segmented } from '../kv/Button';
 import { Stepper } from '../kv/Field';
 import { Avatar, Tag } from '../kv/Layout';
 import { useRoom } from './context';
 import { DiceTray, prefersReducedMotion } from './Dice';
-import { ACTION_ICON, STATE_LABEL, STATE_TONE, actionLabel, isPrimaryAction, skillLabel } from './labels';
+import { ACTION_ICON, DIFFICULTY_LABEL, STATE_LABEL, STATE_TONE, actionLabel, isPrimaryAction, oppositionLabel, skillLabel } from './labels';
 import type { RollActions } from './useRollActions';
 
 /* Una tirada como duelo: el jugador a la izquierda, el DM a la derecha y una gema en medio que decide. La misma
@@ -82,6 +82,19 @@ function Sentence({ roll, who, decided = true }: { roll: RollDoc; who: string; d
   );
 }
 
+/** El lado del DM cuando no tira: un objetivo fijo en lugar de dados. */
+function FixedTarget({ target, live }: { target: number; live: boolean }) {
+  return (
+    <span className="rl-pool">
+      <span className={`rl-fixed${live ? ' rl-fixed--live' : ''}`} aria-label={`objetivo fijo ${target}`}>
+        <GameIcon name="crosshair" strokeWidth={1.8} />
+        Objetivo
+      </span>
+      <span className="rl-total kv-num">{target}</span>
+    </span>
+  );
+}
+
 function Waiting({ children }: { children: ReactNode }) {
   return (
     <span className="rl-waiting">
@@ -141,15 +154,20 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
   const allowed = actions.allowed(roll);
   const busy = actions.busyId === roll.id;
   const max = ctx.room.settings.maxDice;
+  const maxTarget = Math.min(MAX_FIXED_TARGET, max * 6);
+  // Lo que el DM prepara: dados a tirar o un objetivo fijo (tabla de dificultad o a mano).
   const [count, setCount] = useState(Math.min(max, Math.max(1, record.skill.level)));
+  const [target, setTarget] = useState(Math.min(maxTarget, Math.max(1, record.skill.level * 3)));
+  const [mode, setMode] = useState<'dice' | 'fixed'>('dice');
 
   const opp = record.opposition;
+  const oppTotal = opp ? oppositionTotal(opp) : null;
   const mine = record.playerRoll;
   const waiting = reveal?.waitingVerdict ?? false;
   const decided = record.state === 'resuelta' && (record.result === 'exito' || record.result === 'fallo') && !waiting;
   const won = decided && record.result === 'exito';
-  const tie = Boolean(opp && mine && opp.total() === mine.total());
-  const need = opp ? (ctx.room.settings.tieWinner === 'player' ? opp.total() : opp.total() + 1) : null;
+  const tie = Boolean(oppTotal !== null && mine && oppTotal === mine.total());
+  const need = oppTotal !== null ? (ctx.room.settings.tieWinner === 'player' ? oppTotal : oppTotal + 1) : null;
   const sixes = allSix(mine?.dice);
   const faded = record.state === 'rechazada' || record.state === 'retirada';
 
@@ -196,11 +214,53 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
     if (record.state === 'declarada' || record.state === 'aprobada') {
       if (actor === 'dm') {
         const oppose = record.state === 'declarada';
+        const fixed = mode === 'fixed';
+        const value = fixed ? target : count;
+        const preset = DIFFICULTIES.find((d) => (fixed ? d.target === target : d.dice === count));
         return (
           <>
-            <Stepper value={count} min={1} max={max} compact label="dados" onChange={(v) => setCount(Math.round(v))} />
-            <Button variant="primary" icon="shield" className="rl-cta" disabled={busy} onClick={() => void actions.oppose(roll, count)}>
-              {oppose ? `Oponer ${count}d6` : `Tirar ${count}d6`}
+            <div className="rl-chips rl-difficulty" role="group" aria-label="Dificultad">
+              {DIFFICULTIES.map((d) => (
+                <Chip
+                  key={d.key}
+                  selected={preset?.key === d.key}
+                  disabled={!fixed && d.dice > max}
+                  onClick={() => {
+                    setCount(Math.min(max, d.dice));
+                    setTarget(Math.min(maxTarget, d.target));
+                  }}
+                >
+                  {DIFFICULTY_LABEL[d.key]} · {fixed ? d.target : `${d.dice}d6`}
+                </Chip>
+              ))}
+            </div>
+            <div className="rl-oppose">
+              <Segmented
+                label="Cómo oponer"
+                value={mode}
+                options={[
+                  { value: 'dice', label: 'Tirar', icon: 'dices' },
+                  { value: 'fixed', label: 'Fijo', icon: 'crosshair' },
+                ]}
+                onChange={setMode}
+              />
+              <Stepper
+                value={value}
+                min={1}
+                max={fixed ? maxTarget : max}
+                compact
+                label={fixed ? 'objetivo' : 'dados'}
+                onChange={(v) => (fixed ? setTarget(Math.round(v)) : setCount(Math.round(v)))}
+              />
+            </div>
+            <Button
+              variant="primary"
+              icon={fixed ? 'crosshair' : 'shield'}
+              className="rl-cta"
+              disabled={busy}
+              onClick={() => void actions.oppose(roll, fixed ? { target } : { count })}
+            >
+              {fixed ? `${oppose ? 'Oponer' : 'Fijar'} objetivo ${target}` : `${oppose ? 'Oponer' : 'Tirar'} ${count}d6`}
             </Button>
           </>
         );
@@ -248,10 +308,14 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
             <Avatar icon="crown" iconColor="var(--kv-color-warning-text)" size={compact ? 32 : 40} />
             <span className="rl-side__who">
               <span className="rl-side__name">{dmName}</span>
-              <span className="rl-side__skill">{opp ? `Oposición · ${opp.dice.length}d6` : 'Oposición'}</span>
+              <span className="rl-side__skill">{opp ? oppositionLabel(opp) : 'Oposición'}</span>
             </span>
           </div>
-          <DiceTray dice={opp?.dice ?? null} count={opp ? opp.dice.length : count} muted animateKey={reveal?.dmKey ?? 0} />
+          {opp?.kind === 'fixed' ? (
+            <FixedTarget target={opp.target} live={Boolean(reveal?.dmKey)} />
+          ) : (
+            <DiceTray dice={opp?.dice.dice ?? null} count={opp ? opp.dice.length : mode === 'fixed' ? 0 : count} muted animateKey={reveal?.dmKey ?? 0} />
+          )}
           {dmCta && <div className="rl-side__cta">{dmCta}</div>}
         </section>
       </div>
@@ -348,7 +412,7 @@ export function RollItem({ roll, actions, hero, onDismiss }: { roll: RollDoc; ac
         </span>
         {opp && mine && (
           <span className="rl-entry__score kv-num">
-            <span className={won ? 'rl-entry__win' : ''}>{mine.total()}</span> vs <span className={won ? '' : 'rl-entry__win'}>{opp.total()}</span>
+            <span className={won ? 'rl-entry__win' : ''}>{mine.total()}</span> vs <span className={won ? '' : 'rl-entry__win'}>{oppositionTotal(opp)}</span>
           </span>
         )}
         {record.applied?.newSkill ? (

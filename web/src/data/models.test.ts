@@ -18,7 +18,7 @@ describe('tiradas', () => {
     let doc = stored(r, [], OWNER);
     const steps: [Parameters<typeof transition>[1], 'dm' | 'owner', string][] = [
       [{ kind: 'approve' }, 'dm', DM],
-      [{ kind: 'rollOpposition', dice: dice([4, 2]) }, 'dm', DM],
+      [{ kind: 'rollOpposition', opposition: { kind: 'dice', dice: dice([4, 2]) } }, 'dm', DM],
       [{ kind: 'rollPlayer', dice: dice([6, 6]) }, 'owner', OWNER],
       [{ kind: 'resolve', tieWinner: 'player' }, 'owner', OWNER],
       [{ kind: 'applyAdvance', applied: { xpGained: 0, xpSpent: 0, newSkill: { name: 'Saltar lejos', level: 3, permanent: false, derivedFrom: 'Saltar 2' }, replacedIndex: null } }, 'owner', OWNER],
@@ -40,6 +40,14 @@ describe('tiradas', () => {
       replacedSkillIndex: null,
     });
     expect(doc.tirada).toEqual({ dados: [6, 6], total: 12 });
+  });
+
+  it('la oposición fija va y vuelve como {dados: [], total}', () => {
+    let r = transition(declare('Trepo', { index: 0, name: 'Do Anything', level: 1 }), { kind: 'approve' }, 'dm');
+    r = transition(r, { kind: 'rollOpposition', opposition: { kind: 'fixed', target: 9 } }, 'dm');
+    const doc = stored(r, [{ de: null, a: 'declarada', por: OWNER }], DM);
+    expect(doc.oposicion).toEqual({ dados: [], total: 9 });
+    expect(rollFrom('r1', doc, DM).record.opposition).toEqual({ kind: 'fixed', target: 9 });
   });
 
   it('narrar deja dos entradas en el historial', () => {

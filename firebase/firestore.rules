@@ -124,6 +124,13 @@ service cloud.firestore {
         && validDice(t.dados, maxDice) && t.total == sum(t.dados);
     }
 
+    // Oposición con objetivo fijo (dificultad estática): sin dados, con el
+    // total como listón. Como mucho lo que darían maxDice seises.
+    function fixedTarget(t, maxDice) {
+      return t is map && t.keys().hasOnly(['dados', 'total'])
+        && t.dados == [] && t.total is int && t.total >= 1 && t.total <= maxDice * 6;
+    }
+
     // ---------- personaje ----------
 
     function validSkill(s, maxDice) {
@@ -459,10 +466,11 @@ service cloud.firestore {
             || (from in ['declarada', 'contraoferta', 'rechazada'] && to == 'retirada' && isRollOwner()
                 && step(from, to, []))
 
-            // DM: tirar oposición (visible para el jugador)
+            // DM: tirar oposición o fijar un objetivo (visible para el jugador)
             || (from == 'aprobada' && to == 'oposicion' && isDM(r)
                 && step(from, to, ['oposicion'])
-                && validRoll(data().oposicion, room(r).settings.maxDice))
+                && (validRoll(data().oposicion, room(r).settings.maxDice)
+                    || fixedTarget(data().oposicion, room(r).settings.maxDice)))
 
             // Jugador: tirar tantos dados como el nivel declarado
             || (from == 'oposicion' && to == 'tirada' && isRollOwner()

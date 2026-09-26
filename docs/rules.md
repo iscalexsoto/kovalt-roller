@@ -42,6 +42,10 @@ declarada ──(DM)──► aprobada ──(DM)──► oposicion ──(juga
 - **Contraoferta:** el DM sugiere otra habilidad. El jugador la acepta tal cual o edita y vuelve a declarar; en ambos casos regresa a revisión del DM.
 - **Oposición:** el DM tira primero y el resultado es visible para el jugador antes de su tirada («Necesitas N»).
   En la web, «Oponer Nd6» aprueba y tira en un solo gesto.
+- **Dificultad:** cuando la oposición no es otro personaje, el DM elige de la tabla (Fácil 1d6 / 3, Moderado 2d6 / 6,
+  Difícil 3d6 / 9, Muy difícil 4d6 / 12) o ajusta el número a mano, y puede **tirar** los dados o usar el **objetivo
+  fijo** sin tirar. La oposición fija se guarda como `{ dados: [], total: N }` (1 ≤ N ≤ `maxDice` · 6) y se resuelve
+  igual que una tirada; en la mesa se muestra como placa «Objetivo N» en lugar de dados.
 - **Mesa y registro:** las tiradas vivas se muestran como duelo completo; las resueltas se pliegan en una fila con la
   frase, el marcador y el veredicto. La habilidad base se muestra como «Hacer cualquier cosa» (el dato sigue siendo
   `Do Anything`). El sonido de la mesa (dados y sello) es un ajuste por persona, apagado por defecto.

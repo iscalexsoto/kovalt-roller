@@ -7,6 +7,7 @@ import {
   type Actor,
   type AdvancementChoice,
   type ApplyResult,
+  oppositionTotal,
   type FlowAction,
   type RollOutcome,
   type RoomSettings,
@@ -41,7 +42,7 @@ export async function act(room: Room, roll: RollDoc, action: FlowAction, actor: 
 export function outcomeOf(roll: RollDoc, settings: RoomSettings): RollOutcome {
   const { playerRoll, opposition, tieWinner } = roll.record;
   if (!playerRoll || !opposition) throw new UserError('Esta tirada todavía no tiene dados.');
-  return resolve(playerRoll, opposition, tieWinner ?? settings.tieWinner);
+  return resolve(playerRoll, oppositionTotal(opposition), tieWinner ?? settings.tieWinner);
 }
 
 /** Aplica el resultado a la hoja (XP y, si se eligió, la habilidad nueva) y marca el avance como aplicado, en un

@@ -11,7 +11,7 @@
 import type { DiceRoll } from './dice';
 import { EngineError } from './errors';
 import { resolve } from './resolve';
-import type { Character, Skill, TieWinner } from './types';
+import { DIFFICULTIES, MAX_FIXED_TARGET, type Character, type Difficulty, type Skill, type TieWinner } from './types';
 
 export const ROLL_STATES = ['declarada', 'aprobada', 'contraoferta', 'rechazada', 'sin_tirada', 'oposicion', 'tirada', 'resuelta', 'retirada'] as const;
 export type RollState = (typeof ROLL_STATES)[number];
@@ -40,6 +40,26 @@ export function skillRefFrom(character: Character, index: number): SkillRef {
   return { index, name: skill.name, level: skill.level };
 }
 
+/** La oposición del DM: dados tirados o un objetivo fijo (dificultad estática: 3, 6, 9, 12…). */
+export type Opposition = { kind: 'dice'; dice: DiceRoll } | { kind: 'fixed'; target: number };
+
+export function oppositionTotal(o: Opposition): number {
+  return o.kind === 'dice' ? o.dice.total() : o.target;
+}
+
+/** Objetivo fijo validado: entero entre 1 y `MAX_FIXED_TARGET` (las reglas acotan además por `maxDice`). */
+export function fixedOpposition(target: number): Opposition {
+  if (!Number.isInteger(target) || target < 1 || target > MAX_FIXED_TARGET) {
+    throw new EngineError({ kind: 'InvalidTarget', max: MAX_FIXED_TARGET });
+  }
+  return { kind: 'fixed', target };
+}
+
+/** La dificultad de la tabla a la que corresponde una oposición (por número de dados o por objetivo), si alguna. */
+export function difficultyOf(o: Opposition): Difficulty | null {
+  return DIFFICULTIES.find((d) => (o.kind === 'dice' ? d.dice === o.dice.length : d.target === o.target)) ?? null;
+}
+
 export type RollResult = 'exito' | 'fallo' | 'narrado';
 export type AdvanceState = 'pendiente' | 'aplicado' | 'no_aplica';
 
@@ -65,7 +85,7 @@ export interface RollRecord {
   skill: SkillRef;
   counterOffer: SkillRef | null;
   dmNote: string | null;
-  opposition: DiceRoll | null;
+  opposition: Opposition | null;
   playerRoll: DiceRoll | null;
   result: RollResult | null;
   narration: string | null;
@@ -83,7 +103,7 @@ export type FlowAction =
   | { kind: 'acceptCounterOffer' }
   | { kind: 'redeclare'; action: string; purpose: string | null; skill: SkillRef }
   | { kind: 'withdraw' }
-  | { kind: 'rollOpposition'; dice: DiceRoll }
+  | { kind: 'rollOpposition'; opposition: Opposition }
   | { kind: 'rollPlayer'; dice: DiceRoll }
   | { kind: 'resolve'; tieWinner: TieWinner }
   | { kind: 'applyAdvance'; applied: AppliedAdvance };
@@ -222,7 +242,7 @@ export function transition(record: RollRecord, action: FlowAction, actor: Actor)
       goto('retirada');
       break;
     case 'rollOpposition':
-      next.opposition = action.dice;
+      next.opposition = action.opposition.kind === 'fixed' ? fixedOpposition(action.opposition.target) : action.opposition;
       goto('oposicion');
       break;
     case 'rollPlayer': {
@@ -235,7 +255,7 @@ export function transition(record: RollRecord, action: FlowAction, actor: Actor)
     case 'resolve': {
       // En estado `tirada` siempre existen la tirada y la oposición.
       if (!next.playerRoll || !next.opposition) throw notAllowed();
-      const outcome = resolve(next.playerRoll, next.opposition, action.tieWinner);
+      const outcome = resolve(next.playerRoll, oppositionTotal(next.opposition), action.tieWinner);
       next.result = outcome.outcome === 'success' ? 'exito' : 'fallo';
       next.tieWinner = action.tieWinner;
       next.advance = 'pendiente';

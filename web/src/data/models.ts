@@ -17,6 +17,7 @@ import {
   type ItemLook,
   type OfferKind,
   type OfferLine,
+  type Opposition,
   type RollRecord,
   type RollResult,
   type RoomSettings,
@@ -248,6 +249,20 @@ function diceToMap(roll: DiceRoll | null): Json | null {
   return roll ? { dados: [...roll.dice], total: roll.total() } : null;
 }
 
+/** La oposición fija se guarda con la misma forma que una tirada, sin dados: `{ dados: [], total: N }`. */
+function oppositionFrom(v: unknown): Opposition | null {
+  const m = map(v);
+  if (!m) return null;
+  const dados = list(m.dados);
+  if (dados.length === 0) return { kind: 'fixed', target: int(m.total) };
+  return { kind: 'dice', dice: DiceRoll.fromValues(dados.map((d) => int(d)), MAX_DICE_LIMIT) };
+}
+
+function oppositionToMap(o: Opposition | null): Json | null {
+  if (!o) return null;
+  return o.kind === 'dice' ? diceToMap(o.dice) : { dados: [], total: o.target };
+}
+
 function skillRefFrom(v: unknown): SkillRef | null {
   const m = map(v);
   return m ? { index: int(m.skillIndex), name: str(m.skillName), level: int(m.skillLevel, 1) } : null;
@@ -302,7 +317,7 @@ export function rollFrom(id: string, m: DocumentData, dmUid: string): RollDoc {
       skill: { index: int(m.skillIndex), name: str(m.skillName), level: int(m.skillLevel, 1) },
       counterOffer: skillRefFrom(m.contraoferta),
       dmNote: optStr(m.notaDm),
-      opposition: diceFrom(m.oposicion),
+      opposition: oppositionFrom(m.oposicion),
       playerRoll: diceFrom(m.tirada),
       result: resultFrom(m.outcome),
       narration: optStr(m.narracion),
@@ -347,7 +362,7 @@ export function rollFields(r: RollRecord, previousHistory: readonly RawHistory[]
     skillLevel: r.skill.level,
     contraoferta: co ? { skillIndex: co.index, skillName: co.name, skillLevel: co.level } : null,
     notaDm: r.dmNote,
-    oposicion: diceToMap(r.opposition),
+    oposicion: oppositionToMap(r.opposition),
     tirada: diceToMap(r.playerRoll),
     outcome: r.result,
     narracion: r.narration,

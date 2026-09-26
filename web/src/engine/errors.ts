@@ -17,6 +17,7 @@ export type EngineErrorDetail =
   | { kind: 'DiceCountOutOfRange'; got: number; max: number }
   | { kind: 'InvalidDieValue'; value: number }
   | { kind: 'DiceCountMismatch'; expected: number; got: number }
+  | { kind: 'InvalidTarget'; max: number }
   | { kind: 'EmptyAction' }
   | { kind: 'EmptyNarration' }
   | { kind: 'InvalidItemName'; max: number }
@@ -63,6 +64,8 @@ function message(d: EngineErrorDetail): string {
       return `valor de dado inválido: ${d.value}`;
     case 'DiceCountMismatch':
       return `se esperaban ${d.expected} dados y se tiraron ${d.got}`;
+    case 'InvalidTarget':
+      return `el objetivo fijo debe ser un entero entre 1 y ${d.max}`;
     case 'EmptyAction':
       return 'la acción declarada no puede estar vacía';
     case 'EmptyNarration':

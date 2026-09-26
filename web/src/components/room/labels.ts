@@ -1,4 +1,4 @@
-import { BASE_SKILL_NAME, type Character, type FlowActionKind, type RollState, type Skill } from '../../engine';
+import { BASE_SKILL_NAME, difficultyOf, type Character, type Difficulty, type FlowActionKind, type Opposition, type RollState, type Skill } from '../../engine';
 
 /* Nombre visible de la habilidad base. El dato (motor, Firestore, reglas) sigue siendo "Do Anything": solo se traduce
    al pintar, incluidas las etiquetas guardadas en `derivedFrom` ("Do Anything 1"). */
@@ -11,6 +11,20 @@ export function skillName(name: string): string {
 /** "Nombre N" tal como se muestra en pantalla. */
 export function skillLabel(skill: Pick<Skill, 'name' | 'level'>): string {
   return `${skillName(skill.name)} ${skill.level}`;
+}
+
+export const DIFFICULTY_LABEL: Record<Difficulty['key'], string> = {
+  easy: 'Fácil',
+  moderate: 'Moderado',
+  hard: 'Difícil',
+  veryHard: 'Muy difícil',
+};
+
+/** Cómo se describe la oposición bajo el nombre del DM: «Difícil · 3d6», «Objetivo fijo · 7»… */
+export function oppositionLabel(o: Opposition): string {
+  const d = difficultyOf(o);
+  const how = o.kind === 'dice' ? `${o.dice.length}d6` : `objetivo ${o.target}`;
+  return d ? `${DIFFICULTY_LABEL[d.key]} · ${how}` : o.kind === 'dice' ? `Oposición · ${how}` : `Objetivo fijo · ${o.target}`;
 }
 
 /** Traduce una etiqueta guardada ("Do Anything 1" → "Hacer cualquier cosa 1"). */

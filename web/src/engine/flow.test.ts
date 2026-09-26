@@ -7,8 +7,11 @@ import {
   ROLL_STATES,
   allowedActions,
   declare,
+  difficultyOf,
+  fixedOpposition,
   isTerminal,
   newCharacter,
+  oppositionTotal,
   parseRollState,
   permits,
   skillRefFrom,
@@ -16,6 +19,7 @@ import {
   type Actor,
   type AppliedAdvance,
   type Character,
+  type FlowAction,
   type FlowActionKind,
   type RollRecord,
   type RollState,
@@ -25,6 +29,7 @@ import {
 
 const dice = (values: number[]) => DiceRoll.fromValues(values, MAX_DICE_LIMIT);
 const noAdvance: AppliedAdvance = { xpGained: 0, xpSpent: 0, newSkill: null, replacedIndex: null };
+const oppose = (values: number[]): FlowAction => ({ kind: 'rollOpposition', opposition: { kind: 'dice', dice: dice(values) } });
 
 function hero(): Character {
   const c = newCharacter('Ana', '');
@@ -48,9 +53,9 @@ function errorOf(fn: () => unknown): EngineError {
 it('camino feliz: declarar, aprobar, oponer, tirar, resolver y aplicar', () => {
   let r = declared(1);
   r = transition(r, { kind: 'approve' }, 'dm');
-  r = transition(r, { kind: 'rollOpposition', dice: dice([3, 3]) }, 'dm');
+  r = transition(r, oppose([3, 3]), 'dm');
   // La oposición es visible para el jugador antes de tirar.
-  expect(r.opposition!.total()).toBe(6);
+  expect(oppositionTotal(r.opposition!)).toBe(6);
   r = transition(r, { kind: 'rollPlayer', dice: dice([2, 3]) }, 'owner');
   r = transition(r, { kind: 'resolve', tieWinner: 'player' }, 'owner');
   expect(r.state).toBe('resuelta');
@@ -108,16 +113,40 @@ it('rechaza al actor equivocado o saltarse pasos', () => {
 
   r = transition(r, { kind: 'approve' }, 'dm');
   // El DM no tira por el jugador, ni el jugador la oposición.
-  expect(() => transition(r, { kind: 'rollOpposition', dice: dice([1]) }, 'owner')).toThrow(EngineError);
-  r = transition(r, { kind: 'rollOpposition', dice: dice([1]) }, 'dm');
+  expect(() => transition(r, oppose([1]), 'owner')).toThrow(EngineError);
+  r = transition(r, oppose([1]), 'dm');
   expect(() => transition(r, { kind: 'rollPlayer', dice: dice([6, 6]) }, 'dm')).toThrow(EngineError);
   // Retirar ya no es posible tras aprobar.
   expect(() => transition(r, { kind: 'withdraw' }, 'owner')).toThrow(EngineError);
 });
 
+it('oposición con objetivo fijo: sin dados, mismo listón', () => {
+  let r = transition(declared(1), { kind: 'approve' }, 'dm');
+  // Solo el DM fija el objetivo, y debe ser un entero razonable.
+  expect(() => transition(r, { kind: 'rollOpposition', opposition: fixedOpposition(9) }, 'owner')).toThrow(EngineError);
+  expect(errorOf(() => fixedOpposition(0)).kind).toBe('InvalidTarget');
+  expect(errorOf(() => fixedOpposition(61)).kind).toBe('InvalidTarget');
+  expect(errorOf(() => fixedOpposition(2.5)).kind).toBe('InvalidTarget');
+  expect(errorOf(() => transition(r, { kind: 'rollOpposition', opposition: { kind: 'fixed', target: 0 } }, 'dm')).kind).toBe('InvalidTarget');
+
+  r = transition(r, { kind: 'rollOpposition', opposition: fixedOpposition(9) }, 'dm');
+  expect(r.state).toBe('oposicion');
+  expect(r.opposition).toEqual({ kind: 'fixed', target: 9 });
+  expect(oppositionTotal(r.opposition!)).toBe(9);
+  expect(difficultyOf(r.opposition!)?.key).toBe('hard');
+  expect(difficultyOf({ kind: 'dice', dice: dice([1, 1]) })?.key).toBe('moderate');
+  expect(difficultyOf(fixedOpposition(7))).toBeNull();
+
+  // 9 contra 9 con empate a favor del jugador: éxito; 8 contra 9: fallo.
+  const tied = transition(transition(r, { kind: 'rollPlayer', dice: dice([4, 5]) }, 'owner'), { kind: 'resolve', tieWinner: 'player' }, 'dm');
+  expect(tied.result).toBe('exito');
+  const lost = transition(transition(r, { kind: 'rollPlayer', dice: dice([4, 4]) }, 'owner'), { kind: 'resolve', tieWinner: 'player' }, 'dm');
+  expect(lost.result).toBe('fallo');
+});
+
 it('la tirada del jugador debe coincidir con el nivel declarado', () => {
   let r = transition(declared(1), { kind: 'approve' }, 'dm');
-  r = transition(r, { kind: 'rollOpposition', dice: dice([4]) }, 'dm');
+  r = transition(r, oppose([4]), 'dm');
   expect(errorOf(() => transition(r, { kind: 'rollPlayer', dice: dice([6]) }, 'owner')).detail).toEqual({
     kind: 'DiceCountMismatch',
     expected: 2,
@@ -127,7 +156,7 @@ it('la tirada del jugador debe coincidir con el nivel declarado', () => {
 
 it('aplicar el avance comprueba que el XP cuadre', () => {
   let r = transition(declared(1), { kind: 'approve' }, 'dm');
-  r = transition(r, { kind: 'rollOpposition', dice: dice([1]) }, 'dm');
+  r = transition(r, oppose([1]), 'dm');
   r = transition(r, { kind: 'rollPlayer', dice: dice([6, 6]) }, 'owner');
   r = transition(r, { kind: 'resolve', tieWinner: 'player' }, 'dm');
   expect(r.result).toBe('exito');

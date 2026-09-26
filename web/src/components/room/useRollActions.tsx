@@ -3,10 +3,12 @@ import {
   CryptoDice,
   advancementOption,
   allowedActions,
+  fixedOpposition,
   roll as rollDice,
   type AdvancementChoice,
   type FlowAction,
   type FlowActionKind,
+  type Opposition,
   type SkillRef,
 } from '../../engine';
 import type { RollDoc } from '../../data/models';
@@ -21,6 +23,9 @@ import { AdvancementDialog, CounterOfferDialog, DeclareDialog } from './RollDial
 
 const dice = new CryptoDice();
 
+/** Cómo opone el DM: tirando `count` dados o con un objetivo fijo. */
+export type OppositionChoice = { count: number } | { target: number };
+
 /** Lo que tarda el sello en aparecer tras el reveal (--kv-duration-long) más un respiro antes de abrir un diálogo. */
 const STAMP_MS = 320 + 300;
 
@@ -29,8 +34,9 @@ const sleep = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms))
 export interface RollActions {
   allowed: (roll: RollDoc) => FlowActionKind[];
   run: (roll: RollDoc, kind: FlowActionKind) => Promise<void>;
-  /** El DM opone `count` dados: desde `declarada` aprueba y tira en un gesto; desde `aprobada` solo tira. */
-  oppose: (roll: RollDoc, count: number) => Promise<void>;
+  /** El DM opone `count` dados o fija un objetivo (`target`): desde `declarada` aprueba y opone en un gesto;
+   *  desde `aprobada` solo opone. */
+  oppose: (roll: RollDoc, choice: OppositionChoice) => Promise<void>;
   busyId: string | null;
   dialogs: ReactNode;
 }
@@ -142,7 +148,7 @@ export function useRollActions(): RollActions {
           break;
         }
         case 'rollOpposition':
-          await perform(roll, { kind, dice: rollDice(roll.record.skill.level, ctx.room.settings.maxDice, dice) });
+          await perform(roll, { kind, opposition: { kind: 'dice', dice: rollDice(roll.record.skill.level, ctx.room.settings.maxDice, dice) } });
           break;
         case 'rollPlayer': {
           const rolled = await perform(roll, { kind, dice: rollDice(roll.record.skill.level, ctx.room.settings.maxDice, dice) });
@@ -161,10 +167,11 @@ export function useRollActions(): RollActions {
       }
     });
 
-  const oppose = (roll: RollDoc, count: number) =>
+  const oppose = (roll: RollDoc, choice: OppositionChoice) =>
     guarded(roll, async () => {
+      const opposition: Opposition = 'target' in choice ? fixedOpposition(choice.target) : { kind: 'dice', dice: rollDice(choice.count, ctx.room.settings.maxDice, dice) };
       const approved = roll.record.state === 'declarada' ? await perform(roll, { kind: 'approve' }) : roll;
-      await perform(approved, { kind: 'rollOpposition', dice: rollDice(count, ctx.room.settings.maxDice, dice) });
+      await perform(approved, { kind: 'rollOpposition', opposition });
     });
 
   return {
