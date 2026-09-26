@@ -14,7 +14,7 @@ Mesa virtual para jugar **Roll For Shoes** por salas, directo en el navegador: *
 1. Alguien con cuenta de Kovalt autorizada crea una sala y es el DM. La sala tiene un código de 6 caracteres y un enlace
    de invitación (`roller.kovalt.mx/unirse/CODIGO`).
 2. Los jugadores entran con el código: como invitados (solo su nombre) o con su cuenta de Kovalt. Crean su personaje.
-3. Cada acción pasa por el flujo de tirada: declarar → el DM aprueba → oposición → tirada → resuelta.
+3. Cada acción pasa por el flujo de tirada: el jugador actúa desde una habilidad de su ficha → el DM opone dados → el jugador tira → resuelta. La mesa la muestra como un duelo con los dados cayendo.
 
 Las reglas concretas y las variantes de la casa están en [docs/rules.md](docs/rules.md).
 

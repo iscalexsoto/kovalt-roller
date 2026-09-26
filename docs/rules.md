@@ -36,7 +36,11 @@ declarada ──(DM)──► aprobada ──(DM)──► oposicion ──(juga
   acción (`accion`, 1–500) es obligatoria; el propósito (`proposito`, ≤ 200) es opcional. El registro narra el
   desenlace sin conjugar: «intentó … y lo consiguió» / «y no lo consiguió».
 - **Contraoferta:** el DM sugiere otra habilidad. El jugador la acepta tal cual o edita y vuelve a declarar; en ambos casos regresa a revisión del DM.
-- **Oposición:** el DM tira primero y el resultado es visible para el jugador antes de su tirada.
+- **Oposición:** el DM tira primero y el resultado es visible para el jugador antes de su tirada («Necesitas N»).
+  En la web, «Oponer Nd6» aprueba y tira en un solo gesto.
+- **Mesa y registro:** las tiradas vivas se muestran como duelo completo; las resueltas se pliegan en una fila con la
+  frase, el marcador y el veredicto. La habilidad base se muestra como «Hacer cualquier cosa» (el dato sigue siendo
+  `Do Anything`).
 - **Retirar:** el jugador puede retirar su declaración mientras está en `declarada`, `contraoferta` o `rechazada`.
 - **Resuelta:** el resultado se calcula automáticamente. Si hay avance posible, el jugador decide (nombre de la habilidad, gastar XP, qué slot usar) y se aplica.
 

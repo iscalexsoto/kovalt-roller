@@ -56,13 +56,21 @@ implementadas: [docs/rules.md](docs/rules.md).
 
 - **Ajustes por sala:** `skillSlots` (por defecto 5), `tieWinner` (por defecto gana el jugador), `xpSameRoll` (por
   defecto sí) y `maxDice` (10).
-- **Do Anything 1:** permanente, no ocupa slot y no se puede reemplazar.
+- **Do Anything 1:** permanente, no ocupa slot y no se puede reemplazar. En pantalla se muestra como «Hacer cualquier
+  cosa» (`skillName`/`skillLabel` en `labels.ts`); el dato, el motor y las reglas siguen en inglés.
 - **XP:** 1 XP convierte un dado en 6, solo para avanzar, nunca para cambiar el resultado.
 - **Flujo de tirada:** declarada →(DM) aprobada → oposicion → tirada → resuelta.
+  - El jugador declara desde una habilidad de su ficha (o el botón flotante «Actuar» en compacto) completando la
+    frase «X intenta [acción] para [propósito] con Habilidad N»; `proposito` es opcional (≤ 200).
   - Desde declarada, el DM también puede hacer contraoferta (proponer otra skill), rechazar o resolver sin tirada.
   - Tras contraoferta o rechazo, el jugador vuelve a declarar o retira.
-  - La oposición la tira el DM antes que el jugador y es visible para él.
+  - La oposición la tira el DM antes que el jugador y es visible para él: es el listón («Necesitas N»). En la web,
+    «Oponer Nd6» hace aprobar + tirar oposición en un gesto (dos transiciones; el motor no cambia).
   - "Sin tirada" termina en resuelta con narración y sin XP.
+  - **La mesa (`Duel.tsx`):** cada tirada es un duelo (jugador | gema | DM). El reveal (dados que caen uno a uno,
+    conteo, pausa, sello) lo dispara el cambio de estado que llega de Firestore, así todos lo ven a la vez; lo que
+    ya estaba al abrir la sala no se anima. Las tiradas vivas (o con avance pendiente) y la última resuelta van
+    completas; el resto, plegadas en filas del mismo contenedor (`RollItem` conserva el estado del reveal).
 - **Inventario:**
   - El catálogo es privado del DM y no tiene cantidades: nombre, descripción, valor opcional (precio por defecto),
     ícono y color (claves `ITEM_ICON_KEYS`/`ITEM_COLOR_KEYS` del motor; las reglas validan el color).
