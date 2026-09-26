@@ -243,7 +243,13 @@ export async function devSignIn(name: string): Promise<void> {
 async function devGuest(code: string, name: string): Promise<string> {
   // Como el Worker: primero se busca la sala del código y luego se emite la sesión limitada a ella.
   await signInWithCustomToken(auth, unsignedToken('dev_lookup', { name: 'dev', kvExp: Date.now() + 60_000 }));
-  const roomId = await roomIdForCode(code);
+  let roomId: string;
+  try {
+    roomId = await roomIdForCode(code);
+  } catch (e) {
+    await signOut(auth); // que no quede la sesión de búsqueda como si fuera una cuenta
+    throw e;
+  }
   const uid = `g_${devUid(name).slice(4)}`;
   await signInWithCustomToken(auth, unsignedToken(uid, { name: name.trim(), guest: true, room: roomId, kvExp: Date.now() + 24 * 3600 * 1000 }));
   return joinByCode(uid, name.trim(), code);

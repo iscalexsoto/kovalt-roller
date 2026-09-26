@@ -21,7 +21,7 @@ export const membersQuery = (roomId: string) => collection(db, 'rooms', roomId, 
 export const myRoomsQuery = (uid: string) => query(collection(db, 'users', uid, 'rooms'), orderBy('joinedAt', 'desc'));
 
 export function normalizeCode(code: string): string {
-  return code.trim().toUpperCase().replace(/[\s-]/g, '');
+  return code.trim().toUpperCase().replace(/[\s\-·•.]/g, '');
 }
 
 export function isValidCode(code: string): boolean {

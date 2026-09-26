@@ -58,11 +58,12 @@ export function Enter() {
     }
   };
 
-  const asGuest = async () => {
+  // `c` llega de `onComplete` con el código recién escrito o pegado: el estado `code` aún no se actualizó.
+  const asGuest = async (c = code) => {
     setError(null);
     setBusy('guest');
     try {
-      const roomId = await enterAsGuest(code, name);
+      const roomId = await enterAsGuest(c, name);
       navigate(`/sala/${roomId}`, { replace: true });
     } catch (e) {
       setError(errorMessage(e));
@@ -109,8 +110,8 @@ export function Enter() {
             alphanumeric
             value={code}
             onChange={setCode}
-            onComplete={() => {
-              if (name.trim()) void asGuest();
+            onComplete={(c) => {
+              if (name.trim()) void asGuest(c);
             }}
             disabled={busy !== null}
           />
