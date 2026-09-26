@@ -1,14 +1,15 @@
 import type { DiceRoll } from './dice';
 import type { TieWinner } from './types';
 
-export type Outcome = 'success' | 'failure';
+/** `tie`: empate parcial (ajuste `partial`): se consigue a medias, sin XP. */
+export type Outcome = 'success' | 'failure' | 'tie';
 
 export interface RollOutcome {
   outcome: Outcome;
   playerTotal: number;
   oppositionTotal: number;
   tieWinner: TieWinner;
-  /** 1 si la tirada falla, 0 si tiene éxito. */
+  /** 1 si la tirada falla, 0 si tiene éxito o empata a medias. */
   xpGained: number;
 }
 
@@ -16,7 +17,7 @@ export interface RollOutcome {
 export function resolve(player: DiceRoll, opposition: DiceRoll | number, tieWinner: TieWinner): RollOutcome {
   const playerTotal = player.total();
   const oppositionTotal = typeof opposition === 'number' ? opposition : opposition.total();
-  const success = playerTotal > oppositionTotal || (playerTotal === oppositionTotal && tieWinner === 'player');
-  const outcome: Outcome = success ? 'success' : 'failure';
+  const tied = playerTotal === oppositionTotal;
+  const outcome: Outcome = playerTotal > oppositionTotal || (tied && tieWinner === 'player') ? 'success' : tied && tieWinner === 'partial' ? 'tie' : 'failure';
   return { outcome, playerTotal, oppositionTotal, tieWinner, xpGained: outcome === 'failure' ? 1 : 0 };
 }

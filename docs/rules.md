@@ -13,7 +13,7 @@
 | Ajuste | Por defecto | Efecto |
 |---|---|---|
 | `skillSlots` | 5 | Slots para habilidades ganadas. Do Anything 1 no ocupa slot y no se puede reemplazar. Con los slots llenos, el jugador reemplaza una habilidad o descarta la nueva. |
-| `tieWinner` | jugador | Quién gana en empate. |
+| `tieWinner` | jugador | Quién gana en empate: el jugador, la oposición o **nadie** (`partial`): el jugador lo consigue a medias, con un giro o consecuencia menor, y no gana XP. Todos 6 sigue dando habilidad gratis. |
 | `xpSameRoll` | sí | Si el XP ganado al fallar se puede gastar en esa misma tirada. |
 | `maxDice` | 10 | Máximo de dados por tirada; una habilidad de ese nivel ya no avanza. |
 
@@ -50,7 +50,7 @@ declarada ──(DM)──► aprobada ──(DM)──► oposicion ──(juga
   frase, el marcador y el veredicto. La habilidad base se muestra como «Hacer cualquier cosa» (el dato sigue siendo
   `Do Anything`). El sonido de la mesa (dados y sello) es un ajuste por persona, apagado por defecto.
 - **Retirar:** el jugador puede retirar su declaración mientras está en `declarada`, `contraoferta` o `rechazada`.
-- **Resuelta:** el resultado se calcula automáticamente. Si hay avance posible, el jugador decide (nombre de la habilidad, gastar XP, qué slot usar) y se aplica.
+- **Resuelta:** el resultado se calcula automáticamente (`exito`, `fallo` o, con empate parcial, `empate`). Si hay avance posible, el jugador decide (nombre de la habilidad, gastar XP, qué slot usar) y se aplica.
 
 ## Inventario
 

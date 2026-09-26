@@ -152,6 +152,26 @@ describe('dados y resolución', () => {
     const opp = resolve(p, o, 'opposition');
     expect(opp.outcome).toBe('failure');
     expect(opp.xpGained).toBe(1);
+    // Empate parcial: nadie gana y no hay XP; el avance sigue saliendo de los dados.
+    const partial = resolve(p, o, 'partial');
+    expect(partial.outcome).toBe('tie');
+    expect(partial.xpGained).toBe(0);
+    expect(resolve(dice([6, 6]), o, 'partial').outcome).toBe('success');
+    expect(resolve(dice([1, 1]), o, 'partial').outcome).toBe('failure');
+  });
+
+  it('el empate parcial no da XP, pero todos 6 sigue avanzando gratis', () => {
+    const s = settings({ tieWinner: 'partial' });
+    const c = heroWith([skill('Trepar', 2)], 0);
+    const tied = resolve(dice([3, 4]), dice([7 - 3, 3]), 'partial');
+    expect(advancementOption(c, s, dice([3, 4]), tied, 1)).toBeNull();
+    expect(applyRoll(c, s, dice([3, 4]), tied, 1, null).character.xp).toBe(0);
+    // Todos 6 empatados: sigue siendo empate (sin XP), pero la habilidad nueva sale gratis de los dados.
+    const sixes = resolve(dice([6, 6]), dice([6, 6]), 'partial');
+    expect(sixes.outcome).toBe('tie');
+    expect(sixes.xpGained).toBe(0);
+    expect(advancementOption(c, s, dice([6, 6]), sixes, 1)).toMatchObject({ natural: true, xpCost: 0, newLevel: 3 });
+    expect(resolve(dice([6, 6]), dice([6, 6, 1]), 'partial').outcome).toBe('failure');
   });
 });
 

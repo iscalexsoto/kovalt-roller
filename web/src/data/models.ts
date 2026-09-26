@@ -43,7 +43,7 @@ const date = (v: unknown): Date | null => (v && typeof (v as Timestamp).toDate =
 // ---------- ajustes ----------
 
 export function tieWinnerFrom(v: unknown): TieWinner | null {
-  return v === 'player' || v === 'opposition' ? v : null;
+  return v === 'player' || v === 'opposition' || v === 'partial' ? v : null;
 }
 
 export function settingsFrom(m: Json | null): RoomSettings {
@@ -269,7 +269,7 @@ function skillRefFrom(v: unknown): SkillRef | null {
 }
 
 function resultFrom(v: unknown): RollResult | null {
-  return v === 'exito' || v === 'fallo' || v === 'narrado' ? v : null;
+  return v === 'exito' || v === 'fallo' || v === 'empate' || v === 'narrado' ? v : null;
 }
 
 function advanceFrom(v: unknown): AdvanceState | null {

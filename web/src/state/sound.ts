@@ -92,13 +92,13 @@ export function playDie(): void {
 }
 
 /** El sello: un golpe grave; con éxito, además, dos notas que suben (tres y más agudas con todos 6). */
-export function playStamp(kind: 'exito' | 'fallo' | 'seis'): void {
+export function playStamp(kind: 'exito' | 'fallo' | 'empate' | 'seis'): void {
   const ac = audio();
   if (!ac) return;
   const t = ac.currentTime;
   const thud = ac.createOscillator();
   thud.type = 'sine';
-  thud.frequency.setValueAtTime(kind === 'fallo' ? 110 : 150, t);
+  thud.frequency.setValueAtTime(kind === 'fallo' ? 110 : kind === 'empate' ? 130 : 150, t);
   thud.frequency.exponentialRampToValueAtTime(45, t + 0.18);
   const tg = ac.createGain();
   tg.gain.setValueAtTime(0.0001, t);
@@ -107,7 +107,7 @@ export function playStamp(kind: 'exito' | 'fallo' | 'seis'): void {
   thud.connect(tg).connect(ac.destination);
   thud.start(t);
   thud.stop(t + 0.25);
-  if (kind === 'fallo') return;
+  if (kind === 'fallo' || kind === 'empate') return;
 
   const notes = kind === 'seis' ? [660, 880, 1320] : [523, 784];
   notes.forEach((f, i) => {

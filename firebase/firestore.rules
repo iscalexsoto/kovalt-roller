@@ -84,7 +84,7 @@ service cloud.firestore {
     function validSettings(s) {
       return s.keys().hasOnly(['skillSlots', 'tieWinner', 'xpSameRoll', 'maxDice'])
         && s.skillSlots is int && s.skillSlots >= 1 && s.skillSlots <= 20
-        && s.tieWinner in ['player', 'opposition']
+        && s.tieWinner in ['player', 'opposition', 'partial']
         && s.xpSameRoll is bool
         && s.maxDice is int && s.maxDice >= 2 && s.maxDice <= 10;
     }
@@ -245,8 +245,10 @@ service cloud.firestore {
         && historyGrows(1) && lastHistory(from, to);
     }
 
+    // Empate: gana el jugador, gana la oposición o nadie (`partial`: a medias, sin XP).
     function expectedOutcome(p, o, tie) {
-      return (p > o || (p == o && tie == 'player')) ? 'exito' : 'fallo';
+      return (p > o || (p == o && tie == 'player')) ? 'exito'
+        : (p == o && tie == 'partial') ? 'empate' : 'fallo';
     }
 
     function isRollOwner() {

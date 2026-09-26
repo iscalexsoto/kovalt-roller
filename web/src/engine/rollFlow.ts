@@ -60,7 +60,7 @@ export function difficultyOf(o: Opposition): Difficulty | null {
   return DIFFICULTIES.find((d) => (o.kind === 'dice' ? d.dice === o.dice.length : d.target === o.target)) ?? null;
 }
 
-export type RollResult = 'exito' | 'fallo' | 'narrado';
+export type RollResult = 'exito' | 'fallo' | 'empate' | 'narrado';
 export type AdvanceState = 'pendiente' | 'aplicado' | 'no_aplica';
 
 /** Lo que se aplicó a la hoja al cerrar la tirada. */
@@ -256,7 +256,7 @@ export function transition(record: RollRecord, action: FlowAction, actor: Actor)
       // En estado `tirada` siempre existen la tirada y la oposición.
       if (!next.playerRoll || !next.opposition) throw notAllowed();
       const outcome = resolve(next.playerRoll, oppositionTotal(next.opposition), action.tieWinner);
-      next.result = outcome.outcome === 'success' ? 'exito' : 'fallo';
+      next.result = outcome.outcome === 'success' ? 'exito' : outcome.outcome === 'tie' ? 'empate' : 'fallo';
       next.tieWinner = action.tieWinner;
       next.advance = 'pendiente';
       goto('resuelta');

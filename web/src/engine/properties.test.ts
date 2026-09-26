@@ -19,7 +19,7 @@ import {
 
 const arbSettings = fc.record<RoomSettings>({
   skillSlots: fc.integer({ min: 1, max: 6 }),
-  tieWinner: fc.constantFrom('player', 'opposition'),
+  tieWinner: fc.constantFrom('player', 'opposition', 'partial'),
   xpSameRoll: fc.boolean(),
   maxDice: fc.constant(MAX_DICE_LIMIT),
 });

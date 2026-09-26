@@ -487,6 +487,35 @@ describe('tiradas: flujo completo', () => {
     await assertFails(b.commit());
   });
 
+  it('empate parcial: outcome «empate» y el avance no da XP', async () => {
+    await seedRoom(env, { settings: { ...DEFAULT_SETTINGS, tieWinner: 'partial' } });
+    const h = [{ de: null, a: 'declarada', por: P1 }, { de: 'declarada', a: 'aprobada', por: DM },
+               { de: 'aprobada', a: 'oposicion', por: DM }, { de: 'oposicion', a: 'tirada', por: P1 }];
+    await seedRoll(env, 'r1', {
+      characterId: P1, estado: 'tirada', historial: h,
+      oposicion: { dados: [4], total: 4 }, tirada: { dados: [4], total: 4 },
+    });
+    const hRes = [...h, { de: 'tirada', a: 'resuelta', por: P1 }];
+    for (const outcome of ['exito', 'fallo']) {
+      await assertFails(updateDoc(rollRef(p1Db(), 'r1'), upd({
+        estado: 'resuelta', outcome, tieWinner: 'partial', avance: { estado: 'pendiente' }, historial: hRes,
+      })));
+    }
+    await assertSucceeds(updateDoc(rollRef(p1Db(), 'r1'), upd({
+      estado: 'resuelta', outcome: 'empate', tieWinner: 'partial', avance: { estado: 'pendiente' }, historial: hRes,
+    })));
+    const apply = (xp, xpGained) => {
+      const b = writeBatch(p1Db());
+      b.update(charRef(p1Db(), P1), { xp, lastAppliedRollId: 'r1' });
+      b.update(rollRef(p1Db(), 'r1'), upd({
+        avance: { estado: 'aplicado', xpGained, xpSpent: 0, newSkill: null, replacedSkillIndex: null },
+      }));
+      return b.commit();
+    };
+    await assertFails(apply(1, 1));
+    await assertSucceeds(apply(0, 0));
+  });
+
   it('objetivo fijo: se resuelve contra el total sin dados', async () => {
     await seedRoom(env);
     const h = [{ de: null, a: 'declarada', por: P1 }, { de: 'declarada', a: 'aprobada', por: DM }];

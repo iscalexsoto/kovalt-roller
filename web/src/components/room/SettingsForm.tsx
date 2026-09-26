@@ -22,6 +22,7 @@ export function SettingsForm({ value, onChange }: { value: RoomSettings; onChang
           options={[
             { value: 'player', label: 'El jugador' },
             { value: 'opposition', label: 'La oposición' },
+            { value: 'partial', label: 'Nadie (a medias)' },
           ]}
           onChange={(tieWinner) => onChange({ ...value, tieWinner })}
         />

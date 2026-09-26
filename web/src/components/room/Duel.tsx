@@ -71,6 +71,12 @@ function Sentence({ roll, who, decided = true }: { roll: RollDoc; who: string; d
             y <span className="rl-lose">no lo consiguió</span>
           </>
         )}
+        {record.result === 'empate' && (
+          <>
+            {' '}
+            y <span className="rl-tie">lo consiguió a medias</span>
+          </>
+        )}
         .
       </p>
     );
@@ -164,10 +170,14 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
   const oppTotal = opp ? oppositionTotal(opp) : null;
   const mine = record.playerRoll;
   const waiting = reveal?.waitingVerdict ?? false;
-  const decided = record.state === 'resuelta' && (record.result === 'exito' || record.result === 'fallo') && !waiting;
+  const decided = record.state === 'resuelta' && (record.result === 'exito' || record.result === 'fallo' || record.result === 'empate') && !waiting;
   const won = decided && record.result === 'exito';
+  const drawn = decided && record.result === 'empate';
   const tie = Boolean(oppTotal !== null && mine && oppTotal === mine.total());
-  const need = oppTotal !== null ? (ctx.room.settings.tieWinner === 'player' ? oppTotal : oppTotal + 1) : null;
+  const tieRule = ctx.room.settings.tieWinner;
+  const need = oppTotal !== null ? (tieRule === 'player' ? oppTotal : oppTotal + 1) : null;
+  // Lado ganador/perdedor del duelo; en empate parcial ninguno.
+  const sideClass = (side: 'player' | 'dm') => (!decided || drawn ? '' : (side === 'player') === won ? ' rl-side--won' : ' rl-side--lost');
   const sixes = allSix(mine?.dice);
   const faded = record.state === 'rechazada' || record.state === 'retirada';
 
@@ -178,8 +188,8 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
   useEffect(() => {
     if (!live || stamped.current === playerKey) return;
     stamped.current = playerKey;
-    playStamp(won ? (sixes ? 'seis' : 'exito') : 'fallo');
-  }, [live, playerKey, won, sixes]);
+    playStamp(won ? (sixes ? 'seis' : 'exito') : drawn ? 'empate' : 'fallo');
+  }, [live, playerKey, won, drawn, sixes]);
 
   // Botones de la fila: lo que no vive dentro de un lado.
   // Mientras caen los dados no hay nada que decidir.
@@ -195,7 +205,7 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
           </Button>
           <span className="rl-need">
             Necesitas <b>{need}</b>
-            {ctx.room.settings.tieWinner === 'player' ? ' · empate a tu favor' : ''}
+            {tieRule === 'player' ? ' · empate a tu favor' : tieRule === 'partial' ? ` · con ${oppTotal}, a medias` : ''}
           </span>
         </>
       );
@@ -287,7 +297,7 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
       {!compact && <Sentence roll={roll} who={who} decided={!waiting} />}
       {note}
       <div className="rl-arena">
-        <section className={`rl-side${decided ? (won ? ' rl-side--won' : ' rl-side--lost') : ''}`} aria-label={who}>
+        <section className={`rl-side${sideClass('player')}`} aria-label={who}>
           <div className="rl-side__head">
             <Avatar initials={initials(who)} size={compact ? 32 : 40} />
             <span className="rl-side__who">
@@ -300,10 +310,10 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
           <DiceTray dice={mine?.dice ?? null} count={record.skill.level} animateKey={reveal?.playerKey ?? 0} onDone={reveal?.onPlayerDone} />
           {playerCta && <div className="rl-side__cta">{playerCta}</div>}
         </section>
-        <div className={`rl-vs${decided ? (won ? ' rl-vs--exito' : ' rl-vs--fallo') : ''}${decided && reveal?.verdictLive ? ' rl-vs--live' : ''}`} aria-hidden>
-          <GameIcon name={decided ? (won ? 'check' : 'x') : 'swords'} />
+        <div className={`rl-vs${decided ? (won ? ' rl-vs--exito' : drawn ? ' rl-vs--empate' : ' rl-vs--fallo') : ''}${decided && reveal?.verdictLive ? ' rl-vs--live' : ''}`} aria-hidden>
+          <GameIcon name={decided ? (won ? 'check' : drawn ? 'equal' : 'x') : 'swords'} />
         </div>
-        <section className={`rl-side${decided ? (won ? ' rl-side--lost' : ' rl-side--won') : ''}`} aria-label="DM">
+        <section className={`rl-side${sideClass('dm')}`} aria-label="DM">
           <div className="rl-side__head">
             <Avatar icon="crown" iconColor="var(--kv-color-warning-text)" size={compact ? 32 : 40} />
             <span className="rl-side__who">
@@ -323,11 +333,12 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
       {record.narration && <p className="rl-duel__narration">{record.narration}</p>}
 
       {decided && (
-        <div className={`rl-verdict rl-verdict--${won ? 'exito' : 'fallo'}${reveal?.verdictLive ? ' rl-verdict--live' : ''}`} role="status">
+        <div className={`rl-verdict rl-verdict--${won ? 'exito' : drawn ? 'empate' : 'fallo'}${reveal?.verdictLive ? ' rl-verdict--live' : ''}`} role="status">
           <span className="rl-verdict__main">
-            <GameIcon name={won ? 'check' : 'x'} />
-            {sixes && won ? '¡Todos 6!' : won ? 'Éxito' : 'Fallo'}
+            <GameIcon name={won ? 'check' : drawn ? 'equal' : 'x'} />
+            {sixes && won ? '¡Todos 6!' : won ? 'Éxito' : drawn ? 'Empate' : 'Fallo'}
           </span>
+          {drawn && <span className="rl-verdict__extra">a medias · sin XP</span>}
           {record.result === 'fallo' && (
             <span className="rl-verdict__extra">
               <GameIcon name="trending-up" /> +1 XP
@@ -344,7 +355,7 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
               <GameIcon name="hourglass" /> avance pendiente
             </span>
           )}
-          {tie && <span className="rl-verdict__extra">Empate · {ctx.room.settings.tieWinner === 'player' ? 'gana el jugador' : 'gana la oposición'}</span>}
+          {tie && !drawn && <span className="rl-verdict__extra">Empate · {tieRule === 'player' ? 'gana el jugador' : 'gana la oposición'}</span>}
         </div>
       )}
 
@@ -380,6 +391,7 @@ function stateTag(roll: RollDoc) {
   if (record.state === 'resuelta') {
     if (record.result === 'exito') return { label: 'Éxito', tone: 'success' as const };
     if (record.result === 'fallo') return { label: 'Fallo', tone: 'error' as const };
+    if (record.result === 'empate') return { label: 'Empate', tone: 'warning' as const };
     return { label: 'Narrada', tone: 'neutral' as const };
   }
   return { label: STATE_LABEL[record.state], tone: STATE_TONE[record.state] };
@@ -403,6 +415,7 @@ export function RollItem({ roll, actions, hero, onDismiss }: { roll: RollDoc; ac
   const opp = record.opposition;
   const mine = record.playerRoll;
   const won = record.result === 'exito';
+  const drawn = record.result === 'empate';
   return (
     <div className={`rl-entry${faded ? ' rl-entry--faded' : ''}`} aria-expanded={open}>
       <button type="button" className="rl-entry__main kv-state" onClick={() => setOpen((o) => !o)}>
@@ -412,7 +425,7 @@ export function RollItem({ roll, actions, hero, onDismiss }: { roll: RollDoc; ac
         </span>
         {opp && mine && (
           <span className="rl-entry__score kv-num">
-            <span className={won ? 'rl-entry__win' : ''}>{mine.total()}</span> vs <span className={won ? '' : 'rl-entry__win'}>{oppositionTotal(opp)}</span>
+            <span className={won ? 'rl-entry__win' : ''}>{mine.total()}</span> vs <span className={won || drawn ? '' : 'rl-entry__win'}>{oppositionTotal(opp)}</span>
           </span>
         )}
         {record.applied?.newSkill ? (

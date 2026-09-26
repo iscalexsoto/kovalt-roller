@@ -38,7 +38,8 @@ export interface Character {
   skills: Skill[];
 }
 
-export type TieWinner = 'player' | 'opposition';
+/** Quién gana en empate; `partial`: nadie, el jugador lo consigue a medias y no gana XP. */
+export type TieWinner = 'player' | 'opposition' | 'partial';
 
 /** Tabla de dificultad de Roll For Shoes: el DM tira `dice` d6 o usa el objetivo fijo `target`. */
 export interface Difficulty {

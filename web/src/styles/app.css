@@ -139,6 +139,7 @@ button.rl-player__main { cursor: pointer; }
 .rl-duel__sentence b { font-weight: 700; font-style: normal; }
 .rl-win { color: var(--kv-color-success-text); font-weight: 700; font-style: normal; }
 .rl-lose { color: var(--kv-color-error); font-weight: 700; font-style: normal; }
+.rl-tie { color: var(--kv-color-warning-text); font-weight: 700; font-style: normal; }
 .rl-duel__note { margin: 0; display: flex; gap: 6px; align-items: flex-start; font: 400 calc(13 * var(--kv-px))/calc(18 * var(--kv-px)) var(--kv-font-body); color: var(--kv-color-warning-text); overflow-wrap: anywhere; }
 .rl-duel__note .kv-icon { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
 .rl-duel__narration { margin: 0; padding: 8px 12px; background: var(--kv-color-surface-container); clip-path: var(--kv-cut-m); white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -176,6 +177,7 @@ button.rl-player__main { cursor: pointer; }
 .rl-vs .kv-icon { width: 24px; height: 24px; }
 .rl-vs--exito { background: var(--kv-color-success); color: var(--kv-color-ink); }
 .rl-vs--fallo { background: var(--kv-color-error); color: var(--kv-color-on-error); }
+.rl-vs--empate { background: var(--kv-color-warning); color: var(--kv-color-ink); }
 .rl-vs--live { animation: rl-vs-pop var(--kv-duration-medium) var(--kv-easing-kobold) both; }
 
 /* Dados y total. */
@@ -205,6 +207,7 @@ button.rl-player__main { cursor: pointer; }
 .rl-verdict--live { animation: rl-stamp var(--kv-duration-long) var(--kv-easing-kobold) both; }
 .rl-verdict--exito { background: color-mix(in oklab, var(--kv-color-success) 16%, var(--kv-color-surface)); color: var(--kv-color-success-text); }
 .rl-verdict--fallo { background: var(--kv-color-error-container); color: var(--kv-color-error); }
+.rl-verdict--empate { background: color-mix(in oklab, var(--kv-color-warning) 16%, var(--kv-color-surface)); color: var(--kv-color-warning-text); }
 .rl-verdict__main { display: inline-flex; align-items: center; gap: 8px; font: 700 calc(26 * var(--kv-px))/calc(32 * var(--kv-px)) var(--kv-font-heading); letter-spacing: 1px; text-transform: uppercase; }
 .rl-verdict__main .kv-icon { width: 24px; height: 24px; stroke-width: 2.6; }
 .rl-verdict__extra { display: inline-flex; align-items: center; gap: 6px; font: 700 var(--kv-t-label)/calc(20 * var(--kv-px)) var(--kv-font-body); color: var(--kv-color-on-surface); }

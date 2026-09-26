@@ -144,6 +144,19 @@ it('oposición con objetivo fijo: sin dados, mismo listón', () => {
   expect(lost.result).toBe('fallo');
 });
 
+it('empate parcial: resultado «empate», sin XP', () => {
+  let r = transition(declared(1), { kind: 'approve' }, 'dm');
+  r = transition(r, oppose([3, 4]), 'dm');
+  r = transition(r, { kind: 'rollPlayer', dice: dice([4, 3]) }, 'owner');
+  r = transition(r, { kind: 'resolve', tieWinner: 'partial' }, 'dm');
+  expect(r.result).toBe('empate');
+  expect(r.tieWinner).toBe('partial');
+  expect(r.advance).toBe('pendiente');
+  expect(errorOf(() => transition(r, { kind: 'applyAdvance', applied: { ...noAdvance, xpGained: 1 } }, 'owner')).kind).toBe('NotEligible');
+  r = transition(r, { kind: 'applyAdvance', applied: noAdvance }, 'owner');
+  expect(r.advance).toBe('aplicado');
+});
+
 it('la tirada del jugador debe coincidir con el nivel declarado', () => {
   let r = transition(declared(1), { kind: 'approve' }, 'dm');
   r = transition(r, oppose([4]), 'dm');
