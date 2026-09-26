@@ -32,7 +32,7 @@ function initials(name: string): string {
 const allSix = (dice: readonly number[] | undefined) => Boolean(dice && dice.length > 0 && dice.every((d) => d === 6));
 
 /** La frase de la tirada: «X intenta [acción] para [propósito]» y, resuelta, cómo acabó. */
-function Sentence({ roll, who }: { roll: RollDoc; who: string }) {
+function Sentence({ roll, who, decided = true }: { roll: RollDoc; who: string; decided?: boolean }) {
   const { record } = roll;
   const core = (
     <>
@@ -53,7 +53,7 @@ function Sentence({ roll, who }: { roll: RollDoc; who: string }) {
       </p>
     );
   }
-  if (record.state === 'resuelta') {
+  if (record.state === 'resuelta' && decided) {
     return (
       <p className="rl-duel__sentence">
         {name} intentó {core}
@@ -144,7 +144,8 @@ function Duel({ roll, actions, reveal, compact = false }: { roll: RollDoc; actio
 
   const opp = record.opposition;
   const mine = record.playerRoll;
-  const decided = record.state === 'resuelta' && (record.result === 'exito' || record.result === 'fallo') && !(reveal?.waitingVerdict ?? false);
+  const waiting = reveal?.waitingVerdict ?? false;
+  const decided = record.state === 'resuelta' && (record.result === 'exito' || record.result === 'fallo') && !waiting;
   const won = decided && record.result === 'exito';
   const tie = Boolean(opp && mine && opp.total() === mine.total());
   const need = opp ? (ctx.room.settings.tieWinner === 'player' ? opp.total() : opp.total() + 1) : null;
@@ -152,7 +153,8 @@ function Duel({ roll, actions, reveal, compact = false }: { roll: RollDoc; actio
   const faded = record.state === 'rechazada' || record.state === 'retirada';
 
   // Botones de la fila: lo que no vive dentro de un lado.
-  const rowActions = allowed.filter((k) => k !== 'approve' && k !== 'rollOpposition' && k !== 'rollPlayer');
+  // Mientras caen los dados no hay nada que decidir.
+  const rowActions = waiting ? [] : allowed.filter((k) => k !== 'approve' && k !== 'rollOpposition' && k !== 'rollPlayer');
 
   const playerCta = (() => {
     if (record.state !== 'oposicion' || !need) return null;
@@ -211,7 +213,7 @@ function Duel({ roll, actions, reveal, compact = false }: { roll: RollDoc; actio
 
   return (
     <article className={`rl-duel${compact ? ' rl-duel--compact' : ''}${faded ? ' rl-duel--faded' : ''}`} aria-busy={busy}>
-      {!compact && <Sentence roll={roll} who={who} />}
+      {!compact && <Sentence roll={roll} who={who} decided={!waiting} />}
       {note}
       <div className="rl-arena">
         <section className={`rl-side${decided ? (won ? ' rl-side--won' : ' rl-side--lost') : ''}`} aria-label={who}>

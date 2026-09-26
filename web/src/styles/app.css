@@ -207,6 +207,9 @@ button.rl-player__main { cursor: pointer; }
   .rl-duel__sentence { font-size: calc(17 * var(--kv-px)); line-height: calc(24 * var(--kv-px)); }
   .rl-arena { gap: 6px; }
   .rl-side { padding: 10px; gap: 8px; }
+  /* En un lado estrecho el avatar sobra y el nombre de la habilidad puede partirse. */
+  .rl-side__head .kv-avatar { display: none; }
+  .rl-side__skill { white-space: normal; }
   .rl-die { width: 32px; height: 32px; } .rl-die .kv-icon { width: 30px; height: 30px; }
   .rl-total { font-size: calc(28 * var(--kv-px)); }
   .rl-vs { width: 40px; height: 40px; } .rl-vs .kv-icon { width: 18px; height: 18px; }
