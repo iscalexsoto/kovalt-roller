@@ -10,7 +10,10 @@ import {
   defaultRoomSettings,
   adjustCoins,
   claim,
+  editSkill,
   giveItem,
+  grantSkill,
+  removeSkill,
   MAX_STOCK,
   newCatalogItem,
   offerLine,
@@ -86,6 +89,33 @@ describe('personaje', () => {
     expect(details).toContainEqual({ kind: 'MissingBaseSkill' });
     expect(details).toContainEqual({ kind: 'DuplicateSkillName', name: 'trepar' });
     expect(details).toContainEqual({ kind: 'TooManySkills', used: 2, capacity: 1 });
+  });
+
+  it('el DM otorga, corrige y quita habilidades', () => {
+    const s = settings({ skillSlots: 2, maxDice: 4 });
+    let c = grantSkill(newCharacter('Ana', ''), s, '  Trepar   muros ', 2);
+    expect(c.skills[1]).toEqual({ name: 'Trepar muros', level: 2, permanent: false, derivedFrom: null });
+    expect(errorOf(() => grantSkill(c, s, 'trepar MUROS', 3)).kind).toBe('DuplicateSkillName');
+    expect(errorOf(() => grantSkill(c, s, 'Nadar', 5)).kind).toBe('InvalidSkillLevel');
+    expect(errorOf(() => grantSkill(c, s, 'Nadar', 0)).kind).toBe('InvalidSkillLevel');
+    expect(errorOf(() => grantSkill(c, s, ' ', 2)).kind).toBe('InvalidSkillName');
+
+    c = grantSkill(c, s, 'Nadar', 3);
+    expect(errorOf(() => grantSkill(c, s, 'Volar', 2)).kind).toBe('SlotsFull');
+
+    const gained: Skill = { name: 'Saltar', level: 3, permanent: false, derivedFrom: 'Trepar muros 2' };
+    c = { ...c, skills: [c.skills[0]!, c.skills[1]!, gained] };
+    c = editSkill(c, s, 2, 'Saltar lejos', 4);
+    expect(c.skills[2]).toEqual({ name: 'Saltar lejos', level: 4, permanent: false, derivedFrom: 'Trepar muros 2' });
+    expect(errorOf(() => editSkill(c, s, 2, 'trepar muros', 4)).kind).toBe('DuplicateSkillName');
+    expect(editSkill(c, s, 2, 'SALTAR LEJOS', 2).skills[2]!.name).toBe('SALTAR LEJOS');
+    expect(errorOf(() => editSkill(c, s, 0, 'Otra', 1)).kind).toBe('CannotReplacePermanent');
+    expect(errorOf(() => editSkill(c, s, 9, 'Otra', 1)).kind).toBe('SkillIndexOutOfRange');
+
+    expect(errorOf(() => removeSkill(c, 0)).kind).toBe('CannotReplacePermanent');
+    c = removeSkill(c, 1);
+    expect(c.skills.map((k) => k.name)).toEqual(['Do Anything', 'Saltar lejos']);
+    expect(validateCharacter(c, s)).toEqual([]);
   });
 });
 

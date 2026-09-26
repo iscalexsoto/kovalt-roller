@@ -21,6 +21,10 @@ Otras decisiones:
 
 - Los nombres de habilidad no se repiten dentro de una hoja (sin distinguir mayúsculas).
 - Reemplazar la misma habilidad que se usó para tirar está permitido.
+- **Habilidades iniciales y correcciones:** el DM puede otorgar habilidades desde la ficha (nombre y nivel, para
+  arquetipos o escenarios), y editar o quitar cualquier habilidad ganada. Ocupan slot, no vienen de ninguna tirada
+  («Otorgada por el DM») y respetan las mismas invariantes (nivel ≤ `maxDice`, sin duplicados, slots). Do Anything 1
+  no se toca.
 
 ## Flujo de una tirada
 

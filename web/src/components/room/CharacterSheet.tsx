@@ -9,6 +9,7 @@ import { EmptyState, KickerDivider } from '../kv/Layout';
 import { useRoom } from './context';
 import { Inventory } from './Inventory';
 import { skillLabel, skillLabelText, skillName } from './labels';
+import { SkillDialog } from './SkillDialog';
 import { useDeclare } from './useDeclare';
 
 type SheetTexts = { name: string; description: string; notes: string };
@@ -111,6 +112,9 @@ export function CharacterSheet({ character }: { character: CharacterDoc }) {
   const [busy, run] = useBusy();
   const declare = useDeclare();
   const canAct = isOwner && !ctx.isDm;
+  // Diálogo del DM: `null` cerrado, `'new'` otorgar, índice editar.
+  const [editing, setEditing] = useState<number | 'new' | null>(null);
+  const saveSkills = (updated: Parameters<typeof dmUpdateSheet>[3]) => dmUpdateSheet(ctx.room.id, character.id, sheet.xp, updated);
 
   return (
     <section className="rl-sheet" aria-label={`Ficha de ${sheet.name}`}>
@@ -140,8 +144,9 @@ export function CharacterSheet({ character }: { character: CharacterDoc }) {
             <span className="rl-skill__level kv-num">{s.level}</span>
             <span className="rl-skill__text">
               <span className="rl-skill__name">{skillName(s.name)}</span>
-              <span className="rl-skill__from">{s.permanent ? 'Permanente' : s.derivedFrom ? `De ${skillLabelText(s.derivedFrom)}` : skillLabel(s)}</span>
+              <span className="rl-skill__from">{s.permanent ? 'Permanente' : s.derivedFrom ? `De ${skillLabelText(s.derivedFrom)}` : 'Otorgada por el DM'}</span>
             </span>
+            {ctx.isDm && !s.permanent && <IconButton icon="pencil" small label={`Editar ${skillLabel(s)}`} disabled={busy} onClick={() => setEditing(i)} />}
             {canAct && (
               <span className="rl-skill__roll">
                 <Button variant="tonal" dense icon="dices" aria-label={`Actuar con ${skillLabel(s)}`} onClick={() => declare.open(i)}>
@@ -152,6 +157,20 @@ export function CharacterSheet({ character }: { character: CharacterDoc }) {
           </li>
         ))}
       </ul>
+      {ctx.isDm && usage.used < usage.capacity && (
+        <Button variant="text" icon="sparkles" dense className="rl-editable__add" disabled={busy} onClick={() => setEditing('new')}>
+          Otorgar habilidad
+        </Button>
+      )}
+      {editing !== null && (
+        <SkillDialog
+          sheet={sheet}
+          settings={ctx.room.settings}
+          index={editing === 'new' ? undefined : editing}
+          onClose={() => setEditing(null)}
+          onSave={(updated) => saveSkills(updated.skills)}
+        />
+      )}
 
       <Inventory character={character} />
 

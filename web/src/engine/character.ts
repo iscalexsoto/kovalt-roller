@@ -94,3 +94,38 @@ export function validateCharacter(character: Character, settings: RoomSettings):
 
   return errors;
 }
+
+/* ---------- Edición manual del DM (habilidades iniciales y correcciones) ---------- */
+
+function grantedSkill(name: string, level: number, settings: RoomSettings): Skill {
+  if (!Number.isInteger(level) || level < 1 || level > settings.maxDice) {
+    throw new EngineError({ kind: 'InvalidSkillLevel', level });
+  }
+  return { name: normalizeSkillName(name), level, permanent: false, derivedFrom: null };
+}
+
+/** El DM otorga una habilidad (inicial, de arquetipo o corrección). Ocupa un slot y no viene de ninguna tirada. */
+export function grantSkill(character: Character, settings: RoomSettings, name: string, level: number): Character {
+  if (slotsFull(character, settings)) throw new EngineError({ kind: 'SlotsFull' });
+  const skill = grantedSkill(name, level, settings);
+  if (findDuplicate(character.skills, skill.name)) throw new EngineError({ kind: 'DuplicateSkillName', name: skill.name });
+  return { ...character, skills: [...character.skills, skill] };
+}
+
+/** El DM corrige nombre o nivel de una habilidad ganada. "Do Anything 1" no se toca; el origen se conserva. */
+export function editSkill(character: Character, settings: RoomSettings, index: number, name: string, level: number): Character {
+  const target = character.skills[index];
+  if (!target) throw new EngineError({ kind: 'SkillIndexOutOfRange', index });
+  if (target.permanent) throw new EngineError({ kind: 'CannotReplacePermanent' });
+  const skill = { ...grantedSkill(name, level, settings), derivedFrom: target.derivedFrom };
+  if (findDuplicate(character.skills, skill.name, index)) throw new EngineError({ kind: 'DuplicateSkillName', name: skill.name });
+  return { ...character, skills: character.skills.map((s, i) => (i === index ? skill : s)) };
+}
+
+/** El DM quita una habilidad ganada. "Do Anything 1" no se puede quitar. */
+export function removeSkill(character: Character, index: number): Character {
+  const target = character.skills[index];
+  if (!target) throw new EngineError({ kind: 'SkillIndexOutOfRange', index });
+  if (target.permanent) throw new EngineError({ kind: 'CannotReplacePermanent' });
+  return { ...character, skills: character.skills.filter((_, i) => i !== index) };
+}
