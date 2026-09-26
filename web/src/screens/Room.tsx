@@ -113,7 +113,9 @@ export function Room() {
 
   const { isDm, myCharacter } = ctx;
   const needsCharacter = !isDm && !myCharacter;
-  const selectedUid = selected ?? ctx.members.find((m) => m.role !== 'dm')?.uid ?? null;
+  // Si el elegido ya no está en la sala (lo expulsaron o se fue), se pasa al primer jugador.
+  const stillHere = selected !== null && ctx.members.some((m) => m.uid === selected);
+  const selectedUid = (stillHere ? selected : null) ?? ctx.members.find((m) => m.role !== 'dm')?.uid ?? null;
   const side = isDm ? <DmPanel selected={selectedUid} /> : myCharacter ? <CharacterSheet character={myCharacter} /> : null;
   const players = (
     <PlayersPanel
