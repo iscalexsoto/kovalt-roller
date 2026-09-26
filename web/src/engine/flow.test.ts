@@ -80,9 +80,12 @@ it('rechazada y vuelta a declarar', () => {
   const c = hero();
   let r = transition(declared(1), { kind: 'reject', note: null }, 'dm');
   expect(r.state).toBe('rechazada');
-  r = transition(r, { kind: 'redeclare', action: 'Busco una escalera', skill: skillRefFrom(c, 0) }, 'owner');
+  r = transition(r, { kind: 'redeclare', action: 'Busco una escalera', purpose: ' subir sin ruido ', skill: skillRefFrom(c, 0) }, 'owner');
   expect(r.state).toBe('declarada');
   expect(r.action).toBe('Busco una escalera');
+  expect(r.purpose).toBe('subir sin ruido');
+  r = transition(transition(r, { kind: 'reject', note: null }, 'dm'), { kind: 'redeclare', action: 'Salto', purpose: '  ', skill: skillRefFrom(c, 0) }, 'owner');
+  expect(r.purpose).toBeNull();
 });
 
 it('narrada pasa por sin_tirada hasta resuelta y sin XP', () => {

@@ -393,14 +393,14 @@ service cloud.firestore {
         allow delete: if isDM(r) && !exists(memberPath(r, resource.data.characterId));
 
         allow create: if isMember(r) && !isDM(r)
-          && data().keys().hasOnly(['estado', 'characterId', 'declaradoPor', 'accion',
+          && data().keys().hasOnly(['estado', 'characterId', 'declaradoPor', 'accion', 'proposito',
                                     'skillIndex', 'skillName', 'skillLevel', 'contraoferta', 'notaDm',
                                     'oposicion', 'tirada', 'outcome', 'narracion', 'tieWinner',
                                     'avance', 'historial', 'createdAt', 'updatedAt'])
           && data().estado == 'declarada'
           && data().characterId == uid()
           && data().declaradoPor == uid()
-          && isStr(data().accion, 1, 500)
+          && isStr(data().accion, 1, 500) && optStr(data().proposito, 200)
           && skillRefMatches(r, uid(), data().skillIndex, data().skillName, data().skillLevel)
           && data().contraoferta == null && data().notaDm == null
           && data().oposicion == null && data().tirada == null
@@ -447,10 +447,10 @@ service cloud.firestore {
 
             // Jugador: volver a declarar (aceptar contraoferta o editar)
             || (from in ['declarada', 'contraoferta', 'rechazada'] && to == 'declarada' && isRollOwner()
-                && changedOnly(['estado', 'accion', 'skillIndex', 'skillName', 'skillLevel',
+                && changedOnly(['estado', 'accion', 'proposito', 'skillIndex', 'skillName', 'skillLevel',
                                 'contraoferta', 'notaDm', 'historial', 'updatedAt'])
                 && data().updatedAt == request.time
-                && isStr(data().accion, 1, 500)
+                && isStr(data().accion, 1, 500) && optStr(data().proposito, 200)
                 && skillRefMatches(r, uid(), data().skillIndex, data().skillName, data().skillLevel)
                 && data().contraoferta == null && data().notaDm == null
                 && historyGrows(1) && lastHistory(from, to))

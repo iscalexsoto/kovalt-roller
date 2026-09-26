@@ -24,8 +24,8 @@ const rolls = (roomId: string) => collection(db, 'rooms', roomId, 'rolls');
 export const rollsQuery = (roomId: string, max = 100) => query(rolls(roomId), orderBy('createdAt', 'desc'), limit(max));
 
 /** El jugador declara una acción con una de sus habilidades. */
-export async function declareRoll(roomId: string, uid: string, action: string, skill: SkillRef): Promise<void> {
-  const record = declare(action, skill);
+export async function declareRoll(roomId: string, uid: string, action: string, purpose: string | null, skill: SkillRef): Promise<void> {
+  const record = declare(action, skill, purpose);
   await addDoc(rolls(roomId), { ...rollFields(record, [], uid), characterId: uid, declaradoPor: uid, createdAt: serverTimestamp() });
 }
 

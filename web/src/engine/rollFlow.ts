@@ -60,6 +60,8 @@ export interface HistoryEntry {
 export interface RollRecord {
   state: RollState;
   action: string;
+  /** El "para qué" de la acción (opcional): completa la frase «intenta [acción] para [propósito]». */
+  purpose: string | null;
   skill: SkillRef;
   counterOffer: SkillRef | null;
   dmNote: string | null;
@@ -79,7 +81,7 @@ export type FlowAction =
   | { kind: 'reject'; note: string | null }
   | { kind: 'narrate'; narration: string }
   | { kind: 'acceptCounterOffer' }
-  | { kind: 'redeclare'; action: string; skill: SkillRef }
+  | { kind: 'redeclare'; action: string; purpose: string | null; skill: SkillRef }
   | { kind: 'withdraw' }
   | { kind: 'rollOpposition'; dice: DiceRoll }
   | { kind: 'rollPlayer'; dice: DiceRoll }
@@ -141,12 +143,13 @@ export function allowedActions(record: Pick<RollRecord, 'state' | 'advance'>, ac
 }
 
 /** Crea una tirada en estado `declarada`. */
-export function declare(action: string, skill: SkillRef): RollRecord {
+export function declare(action: string, skill: SkillRef, purpose: string | null = null): RollRecord {
   const text = action.trim();
   if (text === '') throw new EngineError({ kind: 'EmptyAction' });
   return {
     state: 'declarada',
     action: text,
+    purpose: cleanNote(purpose),
     skill,
     counterOffer: null,
     dmNote: null,
@@ -208,6 +211,7 @@ export function transition(record: RollRecord, action: FlowAction, actor: Actor)
       const text = action.action.trim();
       if (text === '') throw new EngineError({ kind: 'EmptyAction' });
       next.action = text;
+      next.purpose = cleanNote(action.purpose);
       next.skill = action.skill;
       next.counterOffer = null;
       next.dmNote = null;

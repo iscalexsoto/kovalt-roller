@@ -32,6 +32,9 @@ declarada ──(DM)──► aprobada ──(DM)──► oposicion ──(juga
     └──(jugador)──► retirada
 ```
 
+- **Declarar:** el jugador completa la frase «*Nombre* intenta [acción] para [propósito] con *Habilidad N*». La
+  acción (`accion`, 1–500) es obligatoria; el propósito (`proposito`, ≤ 200) es opcional. El registro narra el
+  desenlace sin conjugar: «intentó … y lo consiguió» / «y no lo consiguió».
 - **Contraoferta:** el DM sugiere otra habilidad. El jugador la acepta tal cual o edita y vuelve a declarar; en ambos casos regresa a revisión del DM.
 - **Oposición:** el DM tira primero y el resultado es visible para el jugador antes de su tirada.
 - **Retirar:** el jugador puede retirar su declaración mientras está en `declarada`, `contraoferta` o `rechazada`.

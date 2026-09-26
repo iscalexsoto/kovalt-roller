@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { skillLabel, skillRefFrom } from '../../engine';
+import { skillRefFrom } from '../../engine';
 import { useLiveQuery } from '../../data/hooks';
 import { rollFrom, type RollDoc } from '../../data/models';
 import { declareRoll, rollsQuery } from '../../data/rolls';
@@ -11,7 +11,7 @@ import { Avatar, EmptyState, KickerDivider, Tag } from '../kv/Layout';
 import { Select } from '../kv/Select';
 import { useRoom } from './context';
 import { DiceRow } from './Dice';
-import { ACTION_ICON, STATE_LABEL, STATE_TONE, actionLabel, isPrimaryAction, skillOptions } from './labels';
+import { ACTION_ICON, STATE_LABEL, STATE_TONE, actionLabel, isPrimaryAction, skillLabel, skillOptions } from './labels';
 import { useRollActions } from './useRollActions';
 
 function initials(name: string): string {
@@ -120,7 +120,7 @@ function DeclareBar() {
   if (!sheet) return null;
   const submit = () =>
     void run(async () => {
-      await declareRoll(ctx.room.id, ctx.uid, action, skillRefFrom(sheet, Number(skill)));
+      await declareRoll(ctx.room.id, ctx.uid, action, null, skillRefFrom(sheet, Number(skill)));
       setAction('');
     });
   return (

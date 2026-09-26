@@ -4,7 +4,6 @@ import {
   advancementOption,
   allowedActions,
   roll as rollDice,
-  skillLabel,
   type AdvancementChoice,
   type FlowAction,
   type FlowActionKind,
@@ -15,6 +14,7 @@ import { act, applyAdvance, outcomeOf } from '../../data/rolls';
 import { toast, toastError } from '../../state/toast';
 import { useDialogs } from '../dialogs';
 import { useRoom } from './context';
+import { skillLabel } from './labels';
 import { AdvancementDialog, CounterOfferDialog, DeclareDialog, OppositionDialog } from './RollDialogs';
 
 const dice = new CryptoDice();
@@ -116,7 +116,7 @@ export function useRollActions(): {
               onSubmit={(action, skill) => done({ action, skill })}
             />
           ));
-          if (res) await perform(roll, { kind, action: res.action, skill: res.skill });
+          if (res) await perform(roll, { kind, action: res.action, purpose: roll.record.purpose, skill: res.skill });
           break;
         }
         case 'rollOpposition': {

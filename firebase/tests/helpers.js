@@ -85,6 +85,7 @@ export function declaredRoll(uid, { skillIndex = 0, skillName = 'Do Anything', s
     characterId: uid,
     declaradoPor: uid,
     accion: 'Salto el foso',
+    proposito: null,
     skillIndex, skillName, skillLevel,
     contraoferta: null, notaDm: null, oposicion: null, tirada: null,
     outcome: null, narracion: null, tieWinner: null, avance: null,

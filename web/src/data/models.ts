@@ -298,6 +298,7 @@ export function rollFrom(id: string, m: DocumentData, dmUid: string): RollDoc {
     record: {
       state: parseRollState(m.estado) ?? 'declarada',
       action: str(m.accion),
+      purpose: optStr(m.proposito),
       skill: { index: int(m.skillIndex), name: str(m.skillName), level: int(m.skillLevel, 1) },
       counterOffer: skillRefFrom(m.contraoferta),
       dmNote: optStr(m.notaDm),
@@ -340,6 +341,7 @@ export function rollFields(r: RollRecord, previousHistory: readonly RawHistory[]
   return {
     estado: r.state,
     accion: r.action,
+    proposito: r.purpose,
     skillIndex: r.skill.index,
     skillName: r.skill.name,
     skillLevel: r.skill.level,

@@ -1,4 +1,22 @@
-import { skillLabel, type Character, type FlowActionKind, type RollState } from '../../engine';
+import { BASE_SKILL_NAME, type Character, type FlowActionKind, type RollState, type Skill } from '../../engine';
+
+/* Nombre visible de la habilidad base. El dato (motor, Firestore, reglas) sigue siendo "Do Anything": solo se traduce
+   al pintar, incluidas las etiquetas guardadas en `derivedFrom` ("Do Anything 1"). */
+const BASE_SKILL_DISPLAY = 'Hacer cualquier cosa';
+
+export function skillName(name: string): string {
+  return name === BASE_SKILL_NAME ? BASE_SKILL_DISPLAY : name;
+}
+
+/** "Nombre N" tal como se muestra en pantalla. */
+export function skillLabel(skill: Pick<Skill, 'name' | 'level'>): string {
+  return `${skillName(skill.name)} ${skill.level}`;
+}
+
+/** Traduce una etiqueta guardada ("Do Anything 1" → "Hacer cualquier cosa 1"). */
+export function skillLabelText(label: string): string {
+  return label.startsWith(`${BASE_SKILL_NAME} `) ? BASE_SKILL_DISPLAY + label.slice(BASE_SKILL_NAME.length) : label;
+}
 import type { RollDoc } from '../../data/models';
 
 export const STATE_LABEL: Record<RollState, string> = {

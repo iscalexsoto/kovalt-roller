@@ -354,7 +354,9 @@ describe('tiradas: flujo completo', () => {
 
   it('declarada → aprobada → oposicion → tirada → resuelta → avance aplicado', async () => {
     await seedRoom(env);
-    await assertSucceeds(setDoc(rollRef(p1Db()), declaredRoll(P1)));
+    // El propósito es opcional y corto.
+    await assertFails(setDoc(rollRef(p1Db()), { ...declaredRoll(P1), proposito: 'x'.repeat(201) }));
+    await assertSucceeds(setDoc(rollRef(p1Db()), { ...declaredRoll(P1), proposito: 'llegar al otro lado' }));
 
     let h = H0();
     // El jugador no puede aprobarse ni saltar pasos.
@@ -526,7 +528,7 @@ describe('tiradas: flujo completo', () => {
     // Otro jugador no puede aceptar por P2.
     const hAccept = [...h, { de: 'contraoferta', a: 'declarada', por: P2 }];
     const accept = (db) => updateDoc(rollRef(db), upd({
-      estado: 'declarada', skillIndex: 0, skillName: 'Do Anything', skillLevel: 1,
+      estado: 'declarada', skillIndex: 0, skillName: 'Do Anything', skillLevel: 1, proposito: 'ver qué hay arriba',
       contraoferta: null, notaDm: null, historial: hAccept,
     }));
     await assertFails(accept(p1Db()));
