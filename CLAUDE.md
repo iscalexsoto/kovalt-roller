@@ -81,6 +81,9 @@ implementadas: [docs/rules.md](docs/rules.md).
   - El DM entrega arrastrando (`drag.ts`, eventos de puntero; tocar el asa y luego el destino también sirve). El id
     de la copia es el del catálogo, así se apilan.
   - Cada inventario lo ven solo su dueño y el DM; el dueño solo cambia la cantidad (≥ 0). Se muestra en cuadrícula.
+  - **Objetos únicos** (`unique`, casilla «Único» al crear o editar): cantidad fija en 1, no se apilan, el dueño no
+    ve el control de cantidad y en un botín o tienda hay como mucho uno. El campo solo se guarda cuando es `true`.
+    Las copias ya entregadas no heredan el cambio del catálogo: el DM las marca desde «Editar objeto entregado».
   - Monedas en el personaje (`coins`): el DM las ajusta, el dueño solo puede bajarlas (pagar).
 - **Botín y tienda** (`offers/{id}` + `lines/{catalogId}`): existencias limitadas, el primero que llega se lo lleva.
   Público `audience` = `['*']` o uids; los jugadores consultan `open == true` + `array-contains` ('*' y su uid).

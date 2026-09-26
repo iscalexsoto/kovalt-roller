@@ -328,6 +328,8 @@ button.rl-status { cursor: pointer; }
 .rl-skill__from { font: 400 calc(12 * var(--kv-px))/calc(16 * var(--kv-px)) var(--kv-font-body); color: var(--kv-color-on-surface-variant); }
 .rl-qty { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 .rl-qty__value { min-width: 2ch; text-align: center; font-weight: 700; }
+.rl-unique { align-self: flex-start; }
+.rl-qty .rl-unique { align-self: center; margin-left: 8px; }
 
 /* Objetos: casillas como en el inventario de un juego. `--rl-item` es el tono del objeto (itemLook.tsx). */
 .rl-grid { display: grid; gap: 6px; }

@@ -1,4 +1,4 @@
-import { collection, deleteDoc, doc, orderBy, query, runTransaction, serverTimestamp, setDoc, updateDoc, where, writeBatch, getDocs, addDoc } from 'firebase/firestore';
+import { collection, deleteDoc, deleteField, doc, orderBy, query, runTransaction, serverTimestamp, setDoc, updateDoc, where, writeBatch, getDocs, addDoc } from 'firebase/firestore';
 import {
   adjustCoins,
   claim,
@@ -49,13 +49,15 @@ export async function deleteCatalogItem(roomId: string, id: string): Promise<voi
 
 // ---------- inventario ----------
 
-/** El DM entrega unidades de un objeto del catálogo; si el personaje ya lo tiene, se apilan. */
+/** El DM entrega unidades de un objeto del catálogo; si el personaje ya lo tiene, se apilan
+ *  (salvo que sea único: entonces solo entra si no tiene ninguno). */
 export async function give(roomId: string, cid: string, item: CatalogDoc, quantity: number, dmUid: string): Promise<void> {
   const ref = doc(inventory(roomId, cid), item.id);
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
     if (snap.exists()) {
-      tx.update(ref, { quantity: stack(Number(snap.data().quantity) || 0, quantity), updatedAt: serverTimestamp() });
+      const unique = item.unique || snap.data().unique === true;
+      tx.update(ref, { quantity: stack(Number(snap.data().quantity) || 0, quantity, unique), ...(unique ? { unique: true } : {}), updatedAt: serverTimestamp() });
     } else {
       tx.set(ref, { ...itemToMap(giveItem(item, quantity)), catalogItemId: item.id, givenBy: dmUid, givenAt: serverTimestamp() });
     }
@@ -65,10 +67,10 @@ export async function give(roomId: string, cid: string, item: CatalogDoc, quanti
 /** El DM edita una copia ya entregada. */
 export async function updateInventoryItem(roomId: string, cid: string, id: string, item: Item): Promise<void> {
   validateItem(item);
-  await updateDoc(doc(inventory(roomId, cid), id), { ...itemToMap(item), updatedAt: serverTimestamp() });
+  await updateDoc(doc(inventory(roomId, cid), id), { ...itemToMap(item), unique: item.unique ? true : deleteField(), updatedAt: serverTimestamp() });
 }
 
-/** El dueño (o el DM) ajusta la cantidad; puede quedar en 0. */
+/** El dueño (o el DM) ajusta la cantidad; puede quedar en 0. La de un objeto único no se toca. */
 export async function setQuantity(roomId: string, cid: string, id: string, quantity: number): Promise<void> {
   if (!Number.isInteger(quantity) || quantity < 0) throw new UserError('La cantidad no puede ser negativa.');
   await updateDoc(doc(inventory(roomId, cid), id), { quantity });
@@ -105,14 +107,14 @@ export async function deleteOffer(roomId: string, oid: string): Promise<void> {
   await batch.commit();
 }
 
-/** Pone un objeto del catálogo en la ventana; si ya estaba, suma una unidad. */
+/** Pone un objeto del catálogo en la ventana; si ya estaba, suma una unidad (de un único solo hay una). */
 export async function addLine(roomId: string, oid: string, item: CatalogDoc): Promise<void> {
   const ref = doc(lines(roomId, oid), item.id);
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
     if (snap.exists()) {
       const line = lineFrom(snap.id, snap.data());
-      const next = { ...line, stock: line.stock + 1 };
+      const next = { ...line, unique: line.unique || item.unique, stock: line.stock + 1 };
       validateOfferLine(next);
       tx.update(ref, { stock: next.stock, updatedAt: serverTimestamp() });
     } else {
@@ -143,7 +145,8 @@ export async function claimLine(roomId: string, oid: string, kind: OfferKind, li
     const result = claim(kind, line, quantity, Number(meSnap.data().coins) || 0);
     tx.update(lineRef, { stock: result.stock });
     if (invSnap.exists()) {
-      tx.update(invRef, { quantity: stack(Number(invSnap.data().quantity) || 0, quantity) });
+      const unique = line.unique || invSnap.data().unique === true;
+      tx.update(invRef, { quantity: stack(Number(invSnap.data().quantity) || 0, quantity, unique) });
     } else {
       tx.set(invRef, { ...itemToMap(giveItem(line, quantity)), catalogItemId: lid, offerId: oid, givenBy: null, givenAt: serverTimestamp() });
     }

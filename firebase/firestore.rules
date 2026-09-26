@@ -357,12 +357,14 @@ service cloud.firestore {
         }
 
         // Las copias del mismo objeto del catálogo se apilan: el id es el del catálogo.
+        // Un objeto único (`unique`) no se apila y su dueño no le cambia la cantidad.
         match /inventory/{itemId} {
           allow read: if cid == uid() || isDM(r);
           allow create: if (isDM(r) && validItem(data()))
             || (cid == uid() && claimedCopy(r, itemId));
           allow update: if (isDM(r) && validItem(data()))
             || (cid == uid() && changedOnly(['quantity'])
+                && resource.data.get('unique', false) == false
                 && data().quantity is int && data().quantity >= 0);
           allow delete: if isDM(r);
 
@@ -379,6 +381,7 @@ service cloud.firestore {
               && data().value == line.value
               && data().icon == line.icon
               && data().color == line.color
+              && data().get('unique', false) == line.get('unique', false)
               && data().quantity == line.stock - getAfter(path).data.stock;
           }
         }
@@ -407,6 +410,7 @@ service cloud.firestore {
 
         // El primero que llega se lo lleva: las existencias bajan en q, el
         // inventario del jugador sube en q y, en la tienda, paga precio × q.
+        // De un objeto único solo se lleva uno, y si no lo tenía.
         function claimLine(r, oid, lid) {
           let offer = get(offerPath(r, oid)).data;
           let q = resource.data.stock - data().stock;
@@ -416,6 +420,7 @@ service cloud.firestore {
             && changedOnly(['stock'])
             && data().stock is int && data().stock >= 0 && q >= 1
             && getAfter(inv).data.quantity == (exists(inv) ? get(inv).data.quantity : 0) + q
+            && (resource.data.get('unique', false) == false || getAfter(inv).data.quantity == 1)
             && (offer.kind == 'loot'
                 || getAfter(me).data.get('coins', 0)
                      == get(me).data.get('coins', 0) - q * resource.data.price);
@@ -560,20 +565,22 @@ service cloud.firestore {
       return isStr(i.name, 1, 80)
         && optStr(i.get('description', ''), 4000)
         && (i.get('value', null) == null || (i.value is int && i.value >= 0))
+        && i.get('unique', false) is bool
         && validLook(i);
     }
 
     // El catálogo no maneja cantidades; el valor es el precio por defecto.
     function validCatalogItem(i) {
-      return i.keys().hasOnly(['name', 'description', 'value', 'icon', 'color', 'updatedAt'])
+      return i.keys().hasOnly(['name', 'description', 'value', 'unique', 'icon', 'color', 'updatedAt'])
         && validItemText(i);
     }
 
     function validItem(i) {
-      return i.keys().hasOnly(['catalogItemId', 'offerId', 'name', 'description', 'value', 'icon', 'color',
+      return i.keys().hasOnly(['catalogItemId', 'offerId', 'name', 'description', 'value', 'unique', 'icon', 'color',
                                'quantity', 'givenBy', 'givenAt', 'updatedAt'])
         && validItemText(i)
-        && i.quantity is int && i.quantity >= 0;
+        && i.quantity is int && i.quantity >= 0
+        && (i.get('unique', false) == false || i.quantity == 1);
     }
 
     function validOffer(o) {
@@ -585,10 +592,11 @@ service cloud.firestore {
     }
 
     function validLine(l) {
-      return l.keys().hasOnly(['name', 'description', 'value', 'icon', 'color', 'price', 'stock', 'updatedAt'])
+      return l.keys().hasOnly(['name', 'description', 'value', 'unique', 'icon', 'color', 'price', 'stock', 'updatedAt'])
         && validItemText(l)
         && l.price is int && l.price >= 0
-        && l.stock is int && l.stock >= 0 && l.stock <= 999;
+        && l.stock is int && l.stock >= 0 && l.stock <= 999
+        && (l.get('unique', false) == false || l.stock <= 1);
     }
   }
 }

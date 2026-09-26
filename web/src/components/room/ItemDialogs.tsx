@@ -3,7 +3,8 @@ import { DEFAULT_ITEM_COLOR, DEFAULT_ITEM_ICON, type CatalogItem, type Item, typ
 import { useBusy } from '../../hooks/useBusy';
 import { GameIcon } from '../../icons/GameIcon';
 import { Button } from '../kv/Button';
-import { Field, TextArea } from '../kv/Field';
+import { Checkbox, Field, TextArea } from '../kv/Field';
+import { Tag } from '../kv/Layout';
 import { Dialog } from '../kv/Overlay';
 import { lookStyle } from './itemColors';
 import { ColorPicker, IconPicker, ItemGlyph } from './itemLook';
@@ -88,6 +89,7 @@ export function ItemEditDialog({
   const [description, setDescription] = useState(initial?.description ?? '');
   const [value, setValue] = useState(initial?.value === null || initial?.value === undefined ? '' : String(initial.value));
   const [quantity, setQuantity] = useState(String(initial?.quantity ?? 1));
+  const [unique, setUnique] = useState(initial?.unique ?? false);
   const [icon, setIcon] = useState(initial?.icon ?? DEFAULT_ITEM_ICON);
   const [color, setColor] = useState(initial?.color ?? DEFAULT_ITEM_COLOR);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -95,7 +97,7 @@ export function ItemEditDialog({
 
   const save = () =>
     void run(async () => {
-      await onSave({ name: name.trim(), description: description.trim(), value: value === '' ? null : Number(value), icon, color, quantity: Number(quantity || '0') });
+      await onSave({ name: name.trim(), description: description.trim(), value: value === '' ? null : Number(value), unique, icon, color, quantity: unique ? 1 : Number(quantity || '0') });
       onClose();
     });
 
@@ -146,14 +148,25 @@ export function ItemEditDialog({
         <TextArea label="Descripción (y efecto, si es mágico)" value={description} maxLength={4000} rows={2} onChange={(e) => setDescription(e.target.value)} />
         <div className="rl-two">
           <Field label="Valor (opcional)" inputMode="numeric" value={value} unit="monedas" onChange={(e) => setValue(digits(e.target.value))} />
-          {withQuantity && <Field label="Cantidad" inputMode="numeric" value={quantity} onChange={(e) => setQuantity(digits(e.target.value))} />}
+          {withQuantity && !unique && <Field label="Cantidad" inputMode="numeric" value={quantity} onChange={(e) => setQuantity(digits(e.target.value))} />}
         </div>
+        <Checkbox label="Único" checked={unique} onChange={(e) => setUnique(e.target.checked)} />
+        <p className="rl-hint">De un objeto único solo hay uno: no se apila y su dueño no puede cambiar la cantidad.</p>
         <span className="kv-field__label">Color</span>
         <ColorPicker value={color} onChange={setColor} />
         <span className="kv-field__label">Ícono</span>
         <IconPicker value={icon} color={color} onChange={setIcon} />
       </div>
     </Dialog>
+  );
+}
+
+/** Marca de objeto único; va donde los demás muestran la cantidad. */
+export function UniqueTag() {
+  return (
+    <Tag small icon="gem" className="rl-unique">
+      Único
+    </Tag>
   );
 }
 

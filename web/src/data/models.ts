@@ -172,7 +172,7 @@ const look = (m: DocumentData): ItemLook => ({
   color: isItemColor(str(m.color)) ? str(m.color) : DEFAULT_ITEM_COLOR,
 });
 
-const catalogFields = (m: DocumentData): CatalogItem => ({ name: str(m.name), description: str(m.description), value: optInt(m.value), ...look(m) });
+const catalogFields = (m: DocumentData): CatalogItem => ({ name: str(m.name), description: str(m.description), value: optInt(m.value), unique: m.unique === true, ...look(m) });
 
 export interface CatalogDoc extends CatalogItem {
   id: string;
@@ -182,8 +182,9 @@ export function catalogFrom(id: string, m: DocumentData): CatalogDoc {
   return { id, ...catalogFields(m) };
 }
 
+/** `unique` solo se guarda cuando es `true`: los documentos de los objetos de siempre no cambian. */
 export function catalogToMap(i: CatalogItem): Json {
-  return { name: i.name.trim(), description: i.description.trim(), value: i.value, icon: i.icon, color: i.color };
+  return { name: i.name.trim(), description: i.description.trim(), value: i.value, icon: i.icon, color: i.color, ...(i.unique ? { unique: true } : {}) };
 }
 
 export interface ItemDoc extends Item {

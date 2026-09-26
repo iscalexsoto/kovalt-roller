@@ -68,6 +68,9 @@ declarada ──(DM)──► aprobada ──(DM)──► oposicion ──(juga
 
 - El DM mantiene un catálogo privado por sala. Un objeto tiene nombre, descripción (incluye el efecto si es mágico),
   valor opcional (entero, en monedas: es el precio por defecto), ícono y color. El catálogo **no** maneja cantidades.
+- Un objeto puede ser **único** (unas llaves, una reliquia): cada personaje tiene como mucho uno. No se apila, su
+  cantidad siempre es 1 y su dueño no puede cambiarla; en un botín o una tienda hay como mucho uno, y no lo puede
+  tomar quien ya lo tiene. Solo el DM lo entrega, lo quita o le cambia la marca.
 - El DM entrega **copias** a los personajes arrastrando el objeto a un jugador (o a su ficha). Cada entrega suma una
   unidad; las copias del mismo objeto se apilan.
 - Cada inventario lo ven solo su dueño y el DM. El dueño solo puede cambiar la cantidad (≥ 0).

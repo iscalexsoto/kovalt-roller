@@ -80,14 +80,23 @@ describe('personaje y ajustes', () => {
 
 describe('objetos', () => {
   it('ida y vuelta de catálogo, copia y línea', () => {
-    const cat = { name: 'Poción', description: 'Cura 1', value: 4, icon: 'flask-round', color: 'rose' };
+    const cat = { name: 'Poción', description: 'Cura 1', value: 4, unique: false, icon: 'flask-round', color: 'rose' };
     expect(catalogFrom('c1', catalogToMap(cat))).toEqual({ id: 'c1', ...cat });
     expect(itemFrom('c1', { ...itemToMap({ ...cat, quantity: 2 }), catalogItemId: 'c1' })).toEqual({ id: 'c1', ...cat, quantity: 2, catalogItemId: 'c1' });
     expect(lineFrom('c1', lineToMap({ ...cat, price: 3, stock: 5 }))).toEqual({ id: 'c1', ...cat, price: 3, stock: 5 });
   });
 
+  it('único: solo se guarda cuando lo es', () => {
+    const llaves = { name: 'Llaves', description: '', value: null, unique: true, icon: 'key', color: 'amber' };
+    expect(catalogToMap(llaves).unique).toBe(true);
+    expect(catalogToMap({ ...llaves, unique: false })).not.toHaveProperty('unique');
+    expect(catalogFrom('c1', catalogToMap(llaves))).toEqual({ id: 'c1', ...llaves });
+    expect(itemFrom('c1', itemToMap({ ...llaves, quantity: 1 })).unique).toBe(true);
+    expect(lineFrom('c1', lineToMap({ ...llaves, price: 0, stock: 1 })).unique).toBe(true);
+  });
+
   it('objetos viejos sin ícono ni color toman los de siempre', () => {
-    expect(catalogFrom('c1', { name: 'Cuerda', quantity: 3 })).toEqual({ id: 'c1', name: 'Cuerda', description: '', value: null, icon: 'package', color: 'slate' });
+    expect(catalogFrom('c1', { name: 'Cuerda', quantity: 3 })).toEqual({ id: 'c1', name: 'Cuerda', description: '', value: null, unique: false, icon: 'package', color: 'slate' });
   });
 
   it('ventanas: tipo, público y abierta', () => {

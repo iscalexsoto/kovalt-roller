@@ -39,11 +39,13 @@ export interface CatalogItem extends ItemLook {
   description: string;
   /** Valor opcional, en monedas. */
   value: number | null;
+  /** Único: cada personaje tiene como mucho uno. No se apila y su cantidad no cambia. */
+  unique: boolean;
 }
 
 /** Copia de un objeto en el inventario de un personaje. */
 export interface Item extends CatalogItem {
-  /** Puede ser 0. */
+  /** Puede ser 0; la de un objeto único siempre es 1. */
   quantity: number;
 }
 
@@ -53,6 +55,7 @@ export type OfferKind = 'loot' | 'shop';
 export interface OfferLine extends CatalogItem {
   /** Precio por unidad en la tienda; en el botín no se usa. */
   price: number;
+  /** De un objeto único hay como mucho 1. */
   stock: number;
 }
 
@@ -76,24 +79,27 @@ export function validateCatalogItem(item: CatalogItem): void {
 export function validateItem(item: Item): void {
   validateCatalogItem(item);
   if (!isCount(item.quantity)) throw new EngineError({ kind: 'InvalidAmount', what: 'cantidad', value: item.quantity });
+  if (item.unique && item.quantity !== 1) throw new EngineError({ kind: 'UniqueItem' });
 }
 
-export function newCatalogItem(name: string, description: string, value: number | null, look: ItemLook = { icon: DEFAULT_ITEM_ICON, color: DEFAULT_ITEM_COLOR }): CatalogItem {
-  const item: CatalogItem = { name: name.trim(), description: description.trim(), value, icon: look.icon, color: look.color };
+export function newCatalogItem(name: string, description: string, value: number | null, look: ItemLook = { icon: DEFAULT_ITEM_ICON, color: DEFAULT_ITEM_COLOR }, unique = false): CatalogItem {
+  const item: CatalogItem = { name: name.trim(), description: description.trim(), value, unique, icon: look.icon, color: look.color };
   validateCatalogItem(item);
   return item;
 }
 
 /** Copia que recibe un personaje, con su propia cantidad. */
 export function giveItem(item: CatalogItem, quantity: number): Item {
-  const copy: Item = { name: item.name, description: item.description, value: item.value, icon: item.icon, color: item.color, quantity };
+  const copy: Item = { name: item.name, description: item.description, value: item.value, unique: item.unique, icon: item.icon, color: item.color, quantity };
   validateItem(copy);
   return copy;
 }
 
-/** Suma unidades a una copia ya en el inventario (los objetos del mismo origen se apilan). */
-export function stack(current: number, added: number): number {
+/** Suma unidades a una copia ya en el inventario (los objetos del mismo origen se apilan).
+ *  Un objeto único no se apila: solo entra si el personaje no tiene ninguno. */
+export function stack(current: number, added: number, unique = false): number {
   if (!isCount(added) || added < 1) throw new EngineError({ kind: 'InvalidAmount', what: 'cantidad', value: added });
+  if (unique && current + added > 1) throw new EngineError({ kind: 'UniqueItem' });
   return current + added;
 }
 
@@ -115,6 +121,7 @@ export function validateOfferLine(line: OfferLine): void {
   validateCatalogItem(line);
   if (!isCount(line.price)) throw new EngineError({ kind: 'InvalidAmount', what: 'precio', value: line.price });
   if (!isCount(line.stock, MAX_STOCK)) throw new EngineError({ kind: 'InvalidAmount', what: 'existencias', value: line.stock });
+  if (line.unique && line.stock > 1) throw new EngineError({ kind: 'UniqueItem' });
 }
 
 export interface ClaimResult {

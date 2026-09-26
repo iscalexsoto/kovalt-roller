@@ -10,7 +10,7 @@ import { NumericPad } from '../kv/NumericPad';
 import { Dialog } from '../kv/Overlay';
 import { useRoom } from './context';
 import { useDropTarget } from './drag';
-import { ItemEditDialog, ItemGrid, ItemInfo, ItemTile } from './ItemDialogs';
+import { ItemEditDialog, ItemGrid, ItemInfo, ItemTile, UniqueTag } from './ItemDialogs';
 
 /** Monedas del personaje; el DM las ajusta (±1 o escribiendo la cantidad). */
 function Coins({ character }: { character: CharacterDoc }) {
@@ -96,12 +96,16 @@ function ItemDetail({ character, item, onClose }: { character: CharacterDoc; ite
       <ItemInfo
         item={item}
         extra={
-          <div className="rl-qty">
-            <span className="rl-xp__label">Cantidad</span>
-            {canCount && <IconButton icon="minus" small label="Uno menos" disabled={item.quantity === 0} onClick={() => change(-1)} />}
-            <span className="rl-qty__value kv-num">{item.quantity}</span>
-            {canCount && <IconButton icon="plus" small label="Uno más" onClick={() => change(1)} />}
-          </div>
+          item.unique ? (
+            <UniqueTag />
+          ) : (
+            <div className="rl-qty">
+              <span className="rl-xp__label">Cantidad</span>
+              {canCount && <IconButton icon="minus" small label="Uno menos" disabled={item.quantity === 0} onClick={() => change(-1)} />}
+              <span className="rl-qty__value kv-num">{item.quantity}</span>
+              {canCount && <IconButton icon="plus" small label="Uno más" onClick={() => change(1)} />}
+            </div>
+          )
         }
       />
     </Dialog>
@@ -129,7 +133,7 @@ export function Inventory({ character }: { character: CharacterDoc }) {
         <ItemGrid count={items.length} label={`Inventario de ${character.sheet.name}`}>
           {items.map((item) => (
             <div key={item.id} role="listitem" className="rl-grid__cell">
-              <ItemTile look={item} name={item.name} count={item.quantity} dim={item.quantity === 0} onClick={() => setOpenId(item.id)} />
+              <ItemTile look={item} name={item.name} count={item.unique ? undefined : item.quantity} dim={item.quantity === 0} onClick={() => setOpenId(item.id)} />
             </div>
           ))}
         </ItemGrid>

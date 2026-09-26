@@ -382,6 +382,23 @@ describe('inventario', () => {
     expect(() => stack(1, 0)).toThrow(EngineError);
   });
 
+  it('un objeto único no se apila ni cambia de cantidad', () => {
+    const llaves = newCatalogItem('Llaves', '', null, { icon: 'key', color: 'amber' }, true);
+    expect(cuerda().unique).toBe(false);
+    expect(giveItem(llaves, 1)).toMatchObject({ unique: true, quantity: 1 });
+    expect(errorOf(() => giveItem(llaves, 2)).detail.kind).toBe('UniqueItem');
+    expect(errorOf(() => giveItem(llaves, 0)).detail.kind).toBe('UniqueItem');
+    // Solo entra si el personaje no tiene ninguno.
+    expect(stack(0, 1, true)).toBe(1);
+    expect(errorOf(() => stack(1, 1, true)).detail.kind).toBe('UniqueItem');
+    expect(errorOf(() => stack(0, 2, true)).detail.kind).toBe('UniqueItem');
+    // En un botín o una tienda hay como mucho uno.
+    expect(offerLine(llaves).stock).toBe(1);
+    expect(offerLine(llaves, 0).stock).toBe(0);
+    expect(errorOf(() => offerLine(llaves, 2)).detail.kind).toBe('UniqueItem');
+    expect(errorOf(() => claim('loot', offerLine(llaves), 2, 0)).detail.kind).toBe('OutOfStock');
+  });
+
   it('la línea de tienda parte del valor como precio', () => {
     expect(offerLine(cuerda(), 3)).toMatchObject({ price: 5, stock: 3 });
     expect(offerLine(newCatalogItem('Piedra', '', null)).price).toBe(0);

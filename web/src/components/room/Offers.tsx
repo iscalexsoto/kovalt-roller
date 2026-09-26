@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { claim, type OfferKind } from '../../engine';
+import { claim, MAX_STOCK, type OfferKind } from '../../engine';
 import { errorMessage } from '../../data/errors';
 import { useLiveQuery } from '../../data/hooks';
-import { addLine, claimLine, createOffer, deleteOffer, linesQuery, offersQuery, removeLine, updateLine, updateOffer, visibleOffersQueries } from '../../data/items';
-import { EVERYONE, lineFrom, offerFrom, type LineDoc, type OfferDoc } from '../../data/models';
+import { addLine, claimLine, createOffer, deleteOffer, inventoryQuery, linesQuery, offersQuery, removeLine, updateLine, updateOffer, visibleOffersQueries } from '../../data/items';
+import { EVERYONE, itemFrom, lineFrom, offerFrom, type LineDoc, type OfferDoc } from '../../data/models';
 import { useBusy } from '../../hooks/useBusy';
 import { GameIcon } from '../../icons/GameIcon';
 import { toast, toastError } from '../../state/toast';
@@ -14,7 +14,7 @@ import { KickerDivider, Tag } from '../kv/Layout';
 import { Dialog } from '../kv/Overlay';
 import { useRoom } from './context';
 import { useDropTarget } from './drag';
-import { ItemGrid, ItemInfo, ItemTile } from './ItemDialogs';
+import { ItemGrid, ItemInfo, ItemTile, UniqueTag } from './ItemDialogs';
 
 const KIND: Record<OfferKind, { icon: string; label: string; take: string }> = {
   loot: { icon: 'gift', label: 'Botín', take: 'Tomar' },
@@ -48,6 +48,7 @@ function LineDialog({ offer, line, onClose }: { offer: OfferDoc; line: LineDoc; 
   const ctx = useRoom();
   const [stock, setStock] = useState(line.stock);
   const [price, setPrice] = useState(String(line.price));
+  const maxStock = line.unique ? 1 : MAX_STOCK;
   const [busy, run] = useBusy();
   return (
     <Dialog
@@ -75,7 +76,8 @@ function LineDialog({ offer, line, onClose }: { offer: OfferDoc; line: LineDoc; 
           <span className="rl-xp__label">Existencias</span>
           <IconButton icon="minus" small label="Una menos" disabled={stock === 0} onClick={() => setStock(stock - 1)} />
           <span className="rl-qty__value kv-num">{stock}</span>
-          <IconButton icon="plus" small label="Una más" disabled={stock >= 999} onClick={() => setStock(stock + 1)} />
+          <IconButton icon="plus" small label="Una más" disabled={stock >= maxStock} onClick={() => setStock(stock + 1)} />
+          {line.unique && <UniqueTag />}
         </div>
         {offer.kind === 'shop' && <Field label="Precio por unidad" inputMode="numeric" value={price} unit="monedas" onChange={(e) => setPrice(digits(e.target.value))} />}
       </div>
@@ -191,11 +193,14 @@ function ClaimDialog({ offer, line, coins, onClose }: { offer: OfferDoc; line: L
   const [busy, run] = useBusy();
   const kind = KIND[offer.kind];
   const q = Math.min(quantity, Math.max(1, line.stock));
-  let problem: string | null = null;
+  // Un objeto único no se toma dos veces: miramos si ya está en la mochila.
+  const mine = useLiveQuery(line.unique ? `inv/${ctx.room.id}/${ctx.uid}` : null, line.unique ? inventoryQuery(ctx.room.id, ctx.uid) : null, itemFrom);
+  const owned = line.unique && (mine.data ?? []).some((i) => i.id === line.id && i.quantity > 0);
+  let problem: string | null = owned ? 'Ya lo tienes: es un objeto único.' : null;
   try {
     claim(offer.kind, line, q, coins);
   } catch (e) {
-    problem = errorMessage(e);
+    problem ??= errorMessage(e);
   }
   const cost = offer.kind === 'shop' ? line.price * q : 0;
 
@@ -216,7 +221,8 @@ function ClaimDialog({ offer, line, coins, onClose }: { offer: OfferDoc; line: L
             onClick={() =>
               void run(async () => {
                 await claimLine(ctx.room.id, offer.id, offer.kind, line.id, ctx.uid, q);
-                toast(offer.kind === 'shop' ? `Compraste ${q} × ${line.name}` : `Tomaste ${q} × ${line.name}`);
+                const what = line.unique ? line.name : `${q} × ${line.name}`;
+                toast(offer.kind === 'shop' ? `Compraste ${what}` : `Tomaste ${what}`);
                 onClose();
               })
             }
@@ -230,13 +236,17 @@ function ClaimDialog({ offer, line, coins, onClose }: { offer: OfferDoc; line: L
         item={line}
         extra={
           <>
-            <div className="rl-qty">
-              <span className="rl-xp__label">Cantidad</span>
-              <IconButton icon="minus" small label="Una menos" disabled={q <= 1} onClick={() => setQuantity(q - 1)} />
-              <span className="rl-qty__value kv-num">{q}</span>
-              <IconButton icon="plus" small label="Una más" disabled={q >= line.stock} onClick={() => setQuantity(q + 1)} />
-              <span className="rl-hint">de {line.stock}</span>
-            </div>
+            {line.unique ? (
+              <UniqueTag />
+            ) : (
+              <div className="rl-qty">
+                <span className="rl-xp__label">Cantidad</span>
+                <IconButton icon="minus" small label="Una menos" disabled={q <= 1} onClick={() => setQuantity(q - 1)} />
+                <span className="rl-qty__value kv-num">{q}</span>
+                <IconButton icon="plus" small label="Una más" disabled={q >= line.stock} onClick={() => setQuantity(q + 1)} />
+                <span className="rl-hint">de {line.stock}</span>
+              </div>
+            )}
             {offer.kind === 'shop' && (
               <span className="rl-coins-inline">
                 <GameIcon name="coins" size={16} /> {line.price} c/u · tienes {coins}

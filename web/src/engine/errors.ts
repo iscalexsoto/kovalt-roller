@@ -27,6 +27,7 @@ export type EngineErrorDetail =
   | { kind: 'EmptyNarration' }
   | { kind: 'InvalidItemName'; max: number }
   | { kind: 'InvalidItemLook' }
+  | { kind: 'UniqueItem' }
   | { kind: 'InvalidAmount'; what: string; value: number }
   | { kind: 'InvalidOfferTitle'; max: number }
   | { kind: 'OutOfStock'; available: number }
@@ -89,6 +90,8 @@ function message(d: EngineErrorDetail): string {
       return `el nombre del objeto es obligatorio (1-${d.max} caracteres)`;
     case 'InvalidItemLook':
       return 'ícono o color de objeto desconocido';
+    case 'UniqueItem':
+      return 'es un objeto único: solo puede haber uno';
     case 'InvalidAmount':
       return `${d.what} inválido: ${d.value} (debe ser un entero no negativo)`;
     case 'InvalidOfferTitle':

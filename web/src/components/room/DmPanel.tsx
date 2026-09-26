@@ -79,8 +79,8 @@ function Catalog() {
               <DragHandle payload={{ item }} label={`Arrastrar ${item.name}`} />
               <button type="button" className="rl-catalog-row__main kv-state" onClick={() => setEditing(item)}>
                 <span className="kv-list-item__headline">{item.name}</span>
-                {(item.description || item.value !== null) && (
-                  <span className="kv-list-item__support">{[item.value !== null ? `${item.value} monedas` : '', item.description].filter(Boolean).join(' · ')}</span>
+                {(item.unique || item.description || item.value !== null) && (
+                  <span className="kv-list-item__support">{[item.unique ? 'Único' : '', item.value !== null ? `${item.value} monedas` : '', item.description].filter(Boolean).join(' · ')}</span>
                 )}
               </button>
             </li>
@@ -92,7 +92,7 @@ function Catalog() {
           title={editing === 'new' ? 'Nuevo objeto' : 'Editar objeto'}
           initial={editing === 'new' ? undefined : editing}
           onClose={() => setEditing(null)}
-          onSave={(item) => saveCatalogItem(ctx.room.id, { name: item.name, description: item.description, value: item.value, icon: item.icon, color: item.color }, editing === 'new' ? undefined : editing.id)}
+          onSave={(item) => saveCatalogItem(ctx.room.id, { name: item.name, description: item.description, value: item.value, unique: item.unique, icon: item.icon, color: item.color }, editing === 'new' ? undefined : editing.id)}
           onDelete={editing === 'new' ? undefined : () => deleteCatalogItem(ctx.room.id, editing.id)}
         />
       )}

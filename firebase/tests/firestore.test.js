@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { collection, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore';
+import { collection, deleteDoc, deleteField, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore';
 import {
   BASE_SKILL, CODE, createEnv, declaredRoll, DEFAULT_SETTINGS, DM, guest, P1, P2, registered,
   ROOM, seedRoll, seedRoom, withClaims,
@@ -211,6 +211,24 @@ describe('catálogo e inventario', () => {
     await assertSucceeds(deleteDoc(inv(dmDb(), P1)));
   });
 
+  it('un objeto único no se apila ni cambia de cantidad', async () => {
+    await seedRoom(env);
+    const ref = (db) => doc(db, `rooms/${ROOM}/catalog/c1`);
+    const given = (extra) => ({ ...item(extra), catalogItemId: 'c1', givenBy: DM, givenAt: serverTimestamp() });
+    await assertSucceeds(setDoc(ref(dmDb()), catalogItem({ unique: true })));
+    await assertFails(setDoc(ref(dmDb()), catalogItem({ unique: 'sí' })));
+    await assertFails(setDoc(inv(dmDb(), P1), given({ unique: true, quantity: 2 })));
+    await assertFails(setDoc(inv(dmDb(), P1), given({ unique: true, quantity: 0 })));
+    await assertSucceeds(setDoc(inv(dmDb(), P1), given({ unique: true })));
+    await assertFails(updateDoc(inv(p1Db(), P1), { quantity: 2 }));
+    await assertFails(updateDoc(inv(p1Db(), P1), { quantity: 0 }));
+    await assertFails(updateDoc(inv(p1Db(), P1), { unique: false }));
+    await assertFails(updateDoc(inv(dmDb(), P1), { quantity: 2 }));
+    // Si el DM le quita lo de único, vuelve a contarse.
+    await assertSucceeds(updateDoc(inv(dmDb(), P1), { unique: deleteField(), quantity: 3 }));
+    await assertSucceeds(updateDoc(inv(p1Db(), P1), { quantity: 2 }));
+  });
+
   it('monedas: el DM las ajusta; el dueño no se las sube', async () => {
     await seedRoom(env);
     await assertSucceeds(updateDoc(charRef(dmDb(), P1), { coins: 10 }));
@@ -301,6 +319,27 @@ describe('botines y tiendas', () => {
     b.update(lineRef(p1Db()), { stock: 2 });
     b.set(inv(p1Db(), P1), { ...copy(1), name: 'Poción legendaria' });
     await assertFails(b.commit());
+  });
+
+  it('un objeto único: se lleva uno, y solo quien no lo tiene', async () => {
+    await seedOffer({ stock: 1 });
+    await env.withSecurityRulesDisabled((ctx) => updateDoc(lineRef(ctx.firestore()), { unique: true }));
+    await assertFails(setDoc(lineRef(dmDb(), 'o1', 'c2'), line({ unique: true, stock: 2 })));
+    await assertSucceeds(setDoc(lineRef(dmDb(), 'o1', 'c2'), line({ unique: true, stock: 1 })));
+    const take = (db, data) => {
+      const b = writeBatch(db);
+      b.update(lineRef(db), { stock: 0 });
+      b.set(inv(db, P1), data);
+      return b.commit();
+    };
+    // La copia debe llevar la marca de único.
+    await assertFails(take(p1Db(), copy(1)));
+    await assertSucceeds(take(p1Db(), { ...copy(1), unique: true }));
+    // El DM repone, pero P1 ya lo tiene.
+    await assertFails(updateDoc(lineRef(dmDb()), { stock: 2 }));
+    await assertSucceeds(updateDoc(lineRef(dmDb()), { stock: 1 }));
+    await assertFails(claimBatch(p1Db(), 1, { from: 1, create: false, invQty: 2 }));
+    await assertFails(updateDoc(lineRef(p1Db()), { stock: 0 }));
   });
 
   it('tienda: cobra precio × cantidad y no deja deber', async () => {
