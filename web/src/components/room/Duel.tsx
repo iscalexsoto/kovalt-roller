@@ -131,7 +131,7 @@ function useReveal(roll: RollDoc) {
 type Reveal = ReturnType<typeof useReveal>;
 
 /** La carta completa. */
-function Duel({ roll, actions, reveal, compact = false }: { roll: RollDoc; actions: RollActions; reveal: Reveal | null; compact?: boolean }) {
+function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: RollDoc; actions: RollActions; reveal: Reveal | null; compact?: boolean; onDismiss?: () => void }) {
   const ctx = useRoom();
   const { record } = roll;
   const character = ctx.characterOf(roll.characterId);
@@ -284,8 +284,13 @@ function Duel({ roll, actions, reveal, compact = false }: { roll: RollDoc; actio
         </div>
       )}
 
-      {rowActions.length > 0 && (
+      {(rowActions.length > 0 || (onDismiss && decided)) && (
         <div className="rl-duel__actions">
+          {onDismiss && decided && (
+            <Button variant="text" quiet dense icon="x" className="rl-duel__dismiss" onClick={onDismiss}>
+              Quitar de la mesa
+            </Button>
+          )}
           {rowActions.map((k) => (
             <Button
               key={k}
@@ -317,7 +322,9 @@ function stateTag(roll: RollDoc) {
 }
 
 /** Una tirada del registro: plegada en una fila o abierta como duelo. */
-export function RollItem({ roll, actions, hero }: { roll: RollDoc; actions: RollActions; hero: boolean }) {
+/** `hero`: va completa en la mesa. `onDismiss`: es la escena que se queda por ser la última resuelta y se puede plegar
+ *  a mano. */
+export function RollItem({ roll, actions, hero, onDismiss }: { roll: RollDoc; actions: RollActions; hero: boolean; onDismiss?: () => void }) {
   const ctx = useRoom();
   const reveal = useReveal(roll);
   const [open, setOpen] = useState(false);
@@ -325,7 +332,7 @@ export function RollItem({ roll, actions, hero }: { roll: RollDoc; actions: Roll
   const character = ctx.characterOf(roll.characterId);
   const who = character?.sheet.name ?? ctx.displayNameOf(roll.characterId);
 
-  if (hero || reveal.holding) return <Duel roll={roll} actions={actions} reveal={reveal} />;
+  if (hero || reveal.holding) return <Duel roll={roll} actions={actions} reveal={reveal} onDismiss={hero ? onDismiss : undefined} />;
 
   const tag = stateTag(roll);
   const faded = record.state === 'rechazada' || record.state === 'retirada';
@@ -362,12 +369,15 @@ export function RollItem({ roll, actions, hero }: { roll: RollDoc; actions: Roll
   );
 }
 
-/** Qué tiradas se muestran completas: las vivas (o con avance pendiente) y, si no hay ninguna, la última resuelta. */
-export function heroIds(rolls: readonly RollDoc[]): Set<string> {
-  const ids = new Set(rolls.filter((r) => !isTerminal(r.record.state) || r.record.advance === 'pendiente').map((r) => r.id));
-  if (ids.size === 0) {
-    const last = rolls.find((r) => r.record.state === 'resuelta');
-    if (last) ids.add(last.id);
+/** Qué tiradas van completas en la mesa: las vivas (o con avance pendiente). Si no hay ninguna, la tirada más
+ *  reciente se queda como escena mientras esté resuelta y nadie la haya quitado; una rechazada o retirada posterior
+ *  ya no la trae de vuelta. `scene` es esa escena, para ofrecer quitarla. */
+export function tableRolls(rolls: readonly RollDoc[], dismissed: string | null): { hero: Set<string>; scene: string | null } {
+  const hero = new Set(rolls.filter((r) => !isTerminal(r.record.state) || r.record.advance === 'pendiente').map((r) => r.id));
+  const last = rolls[0];
+  if (hero.size === 0 && last && last.record.state === 'resuelta' && last.id !== dismissed) {
+    hero.add(last.id);
+    return { hero, scene: last.id };
   }
-  return ids;
+  return { hero, scene: null };
 }
