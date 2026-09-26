@@ -602,6 +602,37 @@ describe('tiradas: flujo completo', () => {
     await assertSucceeds(apply([BASE_SKILL, muros], 1));
   });
 
+  it('comprar slot con XP: solo con buySlots, 2 × nivel además de los dados', async () => {
+    const seed = (settings) => seedRoom(env, { settings: { ...DEFAULT_SETTINGS, skillSlots: 1, ...settings }, skills: { [P1]: [BASE_SKILL, TREPAR] } });
+    const roll = () => seedRoll(env, 'r1', {
+      characterId: P1, estado: 'resuelta', skillIndex: 1, skillName: 'Trepar', skillLevel: 2,
+      oposicion: { dados: [3], total: 3 }, tirada: { dados: [6, 3], total: 9 },
+      outcome: 'exito', tieWinner: 'player', avance: { estado: 'pendiente' },
+    });
+    const muros = { name: 'Escalar muros', level: 3, permanent: false, derivedFrom: 'Trepar 2' };
+    const apply = (charPatch, xpSpent) => {
+      const b = writeBatch(p1Db());
+      b.update(charRef(p1Db(), P1), { skills: [BASE_SKILL, TREPAR, muros], lastAppliedRollId: 'r1', ...charPatch });
+      b.update(rollRef(p1Db()), upd({
+        avance: { estado: 'aplicado', xpGained: 0, xpSpent, newSkill: muros, replacedSkillIndex: null },
+      }));
+      return b.commit();
+    };
+    await seed({});
+    await roll();
+    await env.withSecurityRulesDisabled((ctx) => updateDoc(doc(ctx.firestore(), `rooms/${ROOM}/characters/${P1}`), { xp: 7 }));
+    // Sin el ajuste no se puede comprar.
+    await assertFails(apply({ extraSlots: 1, xp: 0 }, 7));
+
+    await seed({ buySlots: true });
+    await roll();
+    await env.withSecurityRulesDisabled((ctx) => updateDoc(doc(ctx.firestore(), `rooms/${ROOM}/characters/${P1}`), { xp: 7 }));
+    await assertFails(apply({ xp: 6 }, 1));                 // sin comprar no hay slot
+    await assertFails(apply({ extraSlots: 1, xp: 6 }, 1));  // hay que pagar el slot
+    await assertFails(apply({ extraSlots: 2, xp: 0 }, 7));  // solo un slot por avance
+    await assertSucceeds(apply({ extraSlots: 1, xp: 0 }, 7)); // 1 (dado) + 6 (2 × 3)
+  });
+
   it('sin_tirada: el DM narra y la tirada queda resuelta sin avance', async () => {
     await seedRoom(env);
     await seedRoll(env, 'r1', { characterId: P1 });

@@ -70,6 +70,7 @@ export async function applyAdvance(
   batch.update(doc(db, 'rooms', room.id, 'characters', character.id), {
     xp: result.character.xp,
     skills: result.character.skills.map(skillToMap),
+    extraSlots: result.character.extraSlots,
     lastAppliedRollId: roll.id,
     updatedAt: serverTimestamp(),
   });

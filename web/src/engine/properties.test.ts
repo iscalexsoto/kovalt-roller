@@ -22,6 +22,7 @@ const arbSettings = fc.record<RoomSettings>({
   tieWinner: fc.constantFrom('player', 'opposition', 'partial'),
   xpSameRoll: fc.boolean(),
   maxDice: fc.constant(MAX_DICE_LIMIT),
+  buySlots: fc.boolean(),
 });
 
 const byte = fc.integer({ min: 0, max: 255 });
@@ -46,7 +47,12 @@ it('applyRoll conserva las invariantes', () => {
           let slot: SlotChoice;
           if (opt.slotsFull) {
             const nonBase = c.skills.length - 1;
-            slot = slotPick % 3 === 0 || nonBase === 0 ? { kind: 'discard' } : { kind: 'replace', index: 1 + (slotPick % nonBase) };
+            slot =
+              opt.canBuySlot && slotPick % 2 === 0
+                ? { kind: 'buy' }
+                : slotPick % 3 === 0 || nonBase === 0
+                  ? { kind: 'discard' }
+                  : { kind: 'replace', index: 1 + (slotPick % nonBase) };
           } else {
             slot = { kind: 'append' };
           }

@@ -15,6 +15,7 @@ export function newCharacter(name: string, description: string): Character {
     xp: 0,
     skills: [baseSkill()],
     statuses: [],
+    extraSlots: 0,
   };
 }
 
@@ -41,9 +42,9 @@ export interface SlotUsage {
   capacity: number;
 }
 
-/** Slots usados y capacidad. "Do Anything 1" no ocupa slot. */
+/** Slots usados y capacidad (los de la sala más los comprados). "Do Anything 1" no ocupa slot. */
 export function slotUsage(character: Character, settings: RoomSettings): SlotUsage {
-  return { used: character.skills.filter((s) => !s.permanent).length, capacity: settings.skillSlots };
+  return { used: character.skills.filter((s) => !s.permanent).length, capacity: settings.skillSlots + character.extraSlots };
 }
 
 export function slotsFull(character: Character, settings: RoomSettings): boolean {
@@ -90,6 +91,9 @@ export function validateCharacter(character: Character, settings: RoomSettings):
     }
   });
 
+  if (!Number.isInteger(character.extraSlots) || character.extraSlots < 0) {
+    errors.push(new EngineError({ kind: 'InvalidAmount', what: 'slots comprados', value: character.extraSlots }));
+  }
   const { used, capacity } = slotUsage(character, settings);
   if (used > capacity) errors.push(new EngineError({ kind: 'TooManySkills', used, capacity }));
 

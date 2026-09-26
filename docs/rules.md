@@ -16,6 +16,7 @@
 | `tieWinner` | jugador | Quién gana en empate: el jugador, la oposición o **nadie** (`partial`): el jugador lo consigue a medias, con un giro o consecuencia menor, y no gana XP. Todos 6 sigue dando habilidad gratis. |
 | `xpSameRoll` | sí | Si el XP ganado al fallar se puede gastar en esa misma tirada. |
 | `maxDice` | 10 | Máximo de dados por tirada; una habilidad de ese nivel ya no avanza. |
+| `buySlots` | no | Con los slots llenos, al ganar una habilidad se puede **comprar un slot** por el doble de su nivel en XP (además del XP de los dados). El slot queda en la ficha (`extraSlots`) y se suma a `skillSlots`. |
 
 Otras decisiones:
 

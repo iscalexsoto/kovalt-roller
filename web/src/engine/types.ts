@@ -50,6 +50,8 @@ export interface Character {
   /** Invariante: `skills[0]` es "Do Anything 1" permanente. */
   skills: Skill[];
   statuses: Status[];
+  /** Slots comprados con XP (ajuste `buySlots`); se suman a `skillSlots`. */
+  extraSlots: number;
 }
 
 /** Quién gana en empate; `partial`: nadie, el jugador lo consigue a medias y no gana XP. */
@@ -80,10 +82,17 @@ export interface RoomSettings {
   xpSameRoll: boolean;
   /** Dados máximos por tirada (<= `MAX_DICE_LIMIT`). */
   maxDice: number;
+  /** Si, con los slots llenos, se puede comprar uno con XP (2 × nivel de la habilidad nueva). */
+  buySlots: boolean;
+}
+
+/** Precio en XP de un slot para una habilidad de `level`: el doble del nivel. */
+export function slotPrice(level: number): number {
+  return 2 * level;
 }
 
 export function defaultRoomSettings(): RoomSettings {
-  return { skillSlots: 5, tieWinner: 'player', xpSameRoll: true, maxDice: MAX_DICE_LIMIT };
+  return { skillSlots: 5, tieWinner: 'player', xpSameRoll: true, maxDice: MAX_DICE_LIMIT, buySlots: false };
 }
 
 export function validateRoomSettings(settings: RoomSettings): void {

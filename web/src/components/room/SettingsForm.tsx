@@ -32,6 +32,11 @@ export function SettingsForm({ value, onChange }: { value: RoomSettings; onChang
         checked={value.xpSameRoll}
         onChange={(e) => onChange({ ...value, xpSameRoll: e.target.checked })}
       />
+      <Checkbox
+        label="Con los slots llenos se puede comprar uno con XP (el doble del nivel de la habilidad nueva)"
+        checked={value.buySlots}
+        onChange={(e) => onChange({ ...value, buySlots: e.target.checked })}
+      />
     </div>
   );
 }

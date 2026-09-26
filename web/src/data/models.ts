@@ -53,11 +53,12 @@ export function settingsFrom(m: Json | null): RoomSettings {
     tieWinner: tieWinnerFrom(m?.tieWinner) ?? 'player',
     xpSameRoll: m?.xpSameRoll !== false,
     maxDice: int(m?.maxDice, MAX_DICE_LIMIT),
+    buySlots: m?.buySlots === true,
   };
 }
 
 export function settingsToMap(s: RoomSettings): Json {
-  return { skillSlots: s.skillSlots, tieWinner: s.tieWinner, xpSameRoll: s.xpSameRoll, maxDice: s.maxDice };
+  return { skillSlots: s.skillSlots, tieWinner: s.tieWinner, xpSameRoll: s.xpSameRoll, maxDice: s.maxDice, buySlots: s.buySlots };
 }
 
 // ---------- sala y miembros ----------
@@ -136,6 +137,7 @@ export function characterFrom(id: string, m: DocumentData): CharacterDoc {
       xp: int(m.xp),
       skills: list(m.skills).map((s) => skillFrom(map(s) ?? {})),
       statuses: list(m.statuses).map((s) => statusFrom(map(s) ?? {})),
+      extraSlots: int(m.extraSlots),
     },
   };
 }
@@ -157,6 +159,7 @@ export function characterToMap(ownerUid: string, c: Character): Json {
     xp: c.xp,
     skills: c.skills.map(skillToMap),
     statuses: c.statuses.map(statusToMap),
+    extraSlots: c.extraSlots,
     lastAppliedRollId: null,
     updatedAt: serverTimestamp(),
   };

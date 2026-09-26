@@ -82,7 +82,8 @@ service cloud.firestore {
     // ---------- ajustes de sala ----------
 
     function validSettings(s) {
-      return s.keys().hasOnly(['skillSlots', 'tieWinner', 'xpSameRoll', 'maxDice'])
+      return s.keys().hasOnly(['skillSlots', 'tieWinner', 'xpSameRoll', 'maxDice', 'buySlots'])
+        && s.get('buySlots', false) is bool
         && s.skillSlots is int && s.skillSlots >= 1 && s.skillSlots <= 20
         && s.tieWinner in ['player', 'opposition', 'partial']
         && s.xpSameRoll is bool
@@ -166,15 +167,16 @@ service cloud.firestore {
 
     function basicCharacter(c, settings) {
       return c.keys().hasOnly(['ownerUid', 'name', 'description', 'notes', 'xp', 'coins', 'skills',
-                               'statuses', 'lastAppliedRollId', 'updatedAt'])
+                               'statuses', 'extraSlots', 'lastAppliedRollId', 'updatedAt'])
         && validStatuses(c.get('statuses', []))
+        && c.get('extraSlots', 0) is int && c.get('extraSlots', 0) >= 0
         && isStr(c.name, 1, 60)
         && optStr(c.get('description', ''), 4000)
         && optStr(c.get('notes', ''), 20000)
         && c.xp is int && c.xp >= 0
         && c.get('coins', 0) is int && c.get('coins', 0) >= 0
         && c.skills is list && c.skills.size() >= 1
-        && c.skills.size() <= settings.skillSlots + 1
+        && c.skills.size() <= settings.skillSlots + 1 + c.get('extraSlots', 0)
         && isBaseSkill(c.skills[0]);
     }
 
@@ -207,7 +209,11 @@ service cloud.firestore {
       let a = after.avance;
       let oldC = resource.data;
       let newC = data();
+      // Comprar un slot (ajuste buySlots): extraSlots sube 1 y cuesta 2 × nivel nuevo, además de los dados.
+      let bought = newC.get('extraSlots', 0) == oldC.get('extraSlots', 0) + 1;
       return rid is string
+        && (bought ? (settings.get('buySlots', false) == true && a.newSkill != null && a.replacedSkillIndex == null)
+                   : newC.get('extraSlots', 0) == oldC.get('extraSlots', 0))
         && rid != oldC.get('lastAppliedRollId', null)
         && after.characterId == cid
         && before.estado == 'resuelta' && after.estado == 'resuelta'
@@ -218,7 +224,7 @@ service cloud.firestore {
               ? (newC.skills == oldC.skills && a.xpSpent == 0 && a.replacedSkillIndex == null)
               : (a.newSkill.level == after.skillLevel + 1
                  && gainedSkill(a.newSkill, settings.maxDice)
-                 && a.xpSpent == nonSixes(after.tirada.dados)
+                 && a.xpSpent == nonSixes(after.tirada.dados) + (bought ? 2 * a.newSkill.level : 0)
                  && (settings.xpSameRoll || oldC.xp >= a.xpSpent)
                  && (a.replacedSkillIndex == null
                        ? newC.skills == oldC.skills.concat([a.newSkill])
@@ -331,6 +337,7 @@ service cloud.firestore {
           && data().xp == 0
           && data().skills.size() == 1
           && data().get('statuses', []).size() == 0
+          && data().get('extraSlots', 0) == 0
           && data().get('lastAppliedRollId', null) == null
           && basicCharacter(data(), room(r).settings);
         allow update: if updateCharacter(r, cid, room(r).settings);

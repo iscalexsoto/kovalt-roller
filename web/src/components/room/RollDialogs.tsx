@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { skillRefFrom, type AdvancementChoice, type AdvancementOption, type Character, type SkillRef } from '../../engine';
-import { Button, Chip } from '../kv/Button';
+import { Button, Chip, Segmented } from '../kv/Button';
 import { Field } from '../kv/Field';
 import { Dialog } from '../kv/Overlay';
 import { Select } from '../kv/Select';
@@ -175,8 +175,13 @@ export type AdvancementPick = AdvancementChoice | null | undefined;
 export function AdvancementDialog({ option, sheet, forDm, onDone }: { option: AdvancementOption; sheet: Character; forDm: boolean; onDone: (pick: AdvancementPick) => void }) {
   const [name, setName] = useState('');
   const [replace, setReplace] = useState<string>('');
-  const valid = name.trim() !== '' && (!option.slotsFull || replace !== '');
+  // Con los slots llenos: reemplazar una habilidad o, si la sala lo permite y el XP alcanza, comprar un slot.
+  const [full, setFull] = useState<'replace' | 'buy'>(option.canBuySlot ? 'buy' : 'replace');
+  const buying = option.slotsFull && full === 'buy';
+  const valid = name.trim() !== '' && (!option.slotsFull || (buying ? option.canBuySlot : replace !== ''));
   const replaceOptions = sheet.skills.map((s, i) => ({ value: String(i), label: skillLabel(s) })).filter((o) => o.value !== '0');
+  const totalXp = option.xpCost + (buying ? (option.slotPrice ?? 0) : 0);
+  const slot = (): AdvancementChoice['slot'] => (buying ? { kind: 'buy' } : option.slotsFull ? { kind: 'replace', index: Number(replace) } : { kind: 'append' });
   return (
     <Dialog
       title={option.natural ? '¡Todos 6!' : 'Puedes avanzar gastando XP'}
@@ -194,11 +199,9 @@ export function AdvancementDialog({ option, sheet, forDm, onDone }: { option: Ad
           <Button
             variant="primary"
             disabled={!valid}
-            onClick={() =>
-              onDone({ newSkillName: name.trim(), slot: option.slotsFull ? { kind: 'replace', index: Number(replace) } : { kind: 'append' } })
-            }
+            onClick={() => onDone({ newSkillName: name.trim(), slot: slot() })}
           >
-            {option.natural ? 'Aprender' : `Gastar ${option.xpCost} XP y aprender`}
+            {totalXp === 0 ? 'Aprender' : `Gastar ${totalXp} XP y aprender`}
           </Button>
         </>
       }
@@ -211,9 +214,26 @@ export function AdvancementDialog({ option, sheet, forDm, onDone }: { option: Ad
             : `Convierte ${option.xpCost} dado(s) en 6 gastando ${option.xpCost} XP (disponibles: ${option.xpAvailable}) y gana una habilidad de nivel ${option.newLevel} derivada de ${skillLabelText(option.sourceLabel)}. El resultado de la tirada no cambia.`}
         </p>
         <Field label="Nombre de la habilidad" value={name} maxLength={40} autoFocus unit={String(option.newLevel)} onChange={(e) => setName(e.target.value)} />
-        {option.slotsFull && (
+        {option.slotsFull && option.slotPrice !== null && (
+          <div className="rl-settings__row rl-settings__row--stack">
+            <span className="rl-settings__label">Todos los slots están ocupados</span>
+            <Segmented
+              label="Qué hacer con el slot"
+              value={full}
+              options={[
+                { value: 'replace', label: 'Reemplazar una', icon: 'undo-2' },
+                { value: 'buy', label: `Comprar slot · ${option.slotPrice} XP`, icon: 'sparkles' },
+              ]}
+              onChange={setFull}
+            />
+            {full === 'buy' && !option.canBuySlot && (
+              <p className="rl-hint">No alcanza: harían falta {option.xpCost + option.slotPrice} XP y hay {option.xpAvailable}.</p>
+            )}
+          </div>
+        )}
+        {option.slotsFull && !buying && (
           <Select
-            label="Todos los slots están ocupados: ¿cuál reemplazas?"
+            label={option.slotPrice === null ? 'Todos los slots están ocupados: ¿cuál reemplazas?' : '¿Cuál reemplazas?'}
             value={replace}
             placeholder="Elige una habilidad"
             options={replaceOptions}

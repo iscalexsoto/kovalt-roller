@@ -299,6 +299,41 @@ describe('avance', () => {
     expect(discarded.character.skills).toEqual(c.skills);
   });
 
+  it('comprar un slot con XP: 2 × nivel, solo con el ajuste y los slots llenos', () => {
+    const c = heroWith([skill('Trepar', 2)], 5);
+    const r = dice([6, 6]);
+    const o = resolve(r, dice([1]), 'player');
+    // Sin el ajuste no hay precio.
+    const off = advancementOption(c, settings({ skillSlots: 1 }), r, o, 1)!;
+    expect(off).toMatchObject({ slotsFull: true, slotPrice: null, canBuySlot: false });
+    expect(errorOf(() => applyRoll(c, settings({ skillSlots: 1 }), r, o, 1, choice('Escalar', { kind: 'buy' }))).kind).toBe('CannotBuySlot');
+    // Con slot libre tampoco se compra.
+    expect(advancementOption(c, settings({ buySlots: true }), r, o, 1)!.slotPrice).toBeNull();
+
+    const s = settings({ skillSlots: 1, buySlots: true });
+    const opt = advancementOption(c, s, r, o, 1)!;
+    expect(opt).toMatchObject({ slotsFull: true, slotPrice: 6, canBuySlot: false, xpCost: 0, xpAvailable: 5 });
+    expect(errorOf(() => applyRoll(c, s, r, o, 1, choice('Escalar', { kind: 'buy' }))).kind).toBe('InsufficientXp');
+
+    const rich = heroWith([skill('Trepar', 2)], 7);
+    expect(advancementOption(rich, s, r, o, 1)!.canBuySlot).toBe(true);
+    const bought = applyRoll(rich, s, r, o, 1, choice('Escalar', { kind: 'buy' }));
+    expect(bought.xpSpent).toBe(6);
+    expect(bought.character.xp).toBe(1);
+    expect(bought.character.extraSlots).toBe(1);
+    expect(bought.character.skills.map(skillLabel)).toEqual(['Do Anything 1', 'Trepar 2', 'Escalar 3']);
+    expect(slotUsage(bought.character, s)).toEqual({ used: 2, capacity: 2 });
+    expect(validateCharacter(bought.character, s)).toEqual([]);
+
+    // Con dados que no son 6 se paga todo: 1 XP por dado + el slot.
+    const mixed = dice([6, 3]);
+    const lost = resolve(mixed, dice([6, 6]), 'player');
+    const poor = heroWith([skill('Trepar', 2)], 6); // 6 + 1 del fallo = 7 = 1 + 6
+    const both = applyRoll(poor, s, mixed, lost, 1, choice('Escalar', { kind: 'buy' }));
+    expect(both).toMatchObject({ xpGained: 1, xpSpent: 7 });
+    expect(both.character.xp).toBe(0);
+  });
+
   it('rechaza nombres de habilidad repetidos', () => {
     const c = heroWith([skill('Trepar', 2)], 0);
     const r = dice([6]);

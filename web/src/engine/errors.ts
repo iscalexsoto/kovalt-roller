@@ -8,6 +8,7 @@ export type EngineErrorDetail =
   | { kind: 'UnexpectedPermanentSkill' }
   | { kind: 'TooManySkills'; used: number; capacity: number }
   | { kind: 'SlotsFull' }
+  | { kind: 'CannotBuySlot' }
   | { kind: 'CannotReplacePermanent' }
   | { kind: 'SkillIndexOutOfRange'; index: number }
   | { kind: 'DuplicateSkillName'; name: string }
@@ -50,6 +51,8 @@ function message(d: EngineErrorDetail): string {
       return `hay más habilidades (${d.used}) que slots disponibles (${d.capacity})`;
     case 'SlotsFull':
       return 'todos los slots de habilidad están ocupados';
+    case 'CannotBuySlot':
+      return 'en esta sala no se compran slots (o no hace falta: hay uno libre)';
     case 'CannotReplacePermanent':
       return '"Do Anything 1" no se puede reemplazar';
     case 'SkillIndexOutOfRange':
