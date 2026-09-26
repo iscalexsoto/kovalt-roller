@@ -322,15 +322,15 @@ export function RollItem({ roll, actions, hero }: { roll: RollDoc; actions: Roll
   const mine = record.playerRoll;
   const won = record.result === 'exito';
   return (
-    <div className={`rl-row${faded ? ' rl-row--faded' : ''}`} aria-expanded={open}>
-      <button type="button" className="rl-row__main kv-state" onClick={() => setOpen((o) => !o)}>
+    <div className={`rl-entry${faded ? ' rl-entry--faded' : ''}`} aria-expanded={open}>
+      <button type="button" className="rl-entry__main kv-state" onClick={() => setOpen((o) => !o)}>
         <Avatar initials={initials(who)} size={32} />
-        <span className="rl-row__text">
+        <span className="rl-entry__text">
           <Sentence roll={roll} who={who} />
         </span>
         {opp && mine && (
-          <span className="rl-row__score kv-num">
-            <span className={won ? 'rl-row__win' : ''}>{mine.total()}</span> vs <span className={won ? '' : 'rl-row__win'}>{opp.total()}</span>
+          <span className="rl-entry__score kv-num">
+            <span className={won ? 'rl-entry__win' : ''}>{mine.total()}</span> vs <span className={won ? '' : 'rl-entry__win'}>{opp.total()}</span>
           </span>
         )}
         {record.applied?.newSkill ? (
@@ -342,9 +342,9 @@ export function RollItem({ roll, actions, hero }: { roll: RollDoc; actions: Roll
             {tag.label}
           </Tag>
         )}
-        <GameIcon name="chevron-down" className="rl-row__chev" />
+        <GameIcon name="chevron-down" className="rl-entry__chev" />
       </button>
-      <div className="rl-row__detail">
+      <div className="rl-entry__detail">
         <div>{open && <Duel roll={roll} actions={actions} reveal={null} compact />}</div>
       </div>
     </div>
