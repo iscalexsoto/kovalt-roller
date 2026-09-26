@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOutEverywhere, useSession } from '../firebase/session';
+import { setSoundEnabled, useSound } from '../state/sound';
 import { toastError } from '../state/toast';
 import { useDialogs } from './dialogs';
 import { IconButton } from './kv/Button';
@@ -14,6 +15,7 @@ export function AccountMenu() {
   const { confirm, dialogs } = useDialogs();
   const [anchor, setAnchor] = useState<DOMRect | null>(null);
   const [themeAnchor, setThemeAnchor] = useState<DOMRect | null>(null);
+  const sound = useSound();
 
   const signOut = async () => {
     const ok = session.guest
@@ -37,6 +39,7 @@ export function AccountMenu() {
           anchor={anchor}
           items={[
             { key: 'theme', label: 'Tema', icon: 'palette' },
+            { key: 'sound', label: 'Sonido de la mesa', icon: sound ? 'volume-2' : 'volume-x', checked: sound },
             { key: 'out', label: session.guest ? 'Salir de la mesa' : 'Cerrar sesión', icon: 'log-out', destructive: true },
           ]}
           onClose={() => setAnchor(null)}
@@ -44,6 +47,7 @@ export function AccountMenu() {
             const rect = anchor;
             setAnchor(null);
             if (key === 'theme') setThemeAnchor(rect);
+            if (key === 'sound') setSoundEnabled(!sound);
             if (key === 'out') void signOut();
           }}
         />

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { GameIcon } from '../../icons/GameIcon';
+import { playDie } from '../../state/sound';
 
 /* Dados de una tirada. La bandeja sabe animar un reveal: cada dado gira (cambiando de cara cada 60 ms) y cae por
  * separado, 120 ms después del anterior; al caer el último, el total cuenta hacia arriba. Solo se animan
@@ -71,6 +72,7 @@ export function DiceTray({ dice, count, muted = false, animateKey = 0, onDone }:
     values.forEach((_, i) => {
       timers.current.push(
         window.setTimeout(() => {
+          playDie();
           setAnim((a) => (a && a.key === animateKey ? { ...a, landed: i + 1, faces: a.faces.map((f, j) => (j === i ? values[i]! : f)) } : a));
         }, LAND_MS + i * STEP_MS),
       );

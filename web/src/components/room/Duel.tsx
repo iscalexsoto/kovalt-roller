@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { isTerminal } from '../../engine';
 import type { RollDoc } from '../../data/models';
 import { GameIcon } from '../../icons/GameIcon';
+import { playStamp } from '../../state/sound';
 import { Button } from '../kv/Button';
 import { Stepper } from '../kv/Field';
 import { Avatar, Tag } from '../kv/Layout';
@@ -151,6 +152,16 @@ function Duel({ roll, actions, reveal, compact = false }: { roll: RollDoc; actio
   const need = opp ? (ctx.room.settings.tieWinner === 'player' ? opp.total() : opp.total() + 1) : null;
   const sixes = allSix(mine?.dice);
   const faded = record.state === 'rechazada' || record.state === 'retirada';
+
+  // El sello suena una vez por reveal, cuando aparece en vivo.
+  const stamped = useRef(0);
+  const live = decided && Boolean(reveal?.verdictLive);
+  const playerKey = reveal?.playerKey ?? 0;
+  useEffect(() => {
+    if (!live || stamped.current === playerKey) return;
+    stamped.current = playerKey;
+    playStamp(won ? (sixes ? 'seis' : 'exito') : 'fallo');
+  }, [live, playerKey, won, sixes]);
 
   // Botones de la fila: lo que no vive dentro de un lado.
   // Mientras caen los dados no hay nada que decidir.

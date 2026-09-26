@@ -71,6 +71,8 @@ implementadas: [docs/rules.md](docs/rules.md).
     conteo, pausa, sello) lo dispara el cambio de estado que llega de Firestore, así todos lo ven a la vez; lo que
     ya estaba al abrir la sala no se anima. Las tiradas vivas (o con avance pendiente) y la última resuelta van
     completas; el resto, plegadas en filas del mismo contenedor (`RollItem` conserva el estado del reveal).
+  - **Sonido** (`state/sound.ts`): por persona, apagado por defecto (`rl-sound` en localStorage; menú de cuenta).
+    Sintetizado con WebAudio: un clac por dado que cae y un golpe al caer el sello (con notas si es éxito o todos 6).
 - **Inventario:**
   - El catálogo es privado del DM y no tiene cantidades: nombre, descripción, valor opcional (precio por defecto),
     ícono y color (claves `ITEM_ICON_KEYS`/`ITEM_COLOR_KEYS` del motor; las reglas validan el color).
