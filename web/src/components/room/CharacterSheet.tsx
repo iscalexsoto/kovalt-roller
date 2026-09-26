@@ -1,6 +1,6 @@
 import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import { slotUsage } from '../../engine';
-import { dmUpdateSheet, updateCharacterTexts } from '../../data/characters';
+import { dmUpdateSheet, dmUpdateStatuses, updateCharacterTexts } from '../../data/characters';
 import type { CharacterDoc } from '../../data/models';
 import { useBusy } from '../../hooks/useBusy';
 import { Button, IconButton } from '../kv/Button';
@@ -10,6 +10,8 @@ import { useRoom } from './context';
 import { Inventory } from './Inventory';
 import { skillLabel, skillLabelText, skillName } from './labels';
 import { SkillDialog } from './SkillDialog';
+import { StatusDialog } from './StatusDialog';
+import { statusLabel } from './labels';
 import { useDeclare } from './useDeclare';
 
 type SheetTexts = { name: string; description: string; notes: string };
@@ -114,6 +116,7 @@ export function CharacterSheet({ character }: { character: CharacterDoc }) {
   const canAct = isOwner && !ctx.isDm;
   // Diálogo del DM: `null` cerrado, `'new'` otorgar, índice editar.
   const [editing, setEditing] = useState<number | 'new' | null>(null);
+  const [editingStatus, setEditingStatus] = useState<number | 'new' | null>(null);
   const saveSkills = (updated: Parameters<typeof dmUpdateSheet>[3]) => dmUpdateSheet(ctx.room.id, character.id, sheet.xp, updated);
 
   return (
@@ -170,6 +173,31 @@ export function CharacterSheet({ character }: { character: CharacterDoc }) {
           onClose={() => setEditing(null)}
           onSave={(updated) => saveSkills(updated.skills)}
         />
+      )}
+
+      {(sheet.statuses.length > 0 || ctx.isDm) && <KickerDivider className="rl-sheet__kicker">Estados</KickerDivider>}
+      {(sheet.statuses.length > 0 || ctx.isDm) && (
+        <div className="rl-chips rl-statuses">
+          {sheet.statuses.map((s, i) =>
+            ctx.isDm ? (
+              <button key={i} type="button" className={`rl-status kv-state${s.rating < 0 ? ' rl-status--neg' : s.rating > 0 ? ' rl-status--pos' : ''}`} disabled={busy} onClick={() => setEditingStatus(i)}>
+                {statusLabel(s)}
+              </button>
+            ) : (
+              <span key={i} className={`rl-status${s.rating < 0 ? ' rl-status--neg' : s.rating > 0 ? ' rl-status--pos' : ''}`}>
+                {statusLabel(s)}
+              </span>
+            ),
+          )}
+          {ctx.isDm && (
+            <Button variant="text" icon="plus" dense disabled={busy} onClick={() => setEditingStatus('new')}>
+              Estado
+            </Button>
+          )}
+        </div>
+      )}
+      {editingStatus !== null && (
+        <StatusDialog sheet={sheet} index={editingStatus === 'new' ? null : editingStatus} onClose={() => setEditingStatus(null)} onSave={(updated) => dmUpdateStatuses(ctx.room.id, character.id, updated.statuses)} />
       )}
 
       <Inventory character={character} />

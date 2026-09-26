@@ -65,7 +65,7 @@ describe('tiradas', () => {
 
 describe('personaje y ajustes', () => {
   it('ida y vuelta de la hoja', () => {
-    const sheet = { name: 'Ana', description: 'x', notes: 'y', xp: 2, skills: [{ name: 'Do Anything', level: 1, permanent: true, derivedFrom: null }] };
+    const sheet = { name: 'Ana', description: 'x', notes: 'y', xp: 2, skills: [{ name: 'Do Anything', level: 1, permanent: true, derivedFrom: null }], statuses: [{ name: 'Lloviendo', rating: -4 }] };
     const { updatedAt: _ignored, ...m } = characterToMap(OWNER, sheet);
     expect(characterFrom(OWNER, m)).toEqual({ id: OWNER, ownerUid: OWNER, lastAppliedRollId: null, coins: 0, sheet });
   });

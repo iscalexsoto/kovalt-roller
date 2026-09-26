@@ -52,6 +52,17 @@ declarada ──(DM)──► aprobada ──(DM)──► oposicion ──(juga
 - **Retirar:** el jugador puede retirar su declaración mientras está en `declarada`, `contraoferta` o `rechazada`.
 - **Resuelta:** el resultado se calcula automáticamente (`exito`, `fallo` o, con empate parcial, `empate`). Si hay avance posible, el jugador decide (nombre de la habilidad, gastar XP, qué slot usar) y se aplica.
 
+## Estados
+
+- Un estado es un modificador con nombre («−4 Lloviendo», «+2 Zapato limpio», «−3 Nariz rota»): sirve para daño,
+  condiciones, ventajas, desventajas o progreso. Lo pone, corrige y quita el DM desde la ficha; el dueño lo ve. Valor
+  entero entre −20 y +20 (0 es solo narrativo), hasta 10 por personaje.
+- Al oponer, el DM marca qué estados aplican a esa tirada. Su suma es el **modificador** de la tirada (`modificador`,
+  con la lista en `modificadorNota`): se suma al total del jugador para decidir el resultado (y la mesa muestra
+  «Necesitas N» ya descontado), pero **nunca cambia los dados**: el avance (todos 6, XP por dado) sale de los dados
+  tal cual cayeron.
+- Un estado dura hasta que el DM lo quita (una acción lo resuelve o deja de ser cierto en la ficción).
+
 ## Inventario
 
 - El DM mantiene un catálogo privado por sala. Un objeto tiene nombre, descripción (incluye el efecto si es mágico),

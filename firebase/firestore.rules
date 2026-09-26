@@ -149,9 +149,25 @@ service cloud.firestore {
     // revalida cuando la escribe el DM (validSkillList); en el avance del jugador
     // se valida únicamente la habilidad nueva (advancementGuard), para no pasar
     // del límite de 1000 expresiones por evaluación.
+    // Estados («−4 Lloviendo»): nombre y valor entero ±20; máximo 10, sin bucles.
+    function validStatus(s) {
+      return s is map && s.keys().hasOnly(['name', 'rating'])
+        && isStr(s.name, 1, 40) && s.rating is int && s.rating >= -20 && s.rating <= 20;
+    }
+
+    function validStatuses(l) {
+      return l is list && l.size() <= 10
+        && (l.size() < 1 || validStatus(l[0])) && (l.size() < 2 || validStatus(l[1]))
+        && (l.size() < 3 || validStatus(l[2])) && (l.size() < 4 || validStatus(l[3]))
+        && (l.size() < 5 || validStatus(l[4])) && (l.size() < 6 || validStatus(l[5]))
+        && (l.size() < 7 || validStatus(l[6])) && (l.size() < 8 || validStatus(l[7]))
+        && (l.size() < 9 || validStatus(l[8])) && (l.size() < 10 || validStatus(l[9]));
+    }
+
     function basicCharacter(c, settings) {
       return c.keys().hasOnly(['ownerUid', 'name', 'description', 'notes', 'xp', 'coins', 'skills',
-                               'lastAppliedRollId', 'updatedAt'])
+                               'statuses', 'lastAppliedRollId', 'updatedAt'])
+        && validStatuses(c.get('statuses', []))
         && isStr(c.name, 1, 60)
         && optStr(c.get('description', ''), 4000)
         && optStr(c.get('notes', ''), 20000)
@@ -314,6 +330,7 @@ service cloud.firestore {
           && data().ownerUid == cid
           && data().xp == 0
           && data().skills.size() == 1
+          && data().get('statuses', []).size() == 0
           && data().get('lastAppliedRollId', null) == null
           && basicCharacter(data(), room(r).settings);
         allow update: if updateCharacter(r, cid, room(r).settings);
@@ -327,6 +344,8 @@ service cloud.firestore {
                 || (cid == uid() && changedOnly(['coins', 'updatedAt'])
                     && data().coins < resource.data.get('coins', 0))
                 || (cid == uid() && advancementGuard(r, cid, settings))
+                // Estados: solo el DM (basicCharacter ya los validó).
+                || (isDM(r) && changedOnly(['statuses', 'updatedAt']))
                 || (isDM(r) && validSkillList(data().skills, settings.maxDice)));
         }
 
@@ -404,8 +423,8 @@ service cloud.firestore {
         allow create: if isMember(r) && !isDM(r)
           && data().keys().hasOnly(['estado', 'characterId', 'declaradoPor', 'accion', 'proposito',
                                     'skillIndex', 'skillName', 'skillLevel', 'contraoferta', 'notaDm',
-                                    'oposicion', 'tirada', 'outcome', 'narracion', 'tieWinner',
-                                    'avance', 'historial', 'createdAt', 'updatedAt'])
+                                    'oposicion', 'modificador', 'modificadorNota', 'tirada', 'outcome',
+                                    'narracion', 'tieWinner', 'avance', 'historial', 'createdAt', 'updatedAt'])
           && data().estado == 'declarada'
           && data().characterId == uid()
           && data().declaradoPor == uid()
@@ -413,6 +432,7 @@ service cloud.firestore {
           && skillRefMatches(r, uid(), data().skillIndex, data().skillName, data().skillLevel)
           && data().contraoferta == null && data().notaDm == null
           && data().oposicion == null && data().tirada == null
+          && data().get('modificador', 0) == 0 && data().get('modificadorNota', null) == null
           && data().outcome == null && data().narracion == null
           && data().tieWinner == null && data().avance == null
           && data().createdAt == request.time && data().updatedAt == request.time
@@ -468,11 +488,15 @@ service cloud.firestore {
             || (from in ['declarada', 'contraoferta', 'rechazada'] && to == 'retirada' && isRollOwner()
                 && step(from, to, []))
 
-            // DM: tirar oposición o fijar un objetivo (visible para el jugador)
+            // DM: tirar oposición o fijar un objetivo (visible para el jugador), con el
+            // modificador de los estados que aplique (±200: 10 estados de ±20)
             || (from == 'aprobada' && to == 'oposicion' && isDM(r)
-                && step(from, to, ['oposicion'])
+                && step(from, to, ['oposicion', 'modificador', 'modificadorNota'])
                 && (validRoll(data().oposicion, room(r).settings.maxDice)
-                    || fixedTarget(data().oposicion, room(r).settings.maxDice)))
+                    || fixedTarget(data().oposicion, room(r).settings.maxDice))
+                && data().modificador is int
+                && data().modificador >= -200 && data().modificador <= 200
+                && optStr(data().modificadorNota, 200))
 
             // Jugador: tirar tantos dados como el nivel declarado
             || (from == 'oposicion' && to == 'tirada' && isRollOwner()
@@ -484,7 +508,8 @@ service cloud.firestore {
             || (from == 'tirada' && to == 'resuelta' && (isRollOwner() || isDM(r))
                 && step(from, to, ['outcome', 'tieWinner', 'avance'])
                 && data().tieWinner == room(r).settings.tieWinner
-                && data().outcome == expectedOutcome(resource.data.tirada.total,
+                && data().outcome == expectedOutcome(resource.data.tirada.total
+                                                       + resource.data.get('modificador', 0),
                                                      resource.data.oposicion.total,
                                                      data().tieWinner)
                 && data().avance == {'estado': 'pendiente'})

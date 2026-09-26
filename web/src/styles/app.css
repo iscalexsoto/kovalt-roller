@@ -200,6 +200,15 @@ button.rl-player__main { cursor: pointer; }
 .rl-fixed--live { animation: rl-die-land var(--kv-duration-long) var(--kv-easing-kobold) both; }
 /* El DM prepara la oposición: dificultad de la tabla, modo (tirar o fijo) y el número. */
 .rl-difficulty .kv-chip { font-size: calc(12 * var(--kv-px)); }
+/* Estados («−4 Lloviendo»): en la ficha (chips propios) y al oponer (kv-chip conmutables). */
+.rl-statuses { align-items: center; }
+.rl-status { display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; border: none; clip-path: var(--kv-cut-s); background: var(--kv-color-surface-container-high); color: var(--kv-color-on-surface); font: 700 var(--kv-t-label)/1 var(--kv-font-body); white-space: nowrap; }
+button.rl-status { cursor: pointer; }
+.rl-status--neg { color: var(--kv-color-error); }
+.rl-status--pos { color: var(--kv-color-success-text); }
+.rl-mod { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px; font: 400 calc(13 * var(--kv-px))/calc(18 * var(--kv-px)) var(--kv-font-body); }
+.rl-mod b { font-weight: 700; }
+.rl-mod__total { color: var(--kv-color-on-surface); font-weight: 700; font-size: calc(16 * var(--kv-px)); }
 .rl-oppose { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 
 /* El sello. */

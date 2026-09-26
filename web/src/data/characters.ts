@@ -1,7 +1,7 @@
 import { collection, doc, getDocs, query, serverTimestamp, updateDoc, where, writeBatch, type DocumentReference } from 'firebase/firestore';
-import type { Character, Skill } from '../engine';
+import type { Character, Skill, Status } from '../engine';
 import { db } from '../firebase/app';
-import { characterToMap, skillToMap } from './models';
+import { characterToMap, skillToMap, statusToMap } from './models';
 
 const characterRef = (roomId: string, cid: string) => doc(db, 'rooms', roomId, 'characters', cid);
 
@@ -28,6 +28,11 @@ export async function updateCharacterTexts(roomId: string, cid: string, texts: P
 /** Corrección manual del DM (xp y habilidades), sujeta a las invariantes. */
 export async function dmUpdateSheet(roomId: string, cid: string, xp: number, skills: Skill[]): Promise<void> {
   await updateDoc(characterRef(roomId, cid), { xp, skills: skills.map(skillToMap), updatedAt: serverTimestamp() });
+}
+
+/** El DM pone y quita estados («−4 Lloviendo»). */
+export async function dmUpdateStatuses(roomId: string, cid: string, statuses: Status[]): Promise<void> {
+  await updateDoc(characterRef(roomId, cid), { statuses: statuses.map(statusToMap), updatedAt: serverTimestamp() });
 }
 
 /** El DM borra a un jugador que ya no está en la sala: su ficha, su inventario y sus tiradas. */

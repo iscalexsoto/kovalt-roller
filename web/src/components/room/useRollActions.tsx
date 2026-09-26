@@ -8,8 +8,10 @@ import {
   type AdvancementChoice,
   type FlowAction,
   type FlowActionKind,
+  modifierOf,
   type Opposition,
   type SkillRef,
+  type Status,
 } from '../../engine';
 import type { RollDoc } from '../../data/models';
 import { act, applyAdvance, outcomeOf } from '../../data/rolls';
@@ -18,13 +20,13 @@ import { useDialogs } from '../dialogs';
 import { useRoom } from './context';
 import { revealDuration } from './Dice';
 import { VERDICT_BEAT_MS } from './Duel';
-import { skillLabel } from './labels';
+import { skillLabel, statusLabel } from './labels';
 import { AdvancementDialog, CounterOfferDialog, DeclareDialog } from './RollDialogs';
 
 const dice = new CryptoDice();
 
 /** Cómo opone el DM: tirando `count` dados o con un objetivo fijo. */
-export type OppositionChoice = { count: number } | { target: number };
+export type OppositionChoice = ({ count: number } | { target: number }) & { statuses?: Status[] };
 
 /** Lo que tarda el sello en aparecer tras el reveal (--kv-duration-long) más un respiro antes de abrir un diálogo. */
 const STAMP_MS = 320 + 300;
@@ -170,8 +172,9 @@ export function useRollActions(): RollActions {
   const oppose = (roll: RollDoc, choice: OppositionChoice) =>
     guarded(roll, async () => {
       const opposition: Opposition = 'target' in choice ? fixedOpposition(choice.target) : { kind: 'dice', dice: rollDice(choice.count, ctx.room.settings.maxDice, dice) };
+      const statuses = choice.statuses ?? [];
       const approved = roll.record.state === 'declarada' ? await perform(roll, { kind: 'approve' }) : roll;
-      await perform(approved, { kind: 'rollOpposition', opposition });
+      await perform(approved, { kind: 'rollOpposition', opposition, modifier: modifierOf(statuses), modifierNote: statuses.map(statusLabel).join(', ') || null });
     });
 
   return {

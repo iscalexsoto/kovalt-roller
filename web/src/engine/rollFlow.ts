@@ -11,7 +11,7 @@
 import type { DiceRoll } from './dice';
 import { EngineError } from './errors';
 import { resolve } from './resolve';
-import { DIFFICULTIES, MAX_FIXED_TARGET, type Character, type Difficulty, type Skill, type TieWinner } from './types';
+import { DIFFICULTIES, MAX_FIXED_TARGET, MAX_MODIFIER, type Character, type Difficulty, type Skill, type TieWinner } from './types';
 
 export const ROLL_STATES = ['declarada', 'aprobada', 'contraoferta', 'rechazada', 'sin_tirada', 'oposicion', 'tirada', 'resuelta', 'retirada'] as const;
 export type RollState = (typeof ROLL_STATES)[number];
@@ -86,6 +86,9 @@ export interface RollRecord {
   counterOffer: SkillRef | null;
   dmNote: string | null;
   opposition: Opposition | null;
+  /** Suma de los estados que el DM aplicó al oponer (0 si ninguno) y su lista, para mostrarla. */
+  modifier: number;
+  modifierNote: string | null;
   playerRoll: DiceRoll | null;
   result: RollResult | null;
   narration: string | null;
@@ -103,7 +106,7 @@ export type FlowAction =
   | { kind: 'acceptCounterOffer' }
   | { kind: 'redeclare'; action: string; purpose: string | null; skill: SkillRef }
   | { kind: 'withdraw' }
-  | { kind: 'rollOpposition'; opposition: Opposition }
+  | { kind: 'rollOpposition'; opposition: Opposition; modifier?: number; modifierNote?: string | null }
   | { kind: 'rollPlayer'; dice: DiceRoll }
   | { kind: 'resolve'; tieWinner: TieWinner }
   | { kind: 'applyAdvance'; applied: AppliedAdvance };
@@ -174,6 +177,8 @@ export function declare(action: string, skill: SkillRef, purpose: string | null 
     counterOffer: null,
     dmNote: null,
     opposition: null,
+    modifier: 0,
+    modifierNote: null,
     playerRoll: null,
     result: null,
     narration: null,
@@ -241,10 +246,15 @@ export function transition(record: RollRecord, action: FlowAction, actor: Actor)
     case 'withdraw':
       goto('retirada');
       break;
-    case 'rollOpposition':
+    case 'rollOpposition': {
+      const modifier = action.modifier ?? 0;
+      if (!Number.isInteger(modifier) || Math.abs(modifier) > MAX_MODIFIER) throw new EngineError({ kind: 'InvalidModifier', max: MAX_MODIFIER });
       next.opposition = action.opposition.kind === 'fixed' ? fixedOpposition(action.opposition.target) : action.opposition;
+      next.modifier = modifier;
+      next.modifierNote = modifier === 0 ? null : cleanNote(action.modifierNote ?? null);
       goto('oposicion');
       break;
+    }
     case 'rollPlayer': {
       const expected = next.skill.level;
       if (action.dice.length !== expected) throw new EngineError({ kind: 'DiceCountMismatch', expected, got: action.dice.length });
@@ -255,7 +265,7 @@ export function transition(record: RollRecord, action: FlowAction, actor: Actor)
     case 'resolve': {
       // En estado `tirada` siempre existen la tirada y la oposición.
       if (!next.playerRoll || !next.opposition) throw notAllowed();
-      const outcome = resolve(next.playerRoll, oppositionTotal(next.opposition), action.tieWinner);
+      const outcome = resolve(next.playerRoll, oppositionTotal(next.opposition), action.tieWinner, next.modifier);
       next.result = outcome.outcome === 'success' ? 'exito' : outcome.outcome === 'tie' ? 'empate' : 'fallo';
       next.tieWinner = action.tieWinner;
       next.advance = 'pendiente';

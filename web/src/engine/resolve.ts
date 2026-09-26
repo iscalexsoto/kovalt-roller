@@ -13,9 +13,10 @@ export interface RollOutcome {
   xpGained: number;
 }
 
-/** Compara la tirada del jugador con la oposición del DM: sus dados o un objetivo fijo (ya como total). */
-export function resolve(player: DiceRoll, opposition: DiceRoll | number, tieWinner: TieWinner): RollOutcome {
-  const playerTotal = player.total();
+/** Compara la tirada del jugador (más el modificador de sus estados) con la oposición del DM: sus dados o un
+ *  objetivo fijo (ya como total). `playerTotal` es el total efectivo; el avance mira los dados, no este número. */
+export function resolve(player: DiceRoll, opposition: DiceRoll | number, tieWinner: TieWinner, modifier = 0): RollOutcome {
+  const playerTotal = player.total() + modifier;
   const oppositionTotal = typeof opposition === 'number' ? opposition : opposition.total();
   const tied = playerTotal === oppositionTotal;
   const outcome: Outcome = playerTotal > oppositionTotal || (tied && tieWinner === 'player') ? 'success' : tied && tieWinner === 'partial' ? 'tie' : 'failure';

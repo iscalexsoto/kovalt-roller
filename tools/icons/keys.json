@@ -1,4 +1,5 @@
 {
+  "activity": "activity",
   "amphora": "amphora",
   "anchor": "anchor",
   "apple": "apple",
@@ -130,6 +131,7 @@
   "tent": "tent",
   "test-tube-diagonal": "test-tube-diagonal",
   "trash-2": "trash-2",
+  "trending-down": "trending-down",
   "trending-up": "trending-up",
   "triangle-alert": "triangle-alert",
   "trophy": "trophy",

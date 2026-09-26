@@ -12,6 +12,10 @@ export type EngineErrorDetail =
   | { kind: 'SkillIndexOutOfRange'; index: number }
   | { kind: 'DuplicateSkillName'; name: string }
   | { kind: 'InvalidSkillLevel'; level: number }
+  | { kind: 'InvalidStatusName'; max: number }
+  | { kind: 'InvalidStatusRating'; max: number }
+  | { kind: 'TooManyStatuses'; max: number }
+  | { kind: 'InvalidModifier'; max: number }
   | { kind: 'NotEligible' }
   | { kind: 'InsufficientXp'; needed: number; available: number }
   | { kind: 'DiceCountOutOfRange'; got: number; max: number }
@@ -54,6 +58,14 @@ function message(d: EngineErrorDetail): string {
       return `ya existe una habilidad llamada "${d.name}"`;
     case 'InvalidSkillLevel':
       return `nivel de habilidad inválido: ${d.level}`;
+    case 'InvalidStatusName':
+      return `el nombre del estado es obligatorio (1-${d.max} caracteres)`;
+    case 'InvalidStatusRating':
+      return `el valor del estado debe ser un entero entre −${d.max} y +${d.max}`;
+    case 'TooManyStatuses':
+      return `como mucho ${d.max} estados por personaje`;
+    case 'InvalidModifier':
+      return `el modificador debe ser un entero entre −${d.max} y +${d.max}`;
     case 'NotEligible':
       return 'esta tirada no permite avanzar';
     case 'InsufficientXp':

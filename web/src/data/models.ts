@@ -23,6 +23,7 @@ import {
   type RoomSettings,
   type Skill,
   type SkillRef,
+  type Status,
   type TieWinner,
 } from '../engine';
 
@@ -134,8 +135,17 @@ export function characterFrom(id: string, m: DocumentData): CharacterDoc {
       notes: str(m.notes),
       xp: int(m.xp),
       skills: list(m.skills).map((s) => skillFrom(map(s) ?? {})),
+      statuses: list(m.statuses).map((s) => statusFrom(map(s) ?? {})),
     },
   };
+}
+
+export function statusFrom(m: Json): Status {
+  return { name: str(m.name), rating: int(m.rating) };
+}
+
+export function statusToMap(s: Status): Json {
+  return { name: s.name, rating: s.rating };
 }
 
 export function characterToMap(ownerUid: string, c: Character): Json {
@@ -146,6 +156,7 @@ export function characterToMap(ownerUid: string, c: Character): Json {
     notes: c.notes,
     xp: c.xp,
     skills: c.skills.map(skillToMap),
+    statuses: c.statuses.map(statusToMap),
     lastAppliedRollId: null,
     updatedAt: serverTimestamp(),
   };
@@ -318,6 +329,8 @@ export function rollFrom(id: string, m: DocumentData, dmUid: string): RollDoc {
       counterOffer: skillRefFrom(m.contraoferta),
       dmNote: optStr(m.notaDm),
       opposition: oppositionFrom(m.oposicion),
+      modifier: int(m.modificador),
+      modifierNote: optStr(m.modificadorNota),
       playerRoll: diceFrom(m.tirada),
       result: resultFrom(m.outcome),
       narration: optStr(m.narracion),
@@ -363,6 +376,8 @@ export function rollFields(r: RollRecord, previousHistory: readonly RawHistory[]
     contraoferta: co ? { skillIndex: co.index, skillName: co.name, skillLevel: co.level } : null,
     notaDm: r.dmNote,
     oposicion: oppositionToMap(r.opposition),
+    modificador: r.modifier,
+    modificadorNota: r.modifierNote,
     tirada: diceToMap(r.playerRoll),
     outcome: r.result,
     narracion: r.narration,

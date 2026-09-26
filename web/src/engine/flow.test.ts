@@ -19,7 +19,6 @@ import {
   type Actor,
   type AppliedAdvance,
   type Character,
-  type FlowAction,
   type FlowActionKind,
   type RollRecord,
   type RollState,
@@ -29,7 +28,7 @@ import {
 
 const dice = (values: number[]) => DiceRoll.fromValues(values, MAX_DICE_LIMIT);
 const noAdvance: AppliedAdvance = { xpGained: 0, xpSpent: 0, newSkill: null, replacedIndex: null };
-const oppose = (values: number[]): FlowAction => ({ kind: 'rollOpposition', opposition: { kind: 'dice', dice: dice(values) } });
+const oppose = (values: number[]) => ({ kind: 'rollOpposition' as const, opposition: { kind: 'dice' as const, dice: dice(values) } });
 
 function hero(): Character {
   const c = newCharacter('Ana', '');
@@ -142,6 +141,23 @@ it('oposición con objetivo fijo: sin dados, mismo listón', () => {
   expect(tied.result).toBe('exito');
   const lost = transition(transition(r, { kind: 'rollPlayer', dice: dice([4, 4]) }, 'owner'), { kind: 'resolve', tieWinner: 'player' }, 'dm');
   expect(lost.result).toBe('fallo');
+});
+
+it('el DM aplica estados al oponer: el modificador suma al total del jugador', () => {
+  let r = transition(declared(1), { kind: 'approve' }, 'dm');
+  expect(errorOf(() => transition(r, { ...oppose([3, 3]), modifier: 201 }, 'dm')).kind).toBe('InvalidModifier');
+  expect(errorOf(() => transition(r, { ...oppose([3, 3]), modifier: 0.5 }, 'dm')).kind).toBe('InvalidModifier');
+  r = transition(r, { ...oppose([3, 3]), modifier: -2, modifierNote: '−4 Lloviendo, +2 Cuerda' }, 'dm');
+  expect(r.modifier).toBe(-2);
+  expect(r.modifierNote).toBe('−4 Lloviendo, +2 Cuerda');
+  // 4+3 = 7, −2 = 5 < 6: fallo pese a que los dados superan la oposición.
+  r = transition(r, { kind: 'rollPlayer', dice: dice([4, 3]) }, 'owner');
+  r = transition(r, { kind: 'resolve', tieWinner: 'player' }, 'owner');
+  expect(r.result).toBe('fallo');
+  // Sin estados, la nota no se guarda.
+  const plain = transition(transition(declared(1), { kind: 'approve' }, 'dm'), { ...oppose([3, 3]), modifier: 0, modifierNote: 'nada' }, 'dm');
+  expect(plain.modifier).toBe(0);
+  expect(plain.modifierNote).toBeNull();
 });
 
 it('empate parcial: resultado «empate», sin XP', () => {

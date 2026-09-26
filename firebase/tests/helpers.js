@@ -87,7 +87,7 @@ export function declaredRoll(uid, { skillIndex = 0, skillName = 'Do Anything', s
     accion: 'Salto el foso',
     proposito: null,
     skillIndex, skillName, skillLevel,
-    contraoferta: null, notaDm: null, oposicion: null, tirada: null,
+    contraoferta: null, notaDm: null, oposicion: null, modificador: 0, modificadorNota: null, tirada: null,
     outcome: null, narracion: null, tieWinner: null, avance: null,
     historial: [{ de: null, a: 'declarada', por: uid }],
     createdAt: serverTimestamp(),

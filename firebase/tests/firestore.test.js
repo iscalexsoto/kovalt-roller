@@ -487,6 +487,50 @@ describe('tiradas: flujo completo', () => {
     await assertFails(b.commit());
   });
 
+  it('estados: solo el DM, con nombre y valor acotados', async () => {
+    await seedRoom(env);
+    const lluvia = { name: 'Lloviendo', rating: -4 };
+    await assertFails(updateDoc(charRef(p1Db(), P1), { statuses: [lluvia] }));
+    await assertFails(updateDoc(charRef(dmDb(), P1), { statuses: [{ name: '', rating: -4 }] }));
+    await assertFails(updateDoc(charRef(dmDb(), P1), { statuses: [{ name: 'Herido', rating: 21 }] }));
+    await assertFails(updateDoc(charRef(dmDb(), P1), { statuses: [{ name: 'Herido', rating: -1, extra: 1 }] }));
+    await assertFails(updateDoc(charRef(dmDb(), P1), { statuses: Array(11).fill(lluvia) }));
+    await assertSucceeds(updateDoc(charRef(dmDb(), P1), { statuses: [lluvia, { name: 'Zapato limpio', rating: 2 }] }));
+    await assertSucceeds(updateDoc(charRef(dmDb(), P1), { statuses: [] }));
+  });
+
+  it('modificador: lo fija el DM al oponer y cuenta en el resultado', async () => {
+    await seedRoom(env);
+    const h = [{ de: null, a: 'declarada', por: P1 }, { de: 'declarada', a: 'aprobada', por: DM }];
+    await seedRoll(env, 'r1', { characterId: P1, estado: 'aprobada', historial: h });
+    const hOpp = [...h, { de: 'aprobada', a: 'oposicion', por: DM }];
+    await assertFails(updateDoc(rollRef(dmDb(), 'r1'), upd({
+      estado: 'oposicion', oposicion: { dados: [3], total: 3 }, modificador: -201, historial: hOpp,
+    })));
+    await assertFails(updateDoc(rollRef(dmDb(), 'r1'), upd({
+      estado: 'oposicion', oposicion: { dados: [3], total: 3 }, modificador: -1, modificadorNota: 'x'.repeat(201), historial: hOpp,
+    })));
+    await assertSucceeds(updateDoc(rollRef(dmDb(), 'r1'), upd({
+      estado: 'oposicion', oposicion: { dados: [3], total: 3 }, modificador: -2, modificadorNota: '−2 Lloviendo', historial: hOpp,
+    })));
+    const hRoll = [...hOpp, { de: 'oposicion', a: 'tirada', por: P1 }];
+    // El jugador no toca el modificador.
+    await assertFails(updateDoc(rollRef(p1Db(), 'r1'), upd({
+      estado: 'tirada', tirada: { dados: [4], total: 4 }, modificador: 0, historial: hRoll,
+    })));
+    await assertSucceeds(updateDoc(rollRef(p1Db(), 'r1'), upd({
+      estado: 'tirada', tirada: { dados: [4], total: 4 }, historial: hRoll,
+    })));
+    // 4 − 2 = 2 < 3: fallo aunque los dados superen la oposición.
+    const hRes = [...hRoll, { de: 'tirada', a: 'resuelta', por: P1 }];
+    await assertFails(updateDoc(rollRef(p1Db(), 'r1'), upd({
+      estado: 'resuelta', outcome: 'exito', tieWinner: 'player', avance: { estado: 'pendiente' }, historial: hRes,
+    })));
+    await assertSucceeds(updateDoc(rollRef(p1Db(), 'r1'), upd({
+      estado: 'resuelta', outcome: 'fallo', tieWinner: 'player', avance: { estado: 'pendiente' }, historial: hRes,
+    })));
+  });
+
   it('empate parcial: outcome «empate» y el avance no da XP', async () => {
     await seedRoom(env, { settings: { ...DEFAULT_SETTINGS, tieWinner: 'partial' } });
     const h = [{ de: null, a: 'declarada', por: P1 }, { de: 'declarada', a: 'aprobada', por: DM },

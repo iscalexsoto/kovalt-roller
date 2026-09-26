@@ -1,5 +1,5 @@
 import { EngineError } from './errors';
-import { MAX_CHARACTER_NAME_LEN, MAX_SKILL_NAME_LEN, baseSkill, isBaseSkill, type Character, type RoomSettings, type Skill } from './types';
+import { MAX_CHARACTER_NAME_LEN, MAX_SKILL_NAME_LEN, MAX_STATUSES, MAX_STATUS_NAME_LEN, MAX_STATUS_RATING, baseSkill, isBaseSkill, type Character, type RoomSettings, type Skill, type Status } from './types';
 
 /** Largo en caracteres (no en unidades UTF-16), como `chars().count()` en Rust. */
 export function charCount(s: string): number {
@@ -14,6 +14,7 @@ export function newCharacter(name: string, description: string): Character {
     notes: '',
     xp: 0,
     skills: [baseSkill()],
+    statuses: [],
   };
 }
 
@@ -92,7 +93,44 @@ export function validateCharacter(character: Character, settings: RoomSettings):
   const { used, capacity } = slotUsage(character, settings);
   if (used > capacity) errors.push(new EngineError({ kind: 'TooManySkills', used, capacity }));
 
+  if (character.statuses.length > MAX_STATUSES) errors.push(new EngineError({ kind: 'TooManyStatuses', max: MAX_STATUSES }));
+  character.statuses.forEach((st) => {
+    if (!isValid(() => normalizeStatus(st.name, st.rating))) errors.push(new EngineError({ kind: 'InvalidStatusRating', max: MAX_STATUS_RATING }));
+  });
+
   return errors;
+}
+
+/* ---------- estados ---------- */
+
+export function normalizeStatus(name: string, rating: number): Status {
+  const collapsed = name.split(/\s+/).filter(Boolean).join(' ');
+  const len = charCount(collapsed);
+  if (len === 0 || len > MAX_STATUS_NAME_LEN) throw new EngineError({ kind: 'InvalidStatusName', max: MAX_STATUS_NAME_LEN });
+  if (!Number.isInteger(rating) || Math.abs(rating) > MAX_STATUS_RATING) throw new EngineError({ kind: 'InvalidStatusRating', max: MAX_STATUS_RATING });
+  return { name: collapsed, rating };
+}
+
+/** El DM pone un estado nuevo (`index` null) o corrige uno. Un estado con valor 0 es solo narrativo. */
+export function setStatus(character: Character, index: number | null, name: string, rating: number): Character {
+  const status = normalizeStatus(name, rating);
+  if (index === null) {
+    if (character.statuses.length >= MAX_STATUSES) throw new EngineError({ kind: 'TooManyStatuses', max: MAX_STATUSES });
+    return { ...character, statuses: [...character.statuses, status] };
+  }
+  if (!character.statuses[index]) throw new EngineError({ kind: 'SkillIndexOutOfRange', index });
+  return { ...character, statuses: character.statuses.map((s, i) => (i === index ? status : s)) };
+}
+
+/** El DM quita un estado (dejó de ser cierto en la ficción o se resolvió con una acción). */
+export function removeStatus(character: Character, index: number): Character {
+  if (!character.statuses[index]) throw new EngineError({ kind: 'SkillIndexOutOfRange', index });
+  return { ...character, statuses: character.statuses.filter((_, i) => i !== index) };
+}
+
+/** Suma de los estados elegidos: el modificador de una tirada. */
+export function modifierOf(statuses: readonly Status[]): number {
+  return statuses.reduce((sum, s) => sum + s.rating, 0);
 }
 
 /* ---------- Edición manual del DM (habilidades iniciales y correcciones) ---------- */

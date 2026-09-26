@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { DIFFICULTIES, MAX_FIXED_TARGET, isTerminal, oppositionTotal } from '../../engine';
+import { DIFFICULTIES, MAX_FIXED_TARGET, isTerminal, modifierOf, oppositionTotal, type Status } from '../../engine';
 import type { RollDoc } from '../../data/models';
 import { GameIcon } from '../../icons/GameIcon';
 import { playStamp } from '../../state/sound';
@@ -8,7 +8,7 @@ import { Stepper } from '../kv/Field';
 import { Avatar, Tag } from '../kv/Layout';
 import { useRoom } from './context';
 import { DiceTray, prefersReducedMotion } from './Dice';
-import { ACTION_ICON, DIFFICULTY_LABEL, STATE_LABEL, STATE_TONE, actionLabel, isPrimaryAction, oppositionLabel, skillLabel } from './labels';
+import { ACTION_ICON, DIFFICULTY_LABEL, STATE_LABEL, STATE_TONE, actionLabel, isPrimaryAction, oppositionLabel, signed, skillLabel, statusLabel } from './labels';
 import type { RollActions } from './useRollActions';
 
 /* Una tirada como duelo: el jugador a la izquierda, el DM a la derecha y una gema en medio que decide. La misma
@@ -161,21 +161,30 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
   const busy = actions.busyId === roll.id;
   const max = ctx.room.settings.maxDice;
   const maxTarget = Math.min(MAX_FIXED_TARGET, max * 6);
+  const mine = record.playerRoll;
   // Lo que el DM prepara: dados a tirar o un objetivo fijo (tabla de dificultad o a mano).
   const [count, setCount] = useState(Math.min(max, Math.max(1, record.skill.level)));
   const [target, setTarget] = useState(Math.min(maxTarget, Math.max(1, record.skill.level * 3)));
   const [mode, setMode] = useState<'dice' | 'fixed'>('dice');
+  // Estados del personaje que el DM aplica a esta tirada (por índice en la ficha).
+  const statuses = character?.sheet.statuses ?? [];
+  const [applied, setApplied] = useState<number[]>([]);
+  const chosen = applied.map((i) => statuses[i]).filter((s): s is Status => Boolean(s));
+  const pendingMod = modifierOf(chosen);
 
   const opp = record.opposition;
+  const modifier = record.modifier;
+  const mineTotal = mine ? mine.total() + modifier : null;
+
   const oppTotal = opp ? oppositionTotal(opp) : null;
-  const mine = record.playerRoll;
   const waiting = reveal?.waitingVerdict ?? false;
   const decided = record.state === 'resuelta' && (record.result === 'exito' || record.result === 'fallo' || record.result === 'empate') && !waiting;
   const won = decided && record.result === 'exito';
   const drawn = decided && record.result === 'empate';
-  const tie = Boolean(oppTotal !== null && mine && oppTotal === mine.total());
+  const tie = Boolean(oppTotal !== null && mineTotal !== null && oppTotal === mineTotal);
   const tieRule = ctx.room.settings.tieWinner;
-  const need = oppTotal !== null ? (tieRule === 'player' ? oppTotal : oppTotal + 1) : null;
+  // Lo que deben sumar los dados, ya descontado el modificador.
+  const need = oppTotal !== null ? (tieRule === 'player' ? oppTotal : oppTotal + 1) - modifier : null;
   // Lado ganador/perdedor del duelo; en empate parcial ninguno.
   const sideClass = (side: 'player' | 'dm') => (!decided || drawn ? '' : (side === 'player') === won ? ' rl-side--won' : ' rl-side--lost');
   const sixes = allSix(mine?.dice);
@@ -205,7 +214,7 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
           </Button>
           <span className="rl-need">
             Necesitas <b>{need}</b>
-            {tieRule === 'player' ? ' · empate a tu favor' : tieRule === 'partial' ? ` · con ${oppTotal}, a medias` : ''}
+            {tieRule === 'player' ? ' · empate a tu favor' : tieRule === 'partial' ? ` · con ${(need ?? 0) - 1}, a medias` : ''}
           </span>
         </>
       );
@@ -263,14 +272,30 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
                 onChange={(v) => (fixed ? setTarget(Math.round(v)) : setCount(Math.round(v)))}
               />
             </div>
+            {statuses.length > 0 && (
+              <div className="rl-chips rl-apply" role="group" aria-label="Estados que aplican">
+                {statuses.map((s, i) => (
+                  <Chip
+                    key={i}
+                    selected={applied.includes(i)}
+                    icon={s.rating < 0 ? 'trending-down' : s.rating > 0 ? 'trending-up' : 'minus'}
+                    iconColor={applied.includes(i) ? undefined : s.rating < 0 ? 'var(--kv-color-error)' : s.rating > 0 ? 'var(--kv-color-success-text)' : undefined}
+                    onClick={() => setApplied((a) => (a.includes(i) ? a.filter((x) => x !== i) : [...a, i]))}
+                  >
+                    {statusLabel(s)}
+                  </Chip>
+                ))}
+              </div>
+            )}
             <Button
               variant="primary"
               icon={fixed ? 'crosshair' : 'shield'}
               className="rl-cta"
               disabled={busy}
-              onClick={() => void actions.oppose(roll, fixed ? { target } : { count })}
+              onClick={() => void actions.oppose(roll, { ...(fixed ? { target } : { count }), statuses: chosen })}
             >
               {fixed ? `${oppose ? 'Oponer' : 'Fijar'} objetivo ${target}` : `${oppose ? 'Oponer' : 'Tirar'} ${count}d6`}
+              {pendingMod !== 0 ? ` (${signed(pendingMod)})` : ''}
             </Button>
           </>
         );
@@ -308,6 +333,12 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
             </span>
           </div>
           <DiceTray dice={mine?.dice ?? null} count={record.skill.level} animateKey={reveal?.playerKey ?? 0} onDone={reveal?.onPlayerDone} />
+          {modifier !== 0 && (
+            <span className={`rl-mod ${modifier < 0 ? 'rl-status--neg' : 'rl-status--pos'}`}>
+              {record.modifierNote && !record.modifierNote.includes(',') ? <b>{record.modifierNote}</b> : <><b>{signed(modifier)}</b> · {record.modifierNote}</>}
+              {mineTotal !== null && !waiting ? <span className="rl-mod__total kv-num"> = {mineTotal}</span> : null}
+            </span>
+          )}
           {playerCta && <div className="rl-side__cta">{playerCta}</div>}
         </section>
         <div className={`rl-vs${decided ? (won ? ' rl-vs--exito' : drawn ? ' rl-vs--empate' : ' rl-vs--fallo') : ''}${decided && reveal?.verdictLive ? ' rl-vs--live' : ''}`} aria-hidden>
@@ -416,6 +447,7 @@ export function RollItem({ roll, actions, hero, onDismiss }: { roll: RollDoc; ac
   const mine = record.playerRoll;
   const won = record.result === 'exito';
   const drawn = record.result === 'empate';
+  const mineTotal = mine ? mine.total() + record.modifier : null;
   return (
     <div className={`rl-entry${faded ? ' rl-entry--faded' : ''}`} aria-expanded={open}>
       <button type="button" className="rl-entry__main kv-state" onClick={() => setOpen((o) => !o)}>
@@ -425,7 +457,7 @@ export function RollItem({ roll, actions, hero, onDismiss }: { roll: RollDoc; ac
         </span>
         {opp && mine && (
           <span className="rl-entry__score kv-num">
-            <span className={won ? 'rl-entry__win' : ''}>{mine.total()}</span> vs <span className={won || drawn ? '' : 'rl-entry__win'}>{oppositionTotal(opp)}</span>
+            <span className={won ? 'rl-entry__win' : ''}>{mineTotal}</span> vs <span className={won || drawn ? '' : 'rl-entry__win'}>{oppositionTotal(opp)}</span>
           </span>
         )}
         {record.applied?.newSkill ? (

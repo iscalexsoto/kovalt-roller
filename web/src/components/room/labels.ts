@@ -1,4 +1,4 @@
-import { BASE_SKILL_NAME, difficultyOf, type Character, type Difficulty, type FlowActionKind, type Opposition, type RollState, type Skill } from '../../engine';
+import { BASE_SKILL_NAME, difficultyOf, type Character, type Difficulty, type FlowActionKind, type Opposition, type RollState, type Skill, type Status } from '../../engine';
 
 /* Nombre visible de la habilidad base. El dato (motor, Firestore, reglas) sigue siendo "Do Anything": solo se traduce
    al pintar, incluidas las etiquetas guardadas en `derivedFrom` ("Do Anything 1"). */
@@ -11,6 +11,16 @@ export function skillName(name: string): string {
 /** "Nombre N" tal como se muestra en pantalla. */
 export function skillLabel(skill: Pick<Skill, 'name' | 'level'>): string {
   return `${skillName(skill.name)} ${skill.level}`;
+}
+
+/** «+2» o «−4» (con el signo menos tipográfico). */
+export function signed(n: number): string {
+  return n < 0 ? `−${-n}` : `+${n}`;
+}
+
+/** «−4 Lloviendo», como se escriben los estados en Roll For Shoes. */
+export function statusLabel(s: Status): string {
+  return `${signed(s.rating)} ${s.name}`;
 }
 
 export const DIFFICULTY_LABEL: Record<Difficulty['key'], string> = {

@@ -6,6 +6,19 @@ export const BASE_SKILL_NAME = 'Do Anything';
 export const MAX_DICE_LIMIT = 10;
 export const MAX_CHARACTER_NAME_LEN = 60;
 export const MAX_SKILL_NAME_LEN = 40;
+export const MAX_STATUS_NAME_LEN = 40;
+/** Estados por personaje (las reglas los validan sin bucles). */
+export const MAX_STATUSES = 10;
+/** Valor absoluto máximo de un estado y del modificador total de una tirada (10 estados al máximo). */
+export const MAX_STATUS_RATING = 20;
+export const MAX_MODIFIER = MAX_STATUSES * MAX_STATUS_RATING;
+
+/** Un estado: modificador con nombre («−4 Lloviendo», «+2 Zapato limpio»). Lo pone y quita el DM; al oponer
+ *  elige cuáles aplican y su suma modifica el total del jugador (nunca los dados: el avance sale de los dados). */
+export interface Status {
+  name: string;
+  rating: number;
+}
 
 export interface Skill {
   name: string;
@@ -36,6 +49,7 @@ export interface Character {
   xp: number;
   /** Invariante: `skills[0]` es "Do Anything 1" permanente. */
   skills: Skill[];
+  statuses: Status[];
 }
 
 /** Quién gana en empate; `partial`: nadie, el jugador lo consigue a medias y no gana XP. */

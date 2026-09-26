@@ -13,7 +13,10 @@ import {
   editSkill,
   giveItem,
   grantSkill,
+  modifierOf,
   removeSkill,
+  removeStatus,
+  setStatus,
   MAX_STOCK,
   newCatalogItem,
   offerLine,
@@ -116,6 +119,41 @@ describe('personaje', () => {
     c = removeSkill(c, 1);
     expect(c.skills.map((k) => k.name)).toEqual(['Do Anything', 'Saltar lejos']);
     expect(validateCharacter(c, s)).toEqual([]);
+  });
+});
+
+describe('estados', () => {
+  it('el DM pone, corrige y quita estados; la suma es el modificador', () => {
+    let c = setStatus(newCharacter('Bob', ''), null, '  Lloviendo ', -4);
+    c = setStatus(c, null, 'Zapato limpio', 2);
+    expect(c.statuses).toEqual([
+      { name: 'Lloviendo', rating: -4 },
+      { name: 'Zapato limpio', rating: 2 },
+    ]);
+    expect(modifierOf(c.statuses)).toBe(-2);
+    expect(modifierOf([])).toBe(0);
+    expect(errorOf(() => setStatus(c, null, ' ', 1)).kind).toBe('InvalidStatusName');
+    expect(errorOf(() => setStatus(c, null, 'Herido', 21)).kind).toBe('InvalidStatusRating');
+    expect(errorOf(() => setStatus(c, null, 'Herido', 1.5)).kind).toBe('InvalidStatusRating');
+    expect(errorOf(() => setStatus(c, 5, 'Herido', 1)).kind).toBe('SkillIndexOutOfRange');
+    c = setStatus(c, 0, 'Diluviando', -6);
+    expect(c.statuses[0]).toEqual({ name: 'Diluviando', rating: -6 });
+    c = removeStatus(c, 1);
+    expect(c.statuses).toEqual([{ name: 'Diluviando', rating: -6 }]);
+    expect(errorOf(() => removeStatus(c, 1)).kind).toBe('SkillIndexOutOfRange');
+    for (let i = 0; i < 9; i++) c = setStatus(c, null, `Estado ${i}`, 0);
+    expect(errorOf(() => setStatus(c, null, 'Uno más', 1)).kind).toBe('TooManyStatuses');
+    expect(validateCharacter(c, settings())).toEqual([]);
+  });
+
+  it('el modificador cambia el resultado, no los dados del avance', () => {
+    // 3+5+6 = 14, con −4 Lloviendo = 10: gana a 9 y pierde contra 11.
+    const r = dice([3, 5, 6]);
+    expect(resolve(r, 9, 'player', -4)).toMatchObject({ outcome: 'success', playerTotal: 10 });
+    expect(resolve(r, 11, 'player', -4)).toMatchObject({ outcome: 'failure', playerTotal: 10, xpGained: 1 });
+    const c = heroWith([skill('Trepar', 3)], 1);
+    const lost = resolve(r, 11, 'player', -4);
+    expect(advancementOption(c, settings(), r, lost, 1)).toMatchObject({ xpCost: 2, xpAvailable: 2 });
   });
 });
 
