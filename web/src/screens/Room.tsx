@@ -13,6 +13,7 @@ import { DragLayer } from '../components/room/DragUI';
 import { PlayerOffers } from '../components/room/Offers';
 import { PlayersPanel } from '../components/room/PlayersPanel';
 import { RollLog } from '../components/room/RollLog';
+import { useDeclare } from '../components/room/useDeclare';
 import { copyInvite } from '../components/room/invite';
 import { RoomCode } from '../components/room/RoomCode';
 import { charactersQuery } from '../data/characters';
@@ -45,6 +46,20 @@ function BottomNav({ view, onChange, sideLabel, sideIcon }: { view: View; onChan
         </button>
       ))}
     </nav>
+  );
+}
+
+/** En compacto la ficha está en otra pestaña: la mesa lleva un botón flotante «Actuar». */
+function ActFab() {
+  const declare = useDeclare();
+  return (
+    <>
+      <button type="button" className="rl-fab" onClick={() => declare.open()}>
+        <GameIcon name="dices" />
+        Actuar
+      </button>
+      {declare.dialog}
+    </>
   );
 }
 
@@ -164,6 +179,7 @@ export function Room() {
                 <>
                   {!isDm && <PlayerOffers />}
                   <RollLog />
+                  {!isDm && <ActFab />}
                 </>
               )}
               {view === 'players' && players}

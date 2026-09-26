@@ -9,6 +9,7 @@ import { EmptyState, KickerDivider } from '../kv/Layout';
 import { useRoom } from './context';
 import { Inventory } from './Inventory';
 import { skillLabel, skillLabelText, skillName } from './labels';
+import { useDeclare } from './useDeclare';
 
 type SheetTexts = { name: string; description: string; notes: string };
 
@@ -108,6 +109,8 @@ export function CharacterSheet({ character }: { character: CharacterDoc }) {
   const isOwner = character.id === ctx.uid;
   const usage = slotUsage(sheet, ctx.room.settings);
   const [busy, run] = useBusy();
+  const declare = useDeclare();
+  const canAct = isOwner && !ctx.isDm;
 
   return (
     <section className="rl-sheet" aria-label={`Ficha de ${sheet.name}`}>
@@ -139,6 +142,13 @@ export function CharacterSheet({ character }: { character: CharacterDoc }) {
               <span className="rl-skill__name">{skillName(s.name)}</span>
               <span className="rl-skill__from">{s.permanent ? 'Permanente' : s.derivedFrom ? `De ${skillLabelText(s.derivedFrom)}` : skillLabel(s)}</span>
             </span>
+            {canAct && (
+              <span className="rl-skill__roll">
+                <Button variant="tonal" dense icon="dices" aria-label={`Actuar con ${skillLabel(s)}`} onClick={() => declare.open(i)}>
+                  {s.level}d6
+                </Button>
+              </span>
+            )}
           </li>
         ))}
       </ul>
@@ -149,6 +159,7 @@ export function CharacterSheet({ character }: { character: CharacterDoc }) {
       <InlineText field="notes" label="Notas" value={sheet.notes} canEdit={isOwner} multiline rows={6} maxLength={20000} addLabel="Añadir notas">
         <p className="rl-sheet__notes">{sheet.notes}</p>
       </InlineText>
+      {declare.dialog}
     </section>
   );
 }
