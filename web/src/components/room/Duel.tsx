@@ -9,6 +9,7 @@ import { Avatar, Tag } from '../kv/Layout';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useRoom } from './context';
 import { DiceTray, prefersReducedMotion } from './Dice';
+import { StatusPickDialog } from './RollDialogs';
 import { ACTION_ICON, DIFFICULTY_LABEL, STATE_LABEL, STATE_TONE, actionLabel, isPrimaryAction, oppositionLabel, signed, skillLabel, statusLabel } from './labels';
 import type { RollActions } from './useRollActions';
 
@@ -30,6 +31,9 @@ function initials(name: string): string {
       .join('') || '?'
   );
 }
+
+/** Con más estados que esto, el DM los elige en un diálogo en lugar de chips. */
+const MAX_STATUS_CHIPS = 4;
 
 const allSix = (dice: readonly number[] | undefined) => Boolean(dice && dice.length > 0 && dice.every((d) => d === 6));
 
@@ -102,11 +106,19 @@ function FixedTarget({ target, live }: { target: number; live: boolean }) {
   );
 }
 
+/** «Esperando a…»: rombo que late y tres puntos que se encienden por turno. */
 function Waiting({ children }: { children: ReactNode }) {
   return (
     <span className="rl-waiting">
       <span className="rl-pulse" />
-      {children}
+      <span>
+        {children}
+        <span className="rl-dots" aria-hidden>
+          <i />
+          <i />
+          <i />
+        </span>
+      </span>
     </span>
   );
 }
@@ -170,6 +182,7 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
   // Estados del personaje que el DM aplica a esta tirada (por índice en la ficha).
   const statuses = character?.sheet.statuses ?? [];
   const [applied, setApplied] = useState<number[]>([]);
+  const [picking, setPicking] = useState(false);
   const chosen = applied.map((i) => statuses[i]).filter((s): s is Status => Boolean(s));
   const pendingMod = modifierOf(chosen);
 
@@ -268,7 +281,17 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
                 onChange={(v) => (fixed ? setTarget(Math.round(v)) : setCount(Math.round(v)))}
               />
             </div>
-            {statuses.length > 0 && (
+            {statuses.length > MAX_STATUS_CHIPS && (
+              <div className="rl-apply rl-apply--summary">
+                <Button variant="tonal" dense icon="activity" onClick={() => setPicking(true)}>
+                  Estados · {applied.length} de {statuses.length}
+                  {pendingMod !== 0 ? ` · ${signed(pendingMod)}` : ''}
+                </Button>
+                {chosen.length > 0 && <span className="rl-apply__list">{chosen.map(statusLabel).join(', ')}</span>}
+              </div>
+            )}
+            {picking && <StatusPickDialog statuses={statuses} applied={applied} onClose={() => setPicking(false)} onChange={setApplied} />}
+            {statuses.length > 0 && statuses.length <= MAX_STATUS_CHIPS && (
               <div className="rl-chips rl-apply" role="group" aria-label="Estados que aplican">
                 {statuses.map((s, i) => (
                   <Chip
@@ -300,9 +323,9 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
   const dmCta = (() => {
     if (dmPrepare) return null;
     if (record.state === 'declarada' || record.state === 'aprobada') {
-      return <Waiting>{record.state === 'declarada' ? (actor === 'owner' ? 'El DM revisa tu acción' : 'El DM revisa la acción') : 'El DM prepara la oposición'}</Waiting>;
+      return <Waiting>{record.state === 'declarada' ? (actor === 'owner' ? 'El DM está revisando tu acción' : 'El DM está revisando la acción') : 'El DM está preparando la oposición'}</Waiting>;
     }
-    if (record.state === 'tirada') return <Waiting>Resolviendo…</Waiting>;
+    if (record.state === 'tirada') return <Waiting>Resolviendo</Waiting>;
     return null;
   })();
 

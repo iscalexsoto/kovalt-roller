@@ -1,11 +1,49 @@
 import { useState } from 'react';
 import { skillRefFrom, type AdvancementChoice, type AdvancementOption, type Character, type SkillRef } from '../../engine';
 import { Button, Chip, Segmented } from '../kv/Button';
-import { Field } from '../kv/Field';
+import { Checkbox, Field } from '../kv/Field';
 import { Dialog } from '../kv/Overlay';
 import { Select } from '../kv/Select';
 import { Tag } from '../kv/Layout';
-import { skillLabel, skillLabelText, skillOptions } from './labels';
+import { signed, skillLabel, skillLabelText, skillOptions, statusLabel } from './labels';
+import { modifierOf, type Status } from '../../engine';
+
+/** El DM marca qué estados del personaje aplican a esta tirada (cuando son demasiados para chips). */
+export function StatusPickDialog({ statuses, applied, onClose, onChange }: { statuses: readonly Status[]; applied: number[]; onClose: () => void; onChange: (applied: number[]) => void }) {
+  const chosen = applied.map((i) => statuses[i]).filter((s): s is Status => Boolean(s));
+  const total = modifierOf(chosen);
+  const toggle = (i: number) => onChange(applied.includes(i) ? applied.filter((x) => x !== i) : [...applied, i]);
+  return (
+    <Dialog
+      title="Estados que aplican"
+      icon="activity"
+      onClose={onClose}
+      actions={
+        <>
+          <Button variant="text" quiet disabled={applied.length === 0} onClick={() => onChange([])}>
+            Ninguno
+          </Button>
+          <span className="rl-grow" />
+          <Button variant="primary" onClick={onClose}>
+            Listo{total !== 0 ? ` · ${signed(total)}` : ''}
+          </Button>
+        </>
+      }
+    >
+      <div className="rl-pick">
+        {statuses.map((s, i) => (
+          <Checkbox
+            key={i}
+            checked={applied.includes(i)}
+            onChange={() => toggle(i)}
+            label={<span className={s.rating < 0 ? 'rl-status--neg' : s.rating > 0 ? 'rl-status--pos' : ''}>{statusLabel(s)}</span>}
+          />
+        ))}
+      </div>
+      <p className="rl-hint">Su suma modifica el total del jugador, no los dados.</p>
+    </Dialog>
+  );
+}
 
 /* Diálogos del flujo de tirada (useRollActions.tsx y useDeclare.tsx los montan y esperan su resultado). */
 
