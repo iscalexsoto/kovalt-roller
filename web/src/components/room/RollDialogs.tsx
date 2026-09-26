@@ -1,34 +1,59 @@
 import { useState } from 'react';
 import { skillRefFrom, type AdvancementChoice, type AdvancementOption, type Character, type SkillRef } from '../../engine';
-import { Button } from '../kv/Button';
-import { Field, Stepper, TextArea } from '../kv/Field';
+import { Button, Chip } from '../kv/Button';
+import { Field } from '../kv/Field';
 import { Dialog } from '../kv/Overlay';
 import { Select } from '../kv/Select';
+import { Tag } from '../kv/Layout';
 import { skillLabel, skillLabelText, skillOptions } from './labels';
 
-/* Diálogos del flujo de tirada (useRollActions.tsx los monta y espera su resultado). */
+/* Diálogos del flujo de tirada (useRollActions.tsx y useDeclare.tsx los montan y esperan su resultado). */
 
-/** Declarar (o volver a declarar) una acción: texto + habilidad. */
+export const MAX_ACTION_LEN = 500;
+export const MAX_PURPOSE_LEN = 200;
+
+/** Declarar (o volver a declarar) una acción completando la frase:
+ *  «Nombre intenta [acción] para [propósito] con Habilidad N». */
 export function DeclareDialog({
   sheet,
   initialAction = '',
+  initialPurpose = '',
   initialSkill = 0,
   onClose,
   onSubmit,
 }: {
   sheet: Character;
   initialAction?: string;
+  initialPurpose?: string;
   initialSkill?: number;
   onClose: () => void;
-  onSubmit: (action: string, skill: SkillRef) => void;
+  onSubmit: (action: string, purpose: string | null, skill: SkillRef) => void;
 }) {
   const [action, setAction] = useState(initialAction);
+  const [purpose, setPurpose] = useState(initialPurpose);
   const [skill, setSkill] = useState(initialSkill < sheet.skills.length ? initialSkill : 0);
   const valid = action.trim() !== '';
+  const chosen = sheet.skills[skill]!;
+  const submit = () => valid && onSubmit(action.trim(), purpose.trim() || null, skillRefFrom(sheet, skill));
+
+  const a = action.trim() || '…';
+  const p = purpose.trim();
+  const core = (
+    <>
+      <b>{a}</b>
+      {p && (
+        <>
+          {' '}
+          para <b>{p}</b>
+        </>
+      )}
+    </>
+  );
+
   return (
     <Dialog
-      title="Declarar acción"
-      icon="pencil"
+      title="Actuar"
+      icon="dices"
       narrow={false}
       onClose={onClose}
       actions={
@@ -36,15 +61,76 @@ export function DeclareDialog({
           <Button variant="text" quiet onClick={onClose}>
             Cancelar
           </Button>
-          <Button variant="primary" disabled={!valid} onClick={() => onSubmit(action.trim(), skillRefFrom(sheet, skill))}>
+          <Button variant="primary" icon="dices" disabled={!valid} onClick={submit}>
             Declarar
           </Button>
         </>
       }
     >
-      <div className="kv-form">
-        <TextArea label="¿Qué intentas hacer?" value={action} maxLength={500} rows={3} autoFocus onChange={(e) => setAction(e.target.value)} />
-        <Select label="Habilidad" value={String(skill)} options={skillOptions(sheet)} onChange={(v) => setSkill(Number(v))} />
+      <div className="rl-declare">
+        <div className="rl-chips" role="group" aria-label="Habilidad">
+          {sheet.skills.map((s, i) => (
+            <Chip key={i} selected={i === skill} onClick={() => setSkill(i)}>
+              {skillLabel(s)} · {s.level}d6
+            </Chip>
+          ))}
+        </div>
+        <div className="rl-declare__line">
+          <span className="rl-declare__who">{sheet.name}</span>
+          <span className="rl-declare__fixed">intenta</span>
+          <Field
+            aria-label="Acción"
+            className="rl-declare__field"
+            dense
+            value={action}
+            maxLength={MAX_ACTION_LEN}
+            placeholder="patear la puerta"
+            autoFocus
+            autoComplete="off"
+            onChange={(e) => setAction(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && submit()}
+          />
+          <span className="rl-declare__fixed">para</span>
+          <Field
+            aria-label="Propósito (opcional)"
+            className="rl-declare__field"
+            dense
+            value={purpose}
+            maxLength={MAX_PURPOSE_LEN}
+            placeholder="entrar al almacén (opcional)"
+            autoComplete="off"
+            onChange={(e) => setPurpose(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && submit()}
+          />
+          <span className="rl-declare__fixed">con</span>
+          <span className="rl-declare__who">{skillLabel(chosen)}</span>
+        </div>
+        <div className="rl-preview" aria-live="polite">
+          <div className="rl-preview__row">
+            <Tag small className="rl-tone rl-tone--info">
+              Declarada
+            </Tag>
+            <span>
+              <b>{sheet.name}</b> intenta {core}.
+            </span>
+          </div>
+          <div className="rl-preview__row">
+            <Tag small className="rl-tone rl-tone--success">
+              Éxito
+            </Tag>
+            <span>
+              <b>{sheet.name}</b> intentó {core} y <b>lo consiguió</b>.
+            </span>
+          </div>
+          <div className="rl-preview__row">
+            <Tag small className="rl-tone rl-tone--error">
+              Fallo
+            </Tag>
+            <span>
+              <b>{sheet.name}</b> intentó {core} y <b>no lo consiguió</b>.
+            </span>
+          </div>
+        </div>
       </div>
     </Dialog>
   );
@@ -79,32 +165,6 @@ export function CounterOfferDialog({ sheet, current, onClose, onSubmit }: { shee
           <Field label="Nota para el jugador (opcional)" value={note} maxLength={1000} onChange={(e) => setNote(e.target.value)} />
         </div>
       )}
-    </Dialog>
-  );
-}
-
-export function OppositionDialog({ initial, max, onClose, onSubmit }: { initial: number; max: number; onClose: () => void; onSubmit: (count: number) => void }) {
-  const [count, setCount] = useState(Math.min(Math.max(1, initial), max));
-  return (
-    <Dialog
-      title="Dados de oposición"
-      icon="shield"
-      onClose={onClose}
-      actions={
-        <>
-          <Button variant="text" quiet onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button variant="primary" icon="dices" onClick={() => onSubmit(count)}>
-            Tirar {count}d6
-          </Button>
-        </>
-      }
-    >
-      <div className="kv-form rl-opposition">
-        <Stepper value={count} min={1} max={max} label="Dados" onChange={(v) => setCount(Math.round(v))} />
-        <p className="rl-hint">El resultado será visible para el jugador antes de su tirada.</p>
-      </div>
     </Dialog>
   );
 }

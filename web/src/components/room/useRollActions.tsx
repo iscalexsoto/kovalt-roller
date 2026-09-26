@@ -14,20 +14,31 @@ import { act, applyAdvance, outcomeOf } from '../../data/rolls';
 import { toast, toastError } from '../../state/toast';
 import { useDialogs } from '../dialogs';
 import { useRoom } from './context';
+import { revealDuration } from './Dice';
+import { VERDICT_BEAT_MS } from './Duel';
 import { skillLabel } from './labels';
-import { AdvancementDialog, CounterOfferDialog, DeclareDialog, OppositionDialog } from './RollDialogs';
+import { AdvancementDialog, CounterOfferDialog, DeclareDialog } from './RollDialogs';
 
 const dice = new CryptoDice();
+
+/** Lo que tarda el sello en aparecer tras el reveal (--kv-duration-long) más un respiro antes de abrir un diálogo. */
+const STAMP_MS = 320 + 300;
+
+const sleep = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms));
+
+export interface RollActions {
+  allowed: (roll: RollDoc) => FlowActionKind[];
+  run: (roll: RollDoc, kind: FlowActionKind) => Promise<void>;
+  /** El DM opone `count` dados: desde `declarada` aprueba y tira en un gesto; desde `aprobada` solo tira. */
+  oppose: (roll: RollDoc, count: number) => Promise<void>;
+  busyId: string | null;
+  dialogs: ReactNode;
+}
 
 // ---------- acciones ----------
 
 /** Ejecuta las acciones del flujo de tirada desde la interfaz. Devuelve `run` y los diálogos a montar. */
-export function useRollActions(): {
-  allowed: (roll: RollDoc) => FlowActionKind[];
-  run: (roll: RollDoc, kind: FlowActionKind) => Promise<void>;
-  busyId: string | null;
-  dialogs: ReactNode;
-} {
+export function useRollActions(): RollActions {
   const ctx = useRoom();
   const { confirm, prompt, dialogs: basic } = useDialogs();
   const [custom, setCustom] = useState<ReactNode>(null);
@@ -72,9 +83,19 @@ export function useRollActions(): {
 
   const resolveRoll = (roll: RollDoc) => perform(roll, { kind: 'resolve', tieWinner: ctx.room.settings.tieWinner });
 
-  const run = async (roll: RollDoc, kind: FlowActionKind) => {
+  const guarded = async (roll: RollDoc, work: () => Promise<void>) => {
     setBusyId(roll.id);
     try {
+      await work();
+    } catch (e) {
+      toastError(e);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const run = (roll: RollDoc, kind: FlowActionKind) =>
+    guarded(roll, async () => {
       switch (kind) {
         case 'approve':
         case 'acceptCounterOffer':
@@ -107,29 +128,28 @@ export function useRollActions(): {
         case 'redeclare': {
           const sheet = ctx.characterOf(roll.characterId)?.sheet;
           if (!sheet) return;
-          const res = await ask<{ action: string; skill: SkillRef }>((done) => (
+          const res = await ask<{ action: string; purpose: string | null; skill: SkillRef }>((done) => (
             <DeclareDialog
               sheet={sheet}
               initialAction={roll.record.action}
+              initialPurpose={roll.record.purpose ?? ''}
               initialSkill={roll.record.skill.index}
               onClose={() => done(undefined)}
-              onSubmit={(action, skill) => done({ action, skill })}
+              onSubmit={(action, purpose, skill) => done({ action, purpose, skill })}
             />
           ));
-          if (res) await perform(roll, { kind, action: res.action, purpose: roll.record.purpose, skill: res.skill });
+          if (res) await perform(roll, { kind, action: res.action, purpose: res.purpose, skill: res.skill });
           break;
         }
-        case 'rollOpposition': {
-          const max = ctx.room.settings.maxDice;
-          const count = await ask<number>((done) => (
-            <OppositionDialog initial={roll.record.skill.level} max={max} onClose={() => done(undefined)} onSubmit={(n) => done(n)} />
-          ));
-          if (count) await perform(roll, { kind, dice: rollDice(count, max, dice) });
+        case 'rollOpposition':
+          await perform(roll, { kind, dice: rollDice(roll.record.skill.level, ctx.room.settings.maxDice, dice) });
           break;
-        }
         case 'rollPlayer': {
           const rolled = await perform(roll, { kind, dice: rollDice(roll.record.skill.level, ctx.room.settings.maxDice, dice) });
-          await settle(await resolveRoll(rolled));
+          const resolved = await resolveRoll(rolled);
+          // El diálogo de avance espera a que caigan los dados y el sello.
+          await sleep(revealDuration(roll.record.skill.level) + VERDICT_BEAT_MS + STAMP_MS);
+          await settle(resolved);
           break;
         }
         case 'resolve':
@@ -139,16 +159,18 @@ export function useRollActions(): {
           await settle(roll);
           break;
       }
-    } catch (e) {
-      toastError(e);
-    } finally {
-      setBusyId(null);
-    }
-  };
+    });
+
+  const oppose = (roll: RollDoc, count: number) =>
+    guarded(roll, async () => {
+      const approved = roll.record.state === 'declarada' ? await perform(roll, { kind: 'approve' }) : roll;
+      await perform(approved, { kind: 'rollOpposition', dice: rollDice(count, ctx.room.settings.maxDice, dice) });
+    });
 
   return {
     allowed,
     run,
+    oppose,
     busyId,
     dialogs: (
       <>
