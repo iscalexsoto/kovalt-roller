@@ -333,6 +333,20 @@ describe('tiradas: declarar', () => {
     await assertFails(deleteDoc(rollRef(p1Db())));
     await assertFails(deleteDoc(rollRef(dmDb())));
   });
+
+  it('el DM borra las tiradas, la ficha y el inventario de quien ya no está', async () => {
+    await seedRoom(env);
+    await seedRoll(env, 'r1', { characterId: P1 });
+    await env.withSecurityRulesDisabled((ctx) =>
+      setDoc(doc(ctx.firestore(), `rooms/${ROOM}/characters/${P1}/inventory/c1`), { name: 'Cuerda', quantity: 1 }));
+    await env.withSecurityRulesDisabled((ctx) => deleteDoc(doc(ctx.firestore(), `rooms/${ROOM}/members/${P1}`)));
+    await assertFails(deleteDoc(rollRef(p2Db())));
+    const b = writeBatch(dmDb());
+    b.delete(rollRef(dmDb()));
+    b.delete(doc(dmDb(), `rooms/${ROOM}/characters/${P1}/inventory/c1`));
+    b.delete(charRef(dmDb(), P1));
+    await assertSucceeds(b.commit());
+  });
 });
 
 describe('tiradas: flujo completo', () => {

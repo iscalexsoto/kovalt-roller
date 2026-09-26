@@ -389,7 +389,8 @@ service cloud.firestore {
 
       match /rolls/{rid} {
         allow read: if isMember(r);
-        allow delete: if false;
+        // Las tiradas no se borran, salvo que el DM limpie a un jugador que ya no está.
+        allow delete: if isDM(r) && !exists(memberPath(r, resource.data.characterId));
 
         allow create: if isMember(r) && !isDM(r)
           && data().keys().hasOnly(['estado', 'characterId', 'declaradoPor', 'accion',

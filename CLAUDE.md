@@ -73,7 +73,9 @@ implementadas: [docs/rules.md](docs/rules.md).
 - **Botín y tienda** (`offers/{id}` + `lines/{catalogId}`): existencias limitadas, el primero que llega se lo lleva.
   Público `audience` = `['*']` o uids; los jugadores consultan `open == true` + `array-contains` ('*' y su uid).
   Tomar/comprar es un batch (línea −q, inventario +q, monedas −precio·q) que `claimLine`/`claimedCopy` validan.
-- **Tiradas:** no se pueden borrar (las reglas lo prohíben).
+- **Tiradas:** no se pueden borrar, salvo las de un jugador que ya no es miembro: el DM lo borra por completo (ficha,
+  inventario y tiradas) desde "Jugadores anteriores" en la pestaña Sala.
+- **Código de sala:** nunca se muestra en pantalla (puede haber stream); solo el botón "Copiar código".
 
 ## Firebase
 

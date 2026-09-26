@@ -9,7 +9,10 @@ export interface RoomCtx {
   me: Member;
   isDm: boolean;
   members: Member[];
+  /** Personajes de quienes siguen en la sala. */
   characters: CharacterDoc[];
+  /** Personajes de jugadores que ya no están (expulsados o que se fueron); el DM puede borrarlos. */
+  pastCharacters: CharacterDoc[];
   online: Set<string>;
   characterOf: (uid: string) => CharacterDoc | undefined;
   displayNameOf: (uid: string) => string;
@@ -29,13 +32,15 @@ export function buildRoomCtx(room: Room, uid: string, me: Member, members: Membe
   const byId = new Map(characters.map((c) => [c.id, c]));
   const names = new Map(members.map((m) => [m.uid, m.displayName]));
   const isDm = room.dmUid === uid;
+  const here = new Set(members.map((m) => m.uid));
   return {
     room,
     uid,
     me,
     isDm,
     members,
-    characters,
+    characters: characters.filter((c) => here.has(c.ownerUid)),
+    pastCharacters: characters.filter((c) => !here.has(c.ownerUid)),
     online,
     characterOf: (id) => byId.get(id),
     displayNameOf: (id) => names.get(id) ?? byId.get(id)?.sheet.name ?? 'Alguien',

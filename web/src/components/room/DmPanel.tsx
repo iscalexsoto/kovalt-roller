@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { RoomSettings } from '../../engine';
 import { useLiveQuery } from '../../data/hooks';
+import { countRolls, deletePastPlayer } from '../../data/characters';
 import { catalogQuery, deleteCatalogItem, give, saveCatalogItem } from '../../data/items';
 import { catalogFrom, type CatalogDoc, type CharacterDoc } from '../../data/models';
 import { rotateCode, updateRoom } from '../../data/rooms';
@@ -8,9 +9,9 @@ import { useBusy } from '../../hooks/useBusy';
 import { GameIcon } from '../../icons/GameIcon';
 import { toast, toastError } from '../../state/toast';
 import { useDialogs } from '../dialogs';
-import { Button, Segmented } from '../kv/Button';
+import { Button, IconButton, Segmented } from '../kv/Button';
 import { Field } from '../kv/Field';
-import { EmptyState, GroupedList, KickerDivider } from '../kv/Layout';
+import { Card, EmptyState, GroupedList, KickerDivider, ListItem } from '../kv/Layout';
 import { CharacterSheet, NoCharacter } from './CharacterSheet';
 import { useRoom } from './context';
 import { useDropTarget } from './drag';
@@ -119,7 +120,7 @@ function RoomSettingsTab() {
   return (
     <div className="rl-panel-body kv-form">
       <div className="rl-row">
-        <RoomCode code={room.code} revealable />
+        <RoomCode code={room.code} />
         <Button variant="text" icon="refresh-cw" dense disabled={busy} onClick={() => void newCode()}>
           Nuevo código
         </Button>
@@ -131,7 +132,52 @@ function RoomSettingsTab() {
         Guardar cambios
       </Button>
       {dialogs}
+      <PastPlayers />
     </div>
+  );
+}
+
+/** Jugadores que ya no están en la sala: el DM puede borrar su ficha, su inventario y sus tiradas. */
+function PastPlayers() {
+  const ctx = useRoom();
+  const { confirm, dialogs } = useDialogs();
+  const [busy, run] = useBusy();
+  const past = ctx.pastCharacters;
+
+  const remove = async (c: CharacterDoc) => {
+    const rolls = await countRolls(ctx.room.id, c.id).catch(() => null);
+    const what = rolls === null ? 'sus tiradas' : rolls === 1 ? 'su tirada' : `sus ${rolls} tiradas`;
+    if (!(await confirm(`Borrar a ${c.sheet.name}`, `Se borran para siempre su ficha, su inventario y ${what} del historial.`, { okLabel: 'Borrar', danger: true }))) return;
+    await run(async () => {
+      await deletePastPlayer(ctx.room.id, c.id);
+      toast(`${c.sheet.name} ya no está en la mesa`);
+    });
+  };
+
+  return (
+    <Card className="rl-past">
+      <h2 className="kv-card__title">Jugadores anteriores</h2>
+      {past.length === 0 ? (
+        <p className="rl-hint">Cuando expulses a alguien (o se vaya), su personaje queda aquí y lo puedes borrar.</p>
+      ) : (
+        <>
+          <p className="rl-hint">Ya no están en la sala. Borrarlos quita su ficha, su inventario y sus tiradas.</p>
+          <GroupedList>
+            {past.map((c) => (
+              <li key={c.id}>
+                <ListItem
+                  lead="user-round-x"
+                  headline={c.sheet.name}
+                  support={`${c.sheet.xp} XP · ${c.sheet.skills.length} ${c.sheet.skills.length === 1 ? 'habilidad' : 'habilidades'}`}
+                  trail={<IconButton icon="trash-2" small label={`Borrar a ${c.sheet.name}`} disabled={busy} onClick={() => void remove(c)} />}
+                />
+              </li>
+            ))}
+          </GroupedList>
+        </>
+      )}
+      {dialogs}
+    </Card>
   );
 }
 
