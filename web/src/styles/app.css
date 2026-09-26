@@ -198,8 +198,6 @@ button.rl-player__main { cursor: pointer; }
 .rl-fixed { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; clip-path: var(--kv-cut-m); background: var(--kv-color-surface-container-high); color: var(--kv-color-on-surface-variant); font: 400 calc(12 * var(--kv-px))/1 var(--kv-font-heading); letter-spacing: 2px; text-transform: uppercase; }
 .rl-fixed .kv-icon { width: 20px; height: 20px; }
 .rl-fixed--live { animation: rl-die-land var(--kv-duration-long) var(--kv-easing-kobold) both; }
-/* El DM prepara la oposición: dificultad de la tabla, modo (tirar o fijo) y el número. */
-.rl-difficulty .kv-chip { font-size: calc(12 * var(--kv-px)); }
 /* Estados («−4 Lloviendo»): en la ficha (chips propios) y al oponer (kv-chip conmutables). */
 .rl-statuses { align-items: center; }
 .rl-status { display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; border: none; clip-path: var(--kv-cut-s); background: var(--kv-color-surface-container-high); color: var(--kv-color-on-surface); font: 700 var(--kv-t-label)/1 var(--kv-font-body); white-space: nowrap; }
@@ -209,7 +207,18 @@ button.rl-status { cursor: pointer; }
 .rl-mod { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px; font: 400 calc(13 * var(--kv-px))/calc(18 * var(--kv-px)) var(--kv-font-body); }
 .rl-mod b { font-weight: 700; }
 .rl-mod__total { color: var(--kv-color-on-surface); font-weight: 700; font-size: calc(16 * var(--kv-px)); }
-.rl-oppose { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* El DM prepara la oposición: modo (tirar o fijo) a lo ancho y un stepper con el nombre de la dificultad. */
+.rl-oppose__mode { display: flex; align-self: stretch; }
+.rl-oppose__mode > .kv-rim { flex: 1; }
+.rl-oppose__mode .kv-seg { width: 100%; }
+.rl-oppose__mode .kv-seg__opt { flex: 1; padding-left: 8px; padding-right: 8px; }
+.rl-oppose { display: flex; align-self: stretch; justify-content: space-between; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
+/* Estrecho: los controles del DM bajo la arena, a lo ancho. */
+.rl-prepare { display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 10px; clip-path: var(--kv-cut-m); background: var(--kv-color-surface-container); }
+.rl-prepare .rl-cta { align-self: stretch; }
+.rl-oppose__level { display: flex; flex-direction: column; min-width: 0; }
+.rl-oppose__level b { font: 700 var(--kv-t-label)/calc(20 * var(--kv-px)) var(--kv-font-body); }
+.rl-oppose__level span { font: 400 calc(12 * var(--kv-px))/calc(16 * var(--kv-px)) var(--kv-font-body); color: var(--kv-color-on-surface-variant); }
 
 /* El sello. */
 .rl-verdict { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; padding: 10px 16px; clip-path: var(--kv-cut-m); }

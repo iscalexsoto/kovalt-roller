@@ -6,6 +6,7 @@ import { playStamp } from '../../state/sound';
 import { Button, Chip, Segmented } from '../kv/Button';
 import { Stepper } from '../kv/Field';
 import { Avatar, Tag } from '../kv/Layout';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useRoom } from './context';
 import { DiceTray, prefersReducedMotion } from './Dice';
 import { ACTION_ICON, DIFFICULTY_LABEL, STATE_LABEL, STATE_TONE, actionLabel, isPrimaryAction, oppositionLabel, signed, skillLabel, statusLabel } from './labels';
@@ -229,44 +230,39 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
     );
   })();
 
-  const dmCta = (() => {
-    if (record.state === 'declarada' || record.state === 'aprobada') {
-      if (actor === 'dm') {
+  // En pantallas estrechas el lado del DM no da para los controles: van en una fila bajo la arena.
+  const narrow = useMediaQuery('(max-width: 560px)');
+  const dmPrepare = (() => {
+    if (!(record.state === 'declarada' || record.state === 'aprobada') || actor !== 'dm') return null;
         const oppose = record.state === 'declarada';
         const fixed = mode === 'fixed';
         const value = fixed ? target : count;
         const preset = DIFFICULTIES.find((d) => (fixed ? d.target === target : d.dice === count));
         return (
           <>
-            <div className="rl-chips rl-difficulty" role="group" aria-label="Dificultad">
-              {DIFFICULTIES.map((d) => (
-                <Chip
-                  key={d.key}
-                  selected={preset?.key === d.key}
-                  disabled={!fixed && d.dice > max}
-                  onClick={() => {
-                    setCount(Math.min(max, d.dice));
-                    setTarget(Math.min(maxTarget, d.target));
-                  }}
-                >
-                  {DIFFICULTY_LABEL[d.key]} · {fixed ? d.target : `${d.dice}d6`}
-                </Chip>
-              ))}
-            </div>
-            <div className="rl-oppose">
+            <div className="rl-oppose__mode">
               <Segmented
                 label="Cómo oponer"
                 value={mode}
                 options={[
-                  { value: 'dice', label: 'Tirar', icon: 'dices' },
-                  { value: 'fixed', label: 'Fijo', icon: 'crosshair' },
+                  { value: 'dice', label: 'Tirar dados', icon: 'dices' },
+                  { value: 'fixed', label: 'Objetivo fijo', icon: 'crosshair' },
                 ]}
                 onChange={setMode}
               />
+            </div>
+            {/* Un solo stepper recorre la tabla de dificultad (1d6…4d6 o 3, 6, 9, 12); tocar el número permite
+                cualquier valor. El nombre de la dificultad acompaña al número cuando coincide con la tabla. */}
+            <div className="rl-oppose">
+              <span className="rl-oppose__level">
+                <b>{preset ? DIFFICULTY_LABEL[preset.key] : 'A medida'}</b>
+                <span>{fixed ? `Objetivo ${target}` : `${count} ${count === 1 ? 'dado' : 'dados'}`}</span>
+              </span>
               <Stepper
                 value={value}
                 min={1}
                 max={fixed ? maxTarget : max}
+                step={fixed ? 3 : 1}
                 compact
                 label={fixed ? 'objetivo' : 'dados'}
                 onChange={(v) => (fixed ? setTarget(Math.round(v)) : setCount(Math.round(v)))}
@@ -299,7 +295,11 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
             </Button>
           </>
         );
-      }
+  })();
+
+  const dmCta = (() => {
+    if (dmPrepare) return null;
+    if (record.state === 'declarada' || record.state === 'aprobada') {
       return <Waiting>{record.state === 'declarada' ? (actor === 'owner' ? 'El DM revisa tu acción' : 'El DM revisa la acción') : 'El DM prepara la oposición'}</Waiting>;
     }
     if (record.state === 'tirada') return <Waiting>Resolviendo…</Waiting>;
@@ -357,9 +357,10 @@ function Duel({ roll, actions, reveal, compact = false, onDismiss }: { roll: Rol
           ) : (
             <DiceTray dice={opp?.dice.dice ?? null} count={opp ? opp.dice.length : mode === 'fixed' ? 0 : count} muted animateKey={reveal?.dmKey ?? 0} />
           )}
-          {dmCta && <div className="rl-side__cta">{dmCta}</div>}
+          {(dmCta || (dmPrepare && !narrow)) && <div className="rl-side__cta">{dmCta ?? dmPrepare}</div>}
         </section>
       </div>
+      {dmPrepare && narrow && <div className="rl-prepare">{dmPrepare}</div>}
 
       {record.narration && <p className="rl-duel__narration">{record.narration}</p>}
 
