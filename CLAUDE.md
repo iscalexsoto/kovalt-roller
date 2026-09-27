@@ -34,6 +34,20 @@ implementadas: [docs/rules.md](docs/rules.md).
 - `web/src/styles/tokens.css`, `components.css` y `web/src/components/kv/*` son copia de **Kovalt Notes** (la versión
   más nueva). No se editan aquí: si la skill cambia, se copian de nuevo. Lo propio de Roller va en `app.css` con el
   prefijo `rl-`.
+- **Capa medieval** (skill `D:\Proyectos\Kovalt Design\kovalt-medieval-skill`, referencia `Kovalt Roller Medieval.dc.html`):
+  se lee después de la base y, dentro de Roller, gana donde difieren. Cuatro temas (Pergamino, Taberna, Cripta,
+  Bosque) × oscuro/claro en lugar de las seis paletas de la suite, y ejes por persona (Esquinas, Textura, Marco,
+  Divisores, Iconos, Dados, Resultado, más Sonido).
+  - `styles/medieval.css` define los roles `--c-*` y el material `--m-*` por tema y los vuelca sobre los `--kv-*`, así
+    las primitivas copiadas adoptan la capa sin editarlas; también ajusta su tipografía (Amaranth 700 en etiquetas,
+    botones, chips y números; Crimson Pro en el cuerpo, con `size-adjust` 113 % = los +2px de la skill).
+  - `state/theme.ts` guarda tema (`rl-theme`), modo (`kv-mode`) y ejes cambiados (`rl-axes`); elegir tema vuelve a
+    sus ejes. `state/medieval.ts` calcula las formas de la Esquina (`--m-cut-*`, `--kv-cut-*`, `--kv-ring-*`) y
+    rasteriza la textura una vez a PNG (`--m-tex`). El script anti-destello de `index.html` repite la tabla de `bg`.
+  - Material (`--m-metal`) solo en botón primario, botón de dados de la habilidad, sello, checkbox y progreso. El
+    Marco (`components/Frame.tsx`) solo en los paneles principales: la tirada en la mesa, la ficha y la ventana de
+    botín o tienda. Textura solo en la página y los paneles de nivel 1.
+  - Voz Cronista: pasado, tercera persona para personajes («Garra Tuerta forzó la reja…»), sin español arcaico.
 - `web/src/suite/suiteAuth.ts` es un archivo compartido de la suite: idéntico byte a byte al de las demás webs.
 - Íconos: añadir la clave en `tools/icons/keys.json` y ejecutar `node tools/icons/build.mjs` (no editar `paths.ts`).
 - Marca: La Piedra de Roller (un d6 que muestra cinco en la cara izquierda), masters en
@@ -67,17 +81,23 @@ implementadas: [docs/rules.md](docs/rules.md).
   - La oposición la tira el DM antes que el jugador y es visible para él: es el listón («Necesitas N»). En la web,
     «Oponer Nd6» hace aprobar + tirar oposición en un gesto (dos transiciones; el motor no cambia).
   - "Sin tirada" termina en resuelta con narración y sin XP.
-  - **La mesa (`Duel.tsx`):** cada tirada es un duelo (jugador | gema | DM). El reveal (dados que caen uno a uno,
-    conteo, pausa, sello) lo dispara el cambio de estado que llega de Firestore, así todos lo ven a la vez; lo que
-    ya estaba al abrir la sala no se anima. Las tiradas vivas (o con avance pendiente) van completas; sin ninguna, la
+  - **La mesa (`Duel.tsx`):** cada tirada es un duelo (carta del jugador | sello | carta del DM). Cada carta lleva
+    sus dados (Puntos o Numeral) con la suma cruda y, debajo, los estados aplicados y el TOTAL final, el número
+    protagonista. El reveal es la coreografía Sello de la skill (`reveal.ts`: dados que ruedan, suma y total, cada
+    estado suma o resta paso a paso, el veredicto cae) y lo dispara el cambio de estado que llega de Firestore, así
+    todos lo ven a la vez; lo que ya estaba al abrir la sala no se anima. El veredicto es un sello de cera en el
+    material o un estandarte (eje Resultado); el sello lleva el material y la palabra, el color del estado. Las tiradas vivas (o con avance pendiente) van completas; sin ninguna, la
     tirada más reciente se queda como escena solo si está resuelta (una rechazada o retirada posterior deja la mesa en
     espera) y quien mira puede quitarla («Quitar de la mesa», recordado por sala en su navegador). El resto va plegado
     en filas del mismo contenedor (`RollItem` conserva el estado del reveal).
-  - **Sonido** (`state/sound.ts`): por persona, apagado por defecto (`rl-sound` en localStorage; menú de cuenta).
-    Sintetizado con WebAudio: un clac por dado que cae y un golpe al caer el sello (con notas si es éxito o todos 6).
+  - **Sonido** (`state/sound.ts`): por persona, apagado por defecto (`rl-sound` en localStorage; menú de cuenta y
+    selector de tema). Sintetizado con WebAudio según la skill: ráfagas de dados, un tic por paso del total y el golpe
+    del sello. Mudo con la pestaña oculta o con movimiento reducido.
 - **Inventario:**
   - El catálogo es privado del DM y no tiene cantidades: nombre, descripción, valor opcional (precio por defecto),
-    ícono y color (claves `ITEM_ICON_KEYS`/`ITEM_COLOR_KEYS` del motor; las reglas validan el color).
+    ícono y color (claves `ITEM_ICON_KEYS`/`ITEM_COLOR_KEYS` del motor; las reglas validan el color). La capa medieval
+    pinta los íconos en una sola tinta dentro del marco del eje Iconos: el color se conserva en los datos, pero ya no
+    se elige ni se muestra.
   - El DM entrega arrastrando (`drag.ts`, eventos de puntero; tocar el asa y luego el destino también sirve). El id
     de la copia es el del catálogo, así se apilan.
   - Cada inventario lo ven solo su dueño y el DM; el dueño solo cambia la cantidad (≥ 0). Se muestra en cuadrícula.

@@ -49,7 +49,7 @@ declarada ──(DM)──► aprobada ──(DM)──► oposicion ──(juga
   igual que una tirada; en la mesa se muestra como placa «Objetivo N» en lugar de dados.
 - **Mesa y registro:** las tiradas vivas se muestran como duelo completo; las resueltas se pliegan en una fila con la
   frase, el marcador y el veredicto. La habilidad base se muestra como «Hacer cualquier cosa» (el dato sigue siendo
-  `Do Anything`). El sonido de la mesa (dados y sello) es un ajuste por persona, apagado por defecto.
+  `Do Anything`). El sonido de la mesa (dados, pasos del total y sello) es un ajuste por persona, apagado por defecto.
 - **Retirar:** el jugador puede retirar su declaración mientras está en `declarada`, `contraoferta` o `rechazada`.
 - **Resuelta:** el resultado se calcula automáticamente (`exito`, `fallo` o, con empate parcial, `empate`). Si hay avance posible, el jugador decide (nombre de la habilidad, gastar XP, qué slot usar) y se aplica.
 
