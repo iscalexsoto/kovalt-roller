@@ -56,7 +56,7 @@ export function Dialog({
 }
 
 /** Bottom sheet modal: capa Veta traslúcida con borde `--kv-ring-xsc-top` (sin wrapper rim: un `filter` en un
- *  ancestro mataría el blur); corte mínimo arriba (6/2) porque abajo toca el borde de la pantalla. */
+ *  ancestro mataría el blur); corte mínimo arriba (2) porque abajo toca el borde de la pantalla. */
 export function Sheet({
   label,
   onClose,

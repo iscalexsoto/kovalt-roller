@@ -5,7 +5,7 @@ import { Sheet } from './Overlay';
 import { PAD_DECIMAL as DECIMAL, padText } from '../../utils/numeric';
 
 /** Pad numérico (input-pickers.md § 3): la única superficie de entrada numérica de la suite.
- *  Bottom sheet con corte 6/2 arriba; kicker con la etiqueta del campo; display de campo relleno;
+ *  Bottom sheet con corte mínimo (2) arriba; kicker con la etiqueta del campo; display de campo relleno;
  *  teclas 48 Corte S; borrar en Veta (mantener presionado vacía); "Listo" metal solo cierra.
  *  El valor se escribe en vivo: no hay borrador. Con teclado físico, los dígitos, la coma o el
  *  punto, Retroceso, Enter y Esc hacen lo mismo que las teclas. */

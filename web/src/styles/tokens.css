@@ -34,45 +34,45 @@
   --kv-t-code: calc(13 * var(--kv-px));     /* Code Medium 13/20: código inline dentro de Body Large */
   --kv-t-code-s: calc(12 * var(--kv-px));   /* Code Small 12/18 */
 
-  /* Profundidad del Corte como proporción de u. B = A × 0.28, calculado. El corte se topa al 200 %
-     (28px de A en Corte L): por encima crece el texto, no el chaflán. */
+  /* Profundidad del Corte como proporción de u: un solo valor por tamaño, el mismo en las cuatro esquinas.
+     El corte se topa al 200 % (--kv-uc): por encima crece el texto, no el chaflán. */
   --kv-uc: min(var(--kv-u), 28px);
-  --kv-a-xsc: calc(var(--kv-uc) * 0.43); --kv-b-xsc: calc(var(--kv-a-xsc) * 0.28);
-  --kv-a-xs: calc(var(--kv-uc) * 0.57); --kv-b-xs: calc(var(--kv-a-xs) * 0.28);
-  --kv-a-thumb: calc(var(--kv-uc) * 0.64); --kv-b-thumb: calc(var(--kv-a-thumb) * 0.28);
-  --kv-a-s: calc(var(--kv-uc) * 0.86); --kv-b-s: calc(var(--kv-a-s) * 0.28);
-  --kv-a-m: calc(var(--kv-uc) * 1.00); --kv-b-m: calc(var(--kv-a-m) * 0.28);
-  --kv-a-l: calc(var(--kv-uc) * 1.43); --kv-b-l: calc(var(--kv-a-l) * 0.28);
-  --kv-a-xl: calc(var(--kv-uc) * 2.00); --kv-b-xl: calc(var(--kv-a-xl) * 0.28);
+  --kv-c-xsc: calc(var(--kv-uc) * 0.14);
+  --kv-c-xs: calc(var(--kv-uc) * 0.14);
+  --kv-c-thumb: calc(var(--kv-uc) * 0.21);
+  --kv-c-s: calc(var(--kv-uc) * 0.21);
+  --kv-c-m: calc(var(--kv-uc) * 0.28);
+  --kv-c-l: calc(var(--kv-uc) * 0.43);
+  --kv-c-xl: calc(var(--kv-uc) * 0.57);
 
-  /* Corte: chaflanes a 45°. A = profundo (TL/BR), B = leve (TR/BL). Se aplica con clip-path.
-     Escritos contra --kv-a-* / --kv-b-*: al 100 % resuelven a 6/2, 8/2, 12/3, 14/4, 20/6 y 28/8. */
-  --kv-cut-xsc: polygon(var(--kv-a-xsc) 0, calc(100% - var(--kv-b-xsc)) 0, 100% var(--kv-b-xsc), 100% calc(100% - var(--kv-a-xsc)), calc(100% - var(--kv-a-xsc)) 100%, var(--kv-b-xsc) 100%, 0 calc(100% - var(--kv-b-xsc)), 0 var(--kv-a-xsc));
-  --kv-cut-xs: polygon(var(--kv-a-xs) 0, calc(100% - var(--kv-b-xs)) 0, 100% var(--kv-b-xs), 100% calc(100% - var(--kv-a-xs)), calc(100% - var(--kv-a-xs)) 100%, var(--kv-b-xs) 100%, 0 calc(100% - var(--kv-b-xs)), 0 var(--kv-a-xs));
-  --kv-cut-thumb: polygon(var(--kv-a-thumb) 0, calc(100% - var(--kv-b-thumb)) 0, 100% var(--kv-b-thumb), 100% calc(100% - var(--kv-a-thumb)), calc(100% - var(--kv-a-thumb)) 100%, var(--kv-b-thumb) 100%, 0 calc(100% - var(--kv-b-thumb)), 0 var(--kv-a-thumb));
-  --kv-cut-s: polygon(var(--kv-a-s) 0, calc(100% - var(--kv-b-s)) 0, 100% var(--kv-b-s), 100% calc(100% - var(--kv-a-s)), calc(100% - var(--kv-a-s)) 100%, var(--kv-b-s) 100%, 0 calc(100% - var(--kv-b-s)), 0 var(--kv-a-s));
-  --kv-cut-m: polygon(var(--kv-a-m) 0, calc(100% - var(--kv-b-m)) 0, 100% var(--kv-b-m), 100% calc(100% - var(--kv-a-m)), calc(100% - var(--kv-a-m)) 100%, var(--kv-b-m) 100%, 0 calc(100% - var(--kv-b-m)), 0 var(--kv-a-m));
-  --kv-cut-l: polygon(var(--kv-a-l) 0, calc(100% - var(--kv-b-l)) 0, 100% var(--kv-b-l), 100% calc(100% - var(--kv-a-l)), calc(100% - var(--kv-a-l)) 100%, var(--kv-b-l) 100%, 0 calc(100% - var(--kv-b-l)), 0 var(--kv-a-l));
-  --kv-cut-xl: polygon(var(--kv-a-xl) 0, calc(100% - var(--kv-b-xl)) 0, 100% var(--kv-b-xl), 100% calc(100% - var(--kv-a-xl)), calc(100% - var(--kv-a-xl)) 100%, var(--kv-b-xl) 100%, 0 calc(100% - var(--kv-b-xl)), 0 var(--kv-a-xl));
-  /* Solo arriba (la superficie toca un borde recto): cierran con el vértice `0 A`. */
-  --kv-cut-xsc-top: polygon(var(--kv-a-xsc) 0, calc(100% - var(--kv-b-xsc)) 0, 100% var(--kv-b-xsc), 100% 100%, 0 100%, 0 var(--kv-a-xsc));
-  --kv-cut-m-top: polygon(var(--kv-a-m) 0, calc(100% - var(--kv-b-m)) 0, 100% var(--kv-b-m), 100% 100%, 0 100%, 0 var(--kv-a-m));
-  --kv-cut-l-top: polygon(var(--kv-a-l) 0, calc(100% - var(--kv-b-l)) 0, 100% var(--kv-b-l), 100% 100%, 0 100%, 0 var(--kv-a-l));
-  --kv-cut-xl-top: polygon(var(--kv-a-xl) 0, calc(100% - var(--kv-b-xl)) 0, 100% var(--kv-b-xl), 100% 100%, 0 100%, 0 var(--kv-a-xl));
-  --kv-cut-m-start: polygon(var(--kv-a-m) 0, 100% 0, 100% 100%, var(--kv-b-m) 100%, 0 calc(100% - var(--kv-b-m)), 0 var(--kv-a-m));
-  --kv-cut-m-end: polygon(0 0, calc(100% - var(--kv-b-m)) 0, 100% var(--kv-b-m), 100% calc(100% - var(--kv-a-m)), calc(100% - var(--kv-a-m)) 100%, 0 100%);
+  /* Corte: chaflanes a 45°, el mismo C en las cuatro esquinas. Se aplica con clip-path.
+     Escritos contra --kv-c-*: al 100 % resuelven a 2, 2, 3, 3, 4, 6 y 8. */
+  --kv-cut-xsc: polygon(var(--kv-c-xsc) 0, calc(100% - var(--kv-c-xsc)) 0, 100% var(--kv-c-xsc), 100% calc(100% - var(--kv-c-xsc)), calc(100% - var(--kv-c-xsc)) 100%, var(--kv-c-xsc) 100%, 0 calc(100% - var(--kv-c-xsc)), 0 var(--kv-c-xsc));
+  --kv-cut-xs: polygon(var(--kv-c-xs) 0, calc(100% - var(--kv-c-xs)) 0, 100% var(--kv-c-xs), 100% calc(100% - var(--kv-c-xs)), calc(100% - var(--kv-c-xs)) 100%, var(--kv-c-xs) 100%, 0 calc(100% - var(--kv-c-xs)), 0 var(--kv-c-xs));
+  --kv-cut-thumb: polygon(var(--kv-c-thumb) 0, calc(100% - var(--kv-c-thumb)) 0, 100% var(--kv-c-thumb), 100% calc(100% - var(--kv-c-thumb)), calc(100% - var(--kv-c-thumb)) 100%, var(--kv-c-thumb) 100%, 0 calc(100% - var(--kv-c-thumb)), 0 var(--kv-c-thumb));
+  --kv-cut-s: polygon(var(--kv-c-s) 0, calc(100% - var(--kv-c-s)) 0, 100% var(--kv-c-s), 100% calc(100% - var(--kv-c-s)), calc(100% - var(--kv-c-s)) 100%, var(--kv-c-s) 100%, 0 calc(100% - var(--kv-c-s)), 0 var(--kv-c-s));
+  --kv-cut-m: polygon(var(--kv-c-m) 0, calc(100% - var(--kv-c-m)) 0, 100% var(--kv-c-m), 100% calc(100% - var(--kv-c-m)), calc(100% - var(--kv-c-m)) 100%, var(--kv-c-m) 100%, 0 calc(100% - var(--kv-c-m)), 0 var(--kv-c-m));
+  --kv-cut-l: polygon(var(--kv-c-l) 0, calc(100% - var(--kv-c-l)) 0, 100% var(--kv-c-l), 100% calc(100% - var(--kv-c-l)), calc(100% - var(--kv-c-l)) 100%, var(--kv-c-l) 100%, 0 calc(100% - var(--kv-c-l)), 0 var(--kv-c-l));
+  --kv-cut-xl: polygon(var(--kv-c-xl) 0, calc(100% - var(--kv-c-xl)) 0, 100% var(--kv-c-xl), 100% calc(100% - var(--kv-c-xl)), calc(100% - var(--kv-c-xl)) 100%, var(--kv-c-xl) 100%, 0 calc(100% - var(--kv-c-xl)), 0 var(--kv-c-xl));
+  /* Solo arriba (la superficie toca un borde recto): cierran con el vértice `0 C`. */
+  --kv-cut-xsc-top: polygon(var(--kv-c-xsc) 0, calc(100% - var(--kv-c-xsc)) 0, 100% var(--kv-c-xsc), 100% 100%, 0 100%, 0 var(--kv-c-xsc));
+  --kv-cut-m-top: polygon(var(--kv-c-m) 0, calc(100% - var(--kv-c-m)) 0, 100% var(--kv-c-m), 100% 100%, 0 100%, 0 var(--kv-c-m));
+  --kv-cut-l-top: polygon(var(--kv-c-l) 0, calc(100% - var(--kv-c-l)) 0, 100% var(--kv-c-l), 100% 100%, 0 100%, 0 var(--kv-c-l));
+  --kv-cut-xl-top: polygon(var(--kv-c-xl) 0, calc(100% - var(--kv-c-xl)) 0, 100% var(--kv-c-xl), 100% 100%, 0 100%, 0 var(--kv-c-xl));
+  --kv-cut-m-start: polygon(var(--kv-c-m) 0, 100% 0, 100% 100%, var(--kv-c-m) 100%, 0 calc(100% - var(--kv-c-m)), 0 var(--kv-c-m));
+  --kv-cut-m-end: polygon(0 0, calc(100% - var(--kv-c-m)) 0, 100% var(--kv-c-m), 100% calc(100% - var(--kv-c-m)), calc(100% - var(--kv-c-m)) 100%, 0 100%);
 
   /* Ring: el borde de 1px de un elemento cortado, como `::after` recortado a polygon(evenodd, exterior…, interior…).
      Cada lazo repite su primer vértice (si no, el lado izquierdo pierde el borde) y los vértices interiores del
-     chaflán van a A + 0.414px (desplazar una recta a 45° un píxel mueve su vértice √2 − 1). Es la única opción
+     chaflán van a C + 0.414px (desplazar una recta a 45° un píxel mueve su vértice √2 − 1). Es la única opción
      bajo una capa traslúcida: un `filter` (rim) en un ancestro mata el backdrop-filter. */
-  --kv-ring-xsc: polygon(evenodd, 0 var(--kv-a-xsc), var(--kv-a-xsc) 0, calc(100% - var(--kv-b-xsc)) 0, 100% var(--kv-b-xsc), 100% calc(100% - var(--kv-a-xsc)), calc(100% - var(--kv-a-xsc)) 100%, var(--kv-b-xsc) 100%, 0 calc(100% - var(--kv-b-xsc)), 0 var(--kv-a-xsc), 1px calc(var(--kv-a-xsc) + 0.414px), 1px calc(100% - var(--kv-b-xsc) - 0.414px), calc(var(--kv-b-xsc) + 0.414px) calc(100% - 1px), calc(100% - var(--kv-a-xsc) - 0.414px) calc(100% - 1px), calc(100% - 1px) calc(100% - var(--kv-a-xsc) - 0.414px), calc(100% - 1px) calc(var(--kv-b-xsc) + 0.414px), calc(100% - var(--kv-b-xsc) - 0.414px) 1px, calc(var(--kv-a-xsc) + 0.414px) 1px, 1px calc(var(--kv-a-xsc) + 0.414px));
-  --kv-ring-xs: polygon(evenodd, 0 var(--kv-a-xs), var(--kv-a-xs) 0, calc(100% - var(--kv-b-xs)) 0, 100% var(--kv-b-xs), 100% calc(100% - var(--kv-a-xs)), calc(100% - var(--kv-a-xs)) 100%, var(--kv-b-xs) 100%, 0 calc(100% - var(--kv-b-xs)), 0 var(--kv-a-xs), 1px calc(var(--kv-a-xs) + 0.414px), 1px calc(100% - var(--kv-b-xs) - 0.414px), calc(var(--kv-b-xs) + 0.414px) calc(100% - 1px), calc(100% - var(--kv-a-xs) - 0.414px) calc(100% - 1px), calc(100% - 1px) calc(100% - var(--kv-a-xs) - 0.414px), calc(100% - 1px) calc(var(--kv-b-xs) + 0.414px), calc(100% - var(--kv-b-xs) - 0.414px) 1px, calc(var(--kv-a-xs) + 0.414px) 1px, 1px calc(var(--kv-a-xs) + 0.414px));
-  --kv-ring-s: polygon(evenodd, 0 var(--kv-a-s), var(--kv-a-s) 0, calc(100% - var(--kv-b-s)) 0, 100% var(--kv-b-s), 100% calc(100% - var(--kv-a-s)), calc(100% - var(--kv-a-s)) 100%, var(--kv-b-s) 100%, 0 calc(100% - var(--kv-b-s)), 0 var(--kv-a-s), 1px calc(var(--kv-a-s) + 0.414px), 1px calc(100% - var(--kv-b-s) - 0.414px), calc(var(--kv-b-s) + 0.414px) calc(100% - 1px), calc(100% - var(--kv-a-s) - 0.414px) calc(100% - 1px), calc(100% - 1px) calc(100% - var(--kv-a-s) - 0.414px), calc(100% - 1px) calc(var(--kv-b-s) + 0.414px), calc(100% - var(--kv-b-s) - 0.414px) 1px, calc(var(--kv-a-s) + 0.414px) 1px, 1px calc(var(--kv-a-s) + 0.414px));
-  --kv-ring-m: polygon(evenodd, 0 var(--kv-a-m), var(--kv-a-m) 0, calc(100% - var(--kv-b-m)) 0, 100% var(--kv-b-m), 100% calc(100% - var(--kv-a-m)), calc(100% - var(--kv-a-m)) 100%, var(--kv-b-m) 100%, 0 calc(100% - var(--kv-b-m)), 0 var(--kv-a-m), 1px calc(var(--kv-a-m) + 0.414px), 1px calc(100% - var(--kv-b-m) - 0.414px), calc(var(--kv-b-m) + 0.414px) calc(100% - 1px), calc(100% - var(--kv-a-m) - 0.414px) calc(100% - 1px), calc(100% - 1px) calc(100% - var(--kv-a-m) - 0.414px), calc(100% - 1px) calc(var(--kv-b-m) + 0.414px), calc(100% - var(--kv-b-m) - 0.414px) 1px, calc(var(--kv-a-m) + 0.414px) 1px, 1px calc(var(--kv-a-m) + 0.414px));
-  --kv-ring-l: polygon(evenodd, 0 var(--kv-a-l), var(--kv-a-l) 0, calc(100% - var(--kv-b-l)) 0, 100% var(--kv-b-l), 100% calc(100% - var(--kv-a-l)), calc(100% - var(--kv-a-l)) 100%, var(--kv-b-l) 100%, 0 calc(100% - var(--kv-b-l)), 0 var(--kv-a-l), 1px calc(var(--kv-a-l) + 0.414px), 1px calc(100% - var(--kv-b-l) - 0.414px), calc(var(--kv-b-l) + 0.414px) calc(100% - 1px), calc(100% - var(--kv-a-l) - 0.414px) calc(100% - 1px), calc(100% - 1px) calc(100% - var(--kv-a-l) - 0.414px), calc(100% - 1px) calc(var(--kv-b-l) + 0.414px), calc(100% - var(--kv-b-l) - 0.414px) 1px, calc(var(--kv-a-l) + 0.414px) 1px, 1px calc(var(--kv-a-l) + 0.414px));
+  --kv-ring-xsc: polygon(evenodd, 0 var(--kv-c-xsc), var(--kv-c-xsc) 0, calc(100% - var(--kv-c-xsc)) 0, 100% var(--kv-c-xsc), 100% calc(100% - var(--kv-c-xsc)), calc(100% - var(--kv-c-xsc)) 100%, var(--kv-c-xsc) 100%, 0 calc(100% - var(--kv-c-xsc)), 0 var(--kv-c-xsc), 1px calc(var(--kv-c-xsc) + 0.414px), 1px calc(100% - var(--kv-c-xsc) - 0.414px), calc(var(--kv-c-xsc) + 0.414px) calc(100% - 1px), calc(100% - var(--kv-c-xsc) - 0.414px) calc(100% - 1px), calc(100% - 1px) calc(100% - var(--kv-c-xsc) - 0.414px), calc(100% - 1px) calc(var(--kv-c-xsc) + 0.414px), calc(100% - var(--kv-c-xsc) - 0.414px) 1px, calc(var(--kv-c-xsc) + 0.414px) 1px, 1px calc(var(--kv-c-xsc) + 0.414px));
+  --kv-ring-xs: polygon(evenodd, 0 var(--kv-c-xs), var(--kv-c-xs) 0, calc(100% - var(--kv-c-xs)) 0, 100% var(--kv-c-xs), 100% calc(100% - var(--kv-c-xs)), calc(100% - var(--kv-c-xs)) 100%, var(--kv-c-xs) 100%, 0 calc(100% - var(--kv-c-xs)), 0 var(--kv-c-xs), 1px calc(var(--kv-c-xs) + 0.414px), 1px calc(100% - var(--kv-c-xs) - 0.414px), calc(var(--kv-c-xs) + 0.414px) calc(100% - 1px), calc(100% - var(--kv-c-xs) - 0.414px) calc(100% - 1px), calc(100% - 1px) calc(100% - var(--kv-c-xs) - 0.414px), calc(100% - 1px) calc(var(--kv-c-xs) + 0.414px), calc(100% - var(--kv-c-xs) - 0.414px) 1px, calc(var(--kv-c-xs) + 0.414px) 1px, 1px calc(var(--kv-c-xs) + 0.414px));
+  --kv-ring-s: polygon(evenodd, 0 var(--kv-c-s), var(--kv-c-s) 0, calc(100% - var(--kv-c-s)) 0, 100% var(--kv-c-s), 100% calc(100% - var(--kv-c-s)), calc(100% - var(--kv-c-s)) 100%, var(--kv-c-s) 100%, 0 calc(100% - var(--kv-c-s)), 0 var(--kv-c-s), 1px calc(var(--kv-c-s) + 0.414px), 1px calc(100% - var(--kv-c-s) - 0.414px), calc(var(--kv-c-s) + 0.414px) calc(100% - 1px), calc(100% - var(--kv-c-s) - 0.414px) calc(100% - 1px), calc(100% - 1px) calc(100% - var(--kv-c-s) - 0.414px), calc(100% - 1px) calc(var(--kv-c-s) + 0.414px), calc(100% - var(--kv-c-s) - 0.414px) 1px, calc(var(--kv-c-s) + 0.414px) 1px, 1px calc(var(--kv-c-s) + 0.414px));
+  --kv-ring-m: polygon(evenodd, 0 var(--kv-c-m), var(--kv-c-m) 0, calc(100% - var(--kv-c-m)) 0, 100% var(--kv-c-m), 100% calc(100% - var(--kv-c-m)), calc(100% - var(--kv-c-m)) 100%, var(--kv-c-m) 100%, 0 calc(100% - var(--kv-c-m)), 0 var(--kv-c-m), 1px calc(var(--kv-c-m) + 0.414px), 1px calc(100% - var(--kv-c-m) - 0.414px), calc(var(--kv-c-m) + 0.414px) calc(100% - 1px), calc(100% - var(--kv-c-m) - 0.414px) calc(100% - 1px), calc(100% - 1px) calc(100% - var(--kv-c-m) - 0.414px), calc(100% - 1px) calc(var(--kv-c-m) + 0.414px), calc(100% - var(--kv-c-m) - 0.414px) 1px, calc(var(--kv-c-m) + 0.414px) 1px, 1px calc(var(--kv-c-m) + 0.414px));
+  --kv-ring-l: polygon(evenodd, 0 var(--kv-c-l), var(--kv-c-l) 0, calc(100% - var(--kv-c-l)) 0, 100% var(--kv-c-l), 100% calc(100% - var(--kv-c-l)), calc(100% - var(--kv-c-l)) 100%, var(--kv-c-l) 100%, 0 calc(100% - var(--kv-c-l)), 0 var(--kv-c-l), 1px calc(var(--kv-c-l) + 0.414px), 1px calc(100% - var(--kv-c-l) - 0.414px), calc(var(--kv-c-l) + 0.414px) calc(100% - 1px), calc(100% - var(--kv-c-l) - 0.414px) calc(100% - 1px), calc(100% - 1px) calc(100% - var(--kv-c-l) - 0.414px), calc(100% - 1px) calc(var(--kv-c-l) + 0.414px), calc(100% - var(--kv-c-l) - 0.414px) 1px, calc(var(--kv-c-l) + 0.414px) 1px, 1px calc(var(--kv-c-l) + 0.414px));
   /* Ring solo arriba (sheet, campo relleno): tres lados; abajo el borde lo pone la pantalla o el subrayado. */
-  --kv-ring-xsc-top: polygon(evenodd, 0 var(--kv-a-xsc), var(--kv-a-xsc) 0, calc(100% - var(--kv-b-xsc)) 0, 100% var(--kv-b-xsc), 100% 100%, 0 100%, 0 var(--kv-a-xsc), 1px calc(var(--kv-a-xsc) + 0.414px), 1px 100%, calc(100% - 1px) 100%, calc(100% - 1px) calc(var(--kv-b-xsc) + 0.414px), calc(100% - var(--kv-b-xsc) - 0.414px) 1px, calc(var(--kv-a-xsc) + 0.414px) 1px, 1px calc(var(--kv-a-xsc) + 0.414px));
+  --kv-ring-xsc-top: polygon(evenodd, 0 var(--kv-c-xsc), var(--kv-c-xsc) 0, calc(100% - var(--kv-c-xsc)) 0, 100% var(--kv-c-xsc), 100% 100%, 0 100%, 0 var(--kv-c-xsc), 1px calc(var(--kv-c-xsc) + 0.414px), 1px 100%, calc(100% - 1px) 100%, calc(100% - 1px) calc(var(--kv-c-xsc) + 0.414px), calc(100% - var(--kv-c-xsc) - 0.414px) 1px, calc(var(--kv-c-xsc) + 0.414px) 1px, 1px calc(var(--kv-c-xsc) + 0.414px));
 
   /* Rim: el borde de 1px de un elemento cortado sobre superficie OPACA. Va en un WRAPPER, nunca en el elemento
      cortado. */
