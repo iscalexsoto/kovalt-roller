@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
-/** Sonido de la mesa (dados que caen y sello), por persona y apagado por defecto. Se guarda en `rl-sound`.
- *  Los sonidos se sintetizan con WebAudio: nada que descargar y el mismo carácter que la interfaz (seco, corto). */
+/** Sonido de la mesa (kovalt-medieval-skill § Sonido): por persona, apagado por defecto y nunca antes de un gesto.
+ *  Se guarda en `rl-sound`. Sintetizado con WebAudio, sin archivos: dados, un tic por paso del total y el sello. */
 
 const KEY = 'rl-sound';
 const listeners = new Set<() => void>();
@@ -61,66 +61,68 @@ function audio(): AudioContext | null {
   }
 }
 
-let noise: AudioBuffer | null = null;
-function noiseBuffer(ac: AudioContext): AudioBuffer {
-  if (noise && noise.sampleRate === ac.sampleRate) return noise;
-  const n = Math.floor(ac.sampleRate * 0.08);
-  noise = ac.createBuffer(1, n, ac.sampleRate);
-  const data = noise.getChannelData(0);
-  for (let i = 0; i < n; i++) data[i] = Math.random() * 2 - 1;
-  return noise;
+/** Nada suena con la pestaña oculta ni con movimiento reducido (el sonido va atado a los golpes de la animación). */
+function muted(): boolean {
+  return document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-/** Un dado que cae: un clac corto de ruido filtrado, con un tono un poco distinto cada vez. */
-export function playDie(): void {
-  const ac = audio();
+function ready(): AudioContext | null {
+  if (typeof document === 'undefined' || muted()) return null;
+  return audio();
+}
+
+/** Dados: seis ráfagas de ruido pasabanda (1.4–3 kHz, 35 ms, cada 55 ms), al empezar a rodar. */
+export function playDice(): void {
+  const ac = ready();
+  if (!ac) return;
+  const len = Math.floor(ac.sampleRate * 0.035);
+  for (let i = 0; i < 6; i++) {
+    const t = ac.currentTime + i * 0.055 + Math.random() * 0.03;
+    const buf = ac.createBuffer(1, len, ac.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let j = 0; j < len; j++) data[j] = (Math.random() * 2 - 1) * Math.pow(1 - j / len, 4);
+    const src = ac.createBufferSource();
+    src.buffer = buf;
+    const band = ac.createBiquadFilter();
+    band.type = 'bandpass';
+    band.frequency.value = 1400 + Math.random() * 1600;
+    band.Q.value = 3;
+    const gain = ac.createGain();
+    gain.gain.value = 0.7;
+    src.connect(band).connect(gain).connect(ac.destination);
+    src.start(t);
+  }
+}
+
+/** Un paso del total al aplicar un estado: triángulo de 880 Hz, 80 ms. */
+export function playTick(): void {
+  const ac = ready();
   if (!ac) return;
   const t = ac.currentTime;
-  const src = ac.createBufferSource();
-  src.buffer = noiseBuffer(ac);
-  const band = ac.createBiquadFilter();
-  band.type = 'bandpass';
-  band.frequency.value = 2200 + Math.random() * 1600;
-  band.Q.value = 1.2;
+  const osc = ac.createOscillator();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(880, t);
+  const gain = ac.createGain();
+  gain.gain.setValueAtTime(0.25, t);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+  osc.connect(gain).connect(ac.destination);
+  osc.start(t);
+  osc.stop(t + 0.1);
+}
+
+/** El sello al caer: seno de 150 a 45 Hz, 300 ms. */
+export function playSeal(): void {
+  const ac = ready();
+  if (!ac) return;
+  const t = ac.currentTime;
+  const osc = ac.createOscillator();
+  osc.frequency.setValueAtTime(150, t);
+  osc.frequency.exponentialRampToValueAtTime(45, t + 0.2);
   const gain = ac.createGain();
   gain.gain.setValueAtTime(0.0001, t);
-  gain.gain.exponentialRampToValueAtTime(0.5, t + 0.004);
-  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
-  src.connect(band).connect(gain).connect(ac.destination);
-  src.start(t);
-  src.stop(t + 0.08);
-}
-
-/** El sello: un golpe grave; con éxito, además, dos notas que suben (tres y más agudas con todos 6). */
-export function playStamp(kind: 'exito' | 'fallo' | 'empate' | 'seis'): void {
-  const ac = audio();
-  if (!ac) return;
-  const t = ac.currentTime;
-  const thud = ac.createOscillator();
-  thud.type = 'sine';
-  thud.frequency.setValueAtTime(kind === 'fallo' ? 110 : kind === 'empate' ? 130 : 150, t);
-  thud.frequency.exponentialRampToValueAtTime(45, t + 0.18);
-  const tg = ac.createGain();
-  tg.gain.setValueAtTime(0.0001, t);
-  tg.gain.exponentialRampToValueAtTime(0.7, t + 0.006);
-  tg.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-  thud.connect(tg).connect(ac.destination);
-  thud.start(t);
-  thud.stop(t + 0.25);
-  if (kind === 'fallo' || kind === 'empate') return;
-
-  const notes = kind === 'seis' ? [660, 880, 1320] : [523, 784];
-  notes.forEach((f, i) => {
-    const at = t + 0.08 + i * 0.09;
-    const osc = ac.createOscillator();
-    osc.type = 'triangle';
-    osc.frequency.value = f;
-    const g = ac.createGain();
-    g.gain.setValueAtTime(0.0001, at);
-    g.gain.exponentialRampToValueAtTime(0.25, at + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, at + 0.28);
-    osc.connect(g).connect(ac.destination);
-    osc.start(at);
-    osc.stop(at + 0.3);
-  });
+  gain.gain.exponentialRampToValueAtTime(0.6, t + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+  osc.connect(gain).connect(ac.destination);
+  osc.start(t);
+  osc.stop(t + 0.32);
 }

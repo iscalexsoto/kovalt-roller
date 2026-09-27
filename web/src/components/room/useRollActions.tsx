@@ -18,9 +18,8 @@ import { act, applyAdvance, outcomeOf } from '../../data/rolls';
 import { toast, toastError } from '../../state/toast';
 import { useDialogs } from '../dialogs';
 import { useRoom } from './context';
-import { revealDuration } from './Dice';
-import { VERDICT_BEAT_MS } from './Duel';
-import { skillLabel, statusLabel } from './labels';
+import { modifierSteps, skillLabel, statusLabel } from './labels';
+import { revealDuration } from './reveal';
 import { AdvancementDialog, CounterOfferDialog, DeclareDialog } from './RollDialogs';
 
 const dice = new CryptoDice();
@@ -28,8 +27,8 @@ const dice = new CryptoDice();
 /** Cómo opone el DM: tirando `count` dados o con un objetivo fijo. */
 export type OppositionChoice = ({ count: number } | { target: number }) & { statuses?: Status[] };
 
-/** Lo que tarda el sello en aparecer tras el reveal (--kv-duration-long) más un respiro antes de abrir un diálogo. */
-const STAMP_MS = 320 + 300;
+/** Un respiro tras el sello antes de abrir un diálogo. */
+const AFTER_SEAL_MS = 300;
 
 const sleep = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms));
 
@@ -156,7 +155,8 @@ export function useRollActions(): RollActions {
           const rolled = await perform(roll, { kind, dice: rollDice(roll.record.skill.level, ctx.room.settings.maxDice, dice) });
           const resolved = await resolveRoll(rolled);
           // El diálogo de avance espera a que caigan los dados y el sello.
-          await sleep(revealDuration(roll.record.skill.level) + VERDICT_BEAT_MS + STAMP_MS);
+          const deltas = modifierSteps(roll.record.modifier, roll.record.modifierNote).map((s) => s.delta);
+          await sleep(revealDuration(roll.record.skill.level, deltas) + AFTER_SEAL_MS);
           await settle(resolved);
           break;
         }

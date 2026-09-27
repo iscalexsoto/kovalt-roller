@@ -6,12 +6,11 @@ import { Button } from '../kv/Button';
 import { Checkbox, Field, TextArea } from '../kv/Field';
 import { Tag } from '../kv/Layout';
 import { Dialog } from '../kv/Overlay';
-import { lookStyle } from './itemColors';
-import { ColorPicker, IconPicker, ItemGlyph } from './itemLook';
+import { IconPicker, ItemFramed } from './itemLook';
 
 const digits = (s: string) => s.replace(/\D/g, '').slice(0, 9);
 
-/** Casilla de objeto, como en el inventario de un juego: ícono con el brillo de su color, nombre y contador. */
+/** Casilla de objeto, como en el inventario de un juego: el ícono en su marco (eje Iconos), nombre y contador. */
 export function ItemTile({
   look,
   name,
@@ -33,7 +32,7 @@ export function ItemTile({
 }) {
   const body = (
     <span className="rl-slot__body">
-      <ItemGlyph look={look} className="rl-slot__icon" />
+      <ItemFramed look={look} />
       <span className="rl-slot__name">{name}</span>
       {count !== undefined && <span className="rl-slot__count kv-num">{count}</span>}
       {tag && <span className="rl-slot__tag">{tag}</span>}
@@ -41,11 +40,11 @@ export function ItemTile({
   );
   const cls = `rl-slot${dim ? ' rl-slot--dim' : ''}`;
   return onClick ? (
-    <button type="button" className={`${cls} kv-state`} style={lookStyle(look)} title={title ?? name} onClick={onClick}>
+    <button type="button" className={`${cls} kv-state`} title={title ?? name} onClick={onClick}>
       {body}
     </button>
   ) : (
-    <div className={cls} style={lookStyle(look)} title={title ?? name}>
+    <div className={cls} title={title ?? name}>
       {body}
     </div>
   );
@@ -91,7 +90,8 @@ export function ItemEditDialog({
   const [quantity, setQuantity] = useState(String(initial?.quantity ?? 1));
   const [unique, setUnique] = useState(initial?.unique ?? false);
   const [icon, setIcon] = useState(initial?.icon ?? DEFAULT_ITEM_ICON);
-  const [color, setColor] = useState(initial?.color ?? DEFAULT_ITEM_COLOR);
+  // El color ya no se elige (íconos en una sola tinta), pero se conserva el que tenga.
+  const color = initial?.color ?? DEFAULT_ITEM_COLOR;
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, run] = useBusy();
 
@@ -140,9 +140,7 @@ export function ItemEditDialog({
     >
       <div className="kv-form">
         <div className="rl-item-head">
-          <span className="rl-item-preview" style={lookStyle({ icon, color })}>
-            <ItemGlyph look={{ icon, color }} size={32} />
-          </span>
+          <ItemFramed look={{ icon }} big />
           <Field className="rl-grow" label="Nombre" value={name} maxLength={80} autoFocus onChange={(e) => setName(e.target.value)} />
         </div>
         <TextArea label="Descripción (y efecto, si es mágico)" value={description} maxLength={4000} rows={2} onChange={(e) => setDescription(e.target.value)} />
@@ -152,10 +150,8 @@ export function ItemEditDialog({
         </div>
         <Checkbox label="Único" checked={unique} onChange={(e) => setUnique(e.target.checked)} />
         <p className="rl-hint">De un objeto único solo hay uno: no se apila y su dueño no puede cambiar la cantidad.</p>
-        <span className="kv-field__label">Color</span>
-        <ColorPicker value={color} onChange={setColor} />
         <span className="kv-field__label">Ícono</span>
-        <IconPicker value={icon} color={color} onChange={setIcon} />
+        <IconPicker value={icon} onChange={setIcon} />
       </div>
     </Dialog>
   );
@@ -174,9 +170,7 @@ export function UniqueTag() {
 export function ItemInfo({ item, extra }: { item: CatalogItem; extra?: ReactNode }) {
   return (
     <div className="rl-item-info">
-      <span className="rl-item-preview rl-item-preview--big" style={lookStyle(item)}>
-        <ItemGlyph look={item} size={40} />
-      </span>
+      <ItemFramed look={item} big />
       <div className="rl-item-info__text">
         {item.description ? <p className="rl-item-info__desc">{item.description}</p> : <p className="rl-hint">Sin descripción.</p>}
         {item.value !== null && (

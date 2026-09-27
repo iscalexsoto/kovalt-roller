@@ -1,0 +1,182 @@
+/* Capa medieval de Kovalt para Roller (kovalt-medieval-skill; tokens: references/themes.md). Se carga después de
+   tokens.css y components.css (copias de Notes, que no se editan) y los reescribe desde fuera:
+   - Cuatro temas × oscuro/claro en `data-theme="<tema>-<modo>"`. Cada uno define sus roles `--c-*` y su material
+     `--m-*`; un bloque común los vuelca sobre los `--kv-*`, así las primitivas adoptan la capa sin tocarlas.
+   - Ejes en `data-shape|texture|frame|divider|icons` de <html> (state/theme.ts). Las formas de la Esquina
+     (`--m-cut-*`, `--kv-cut-*`, `--kv-ring-*`) y la textura (`--m-tex`) las pone state/theme.ts en `style`.
+   - Crimson Pro en el cuerpo; Amaranth 700 en etiquetas, botones, chips y números. */
+
+/* ===== Paletas ===== */
+[data-theme="pergamino-dark"] {
+  --c-bg: #1e1711; --c-surface: #2a2018; --c-sc: #33271d; --c-on: #f0e3c8; --c-onv: #c8b590; --c-faint: #978564;
+  --c-outline: #4a3b2c; --c-strong: #77613f; --c-primary: #c4463a; --c-bright: #e8866b; --c-onp: #fff2e4; --c-pc: #4a2219; --c-onpc: #f4c9b6;
+}
+[data-theme="pergamino-light"] {
+  --c-bg: #ede0c3; --c-surface: #f5ead2; --c-sc: #e8d8b6; --c-on: #3a2917; --c-onv: #654d33; --c-faint: #86704f;
+  --c-outline: #d2bd93; --c-strong: #a4865a; --c-primary: #9e2b22; --c-bright: #8a2219; --c-onp: #fff2e4; --c-pc: #f0cdb9; --c-onpc: #5a170f;
+}
+[data-theme="taberna-dark"] {
+  --c-bg: #170f0a; --c-surface: #231912; --c-sc: #2d2117; --c-on: #f3e1bd; --c-onv: #ccb088; --c-faint: #9a805e;
+  --c-outline: #44321f; --c-strong: #6f5433; --c-primary: #cf9f43; --c-bright: #e9c16b; --c-onp: #2a1906; --c-pc: #48331a; --c-onpc: #f2d69c;
+}
+[data-theme="taberna-light"] {
+  --c-bg: #e7d8bc; --c-surface: #f1e5cd; --c-sc: #e3d1b0; --c-on: #2d2011; --c-onv: #5b472b; --c-faint: #806b4b;
+  --c-outline: #cbb086; --c-strong: #9c7f54; --c-primary: #8c6221; --c-bright: #74500f; --c-onp: #2a1906; --c-pc: #ecd6a2; --c-onpc: #473006;
+}
+[data-theme="cripta-dark"] {
+  --c-bg: #111315; --c-surface: #1a1d20; --c-sc: #22262a; --c-on: #e2e5e7; --c-onv: #a8afb5; --c-faint: #7b838a;
+  --c-outline: #32373c; --c-strong: #535a61; --c-primary: #9fb0bd; --c-bright: #c7d2da; --c-onp: #f2f5f7; --c-pc: #2b343c; --c-onpc: #d4dee6;
+}
+[data-theme="cripta-light"] {
+  --c-bg: #dadad3; --c-surface: #e7e7e1; --c-sc: #d4d4cc; --c-on: #1c2024; --c-onv: #454c53; --c-faint: #686f75;
+  --c-outline: #bbbbb2; --c-strong: #878b8b; --c-primary: #48525b; --c-bright: #343e47; --c-onp: #f2f5f7; --c-pc: #c3cad0; --c-onpc: #212a31;
+}
+[data-theme="bosque-dark"] {
+  --c-bg: #101610; --c-surface: #172017; --c-sc: #1e291d; --c-on: #e6ecd6; --c-onv: #b1bf98; --c-faint: #7f8d6c;
+  --c-outline: #2c3a29; --c-strong: #4b5e43; --c-primary: #8fb35e; --c-bright: #b4d47f; --c-onp: #f3f6e8; --c-pc: #2a3d22; --c-onpc: #cfe3ae;
+}
+[data-theme="bosque-light"] {
+  --c-bg: #dfe4cf; --c-surface: #ebefdd; --c-sc: #d6dcc2; --c-on: #1d2717; --c-onv: #44543a; --c-faint: #66745a;
+  --c-outline: #bcc6a5; --c-strong: #8a9876; --c-primary: #3f6a24; --c-bright: #33561c; --c-onp: #f3f6e8; --c-pc: #cfdfb3; --c-onpc: #223a12;
+}
+
+/* ===== Tintas semánticas (pigmentos apagados: verdín, sangre, ámbar, índigo) ===== */
+[data-theme$="-dark"] {
+  color-scheme: dark;
+  --c-success: #95c479; --c-successc: rgba(120,170,90,.16); --c-error: #e8836b; --c-errorc: rgba(210,90,60,.16);
+  --c-warning: #e0b456; --c-info: #93b3d8;
+  --m-filo: inset 0 1px 0 rgba(255,236,205,.07);
+  --m-icf-grabado: inset 0 2px 3px rgba(0,0,0,.55), inset 0 -1px 0 rgba(255,240,210,.08);
+  --m-shadow: 0 12px 32px rgba(0,0,0,.45);
+  --kv-scrim: rgba(0,0,0,.5);
+  --kv-state-hover: .06; --kv-state-pressed: .10; --kv-state-dragged: .14;
+}
+[data-theme$="-light"] {
+  color-scheme: light;
+  --c-success: #3c6b27; --c-successc: rgba(70,120,40,.14); --c-error: #a02a1e; --c-errorc: rgba(160,40,30,.12);
+  --c-warning: #8a5e0c; --c-info: #2f5a86;
+  --m-filo: inset 0 1px 0 rgba(255,255,255,.7);
+  --m-icf-grabado: inset 0 2px 3px rgba(60,40,10,.22), inset 0 -1px 0 rgba(255,255,255,.6);
+  --m-shadow: 0 12px 32px rgba(60,40,15,.22);
+  --kv-scrim: rgba(40,25,10,.35);
+  --kv-state-hover: .05; --kv-state-pressed: .09; --kv-state-dragged: .12;
+}
+/* En Bosque el verdín se fundiría con el musgo: el éxito pasa a liquen. */
+[data-theme="bosque-dark"] { --c-success: #c9dc6a; --c-successc: rgba(200,220,100,.14); }
+[data-theme="bosque-light"] { --c-success: #5a6b0c; --c-successc: rgba(110,130,20,.14); }
+
+/* ===== Materiales (--m-metal): cera, latón, hierro, musgo. Iguales en los dos modos. ===== */
+[data-theme^="pergamino-"] {
+  --m-stops: #cf4b3f 0%, #a52d23 55%, #7f1f18 100%;
+  --m-edge: inset 0 1px 0 rgba(255,210,190,.4), inset 0 -2px 0 rgba(60,10,5,.45);
+}
+[data-theme^="taberna-"] {
+  --m-stops: #eccb77 0%, #c4953c 50%, #8c6221 100%;
+  --m-edge: inset 0 1px 0 rgba(255,244,210,.65), inset 0 -2px 0 rgba(70,40,5,.5);
+}
+[data-theme^="cripta-"] {
+  --m-stops: #8a949d 0%, #5d666e 50%, #3d444b 100%;
+  --m-edge: inset 0 1px 0 rgba(230,240,248,.4), inset 0 -2px 0 rgba(0,0,0,.5);
+}
+[data-theme^="bosque-"] {
+  --m-stops: #7fae52 0%, #55813a 50%, #355a22 100%;
+  --m-edge: inset 0 1px 0 rgba(230,255,200,.45), inset 0 -2px 0 rgba(10,30,5,.5);
+}
+
+/* ===== Común: derivados y el volcado sobre --kv-* ===== */
+:root { --m-tex: none; }
+[data-theme] {
+  --m-metal: linear-gradient(180deg, var(--m-stops));
+  --m-metal-rev: linear-gradient(0deg, var(--m-stops));
+  --m-rim: drop-shadow(1px 0 0 var(--c-outline)) drop-shadow(-1px 0 0 var(--c-outline)) drop-shadow(0 1px 0 var(--c-outline)) drop-shadow(0 -1px 0 var(--c-outline));
+  --m-rim-strong: drop-shadow(1px 0 0 var(--c-strong)) drop-shadow(-1px 0 0 var(--c-strong)) drop-shadow(0 1px 0 var(--c-strong)) drop-shadow(0 -1px 0 var(--c-strong));
+  --m-rim-success: drop-shadow(1px 0 0 var(--c-success)) drop-shadow(-1px 0 0 var(--c-success)) drop-shadow(0 1px 0 var(--c-success)) drop-shadow(0 -1px 0 var(--c-success));
+  --m-rim-error: drop-shadow(1px 0 0 var(--c-error)) drop-shadow(-1px 0 0 var(--c-error)) drop-shadow(0 1px 0 var(--c-error)) drop-shadow(0 -1px 0 var(--c-error));
+  --m-rim-warning: drop-shadow(1px 0 0 var(--c-warning)) drop-shadow(-1px 0 0 var(--c-warning)) drop-shadow(0 1px 0 var(--c-warning)) drop-shadow(0 -1px 0 var(--c-warning));
+  --m-fade: linear-gradient(90deg, var(--c-primary), var(--c-outline) 40%, transparent);
+  --m-fr-line: var(--c-strong);
+  --m-gema: polygon(28% 0,72% 0,100% 28%,100% 72%,72% 100%,28% 100%,0 72%,0 28%);
+
+  --kv-font-body: 'Crimson Pro', Georgia, serif;
+  --kv-font-heading: 'Amaranth', Georgia, serif;
+  --kv-color-bg: var(--c-bg);
+  --kv-color-surface: var(--c-surface);
+  --kv-color-surface-container: var(--c-sc);
+  /* La capa no tiene `surface-container-high`: nivel 3 es `sc` + sombra. */
+  --kv-color-surface-container-high: var(--c-sc);
+  --kv-color-on-surface: var(--c-on);
+  --kv-color-on-surface-variant: var(--c-onv);
+  --kv-color-on-surface-faint: var(--c-faint);
+  --kv-color-outline: var(--c-outline);
+  --kv-color-outline-strong: var(--c-strong);
+  --kv-color-primary: var(--c-primary);
+  --kv-color-primary-bright: var(--c-bright);
+  --kv-color-on-primary: var(--c-onp);
+  --kv-color-primary-container: var(--c-pc);
+  --kv-color-on-primary-container: var(--c-onpc);
+  --kv-color-focus-ring: color-mix(in oklab, var(--c-primary) 35%, transparent);
+  --kv-color-link: var(--c-bright);
+  --kv-color-link-hover: var(--c-on);
+  --kv-color-success: var(--c-success);
+  --kv-color-success-text: var(--c-success);
+  --kv-color-error: var(--c-error);
+  --kv-color-error-container: var(--c-errorc);
+  --kv-color-on-error: var(--c-bg);
+  --kv-color-warning: var(--c-warning);
+  --kv-color-warning-text: var(--c-warning);
+  --kv-color-info: var(--c-info);
+  --kv-color-info-text: var(--c-info);
+  --kv-color-highlight: var(--c-bright);
+  --kv-color-highlight-text: var(--c-bright);
+  /* La tinta sobre un pigmento claro: el fondo del tema (oscuro de noche, papel de día). */
+  --kv-color-ink: var(--c-bg);
+  --kv-glow: none;
+  --kv-metal: var(--m-metal);
+  --kv-metal-edge: var(--m-edge);
+  --kv-filo: var(--m-filo);
+  --kv-lift: drop-shadow(0 10px 20px rgba(0,0,0,.35));
+}
+
+/* ===== Ejes de CSS ===== */
+[data-frame="filete"] { --m-fr-gap: 0px; --m-fr-in: 0px; }
+[data-frame="doble"] { --m-fr-gap: 2px; --m-fr-in: 1px; }
+
+[data-divider="filete"] { --m-lead: none; --m-tail: none; --m-rule: var(--m-fade); --m-rule-h: 1px; }
+[data-divider="doble"] { --m-lead: inline-block; --m-tail: none; --m-rule: var(--m-fade) top / 100% 1px no-repeat, var(--m-fade) bottom / 100% 1px no-repeat; --m-rule-h: 4px; }
+[data-divider="rombos"] { --m-lead: inline-block; --m-tail: inline-block; --m-rule: linear-gradient(90deg, var(--c-primary), var(--c-strong) 50%, var(--c-strong)); --m-rule-h: 1px; }
+
+[data-icons="tinta"] { --m-icf-bg: transparent; --m-icf-clip: none; --m-icf-shadow: none; --m-icf-color: var(--c-on); }
+[data-icons="grabado"] { --m-icf-bg: var(--c-bg); --m-icf-clip: var(--m-cut-xs); --m-icf-shadow: var(--m-icf-grabado); --m-icf-color: var(--c-on); }
+[data-icons="medallon"] { --m-icf-bg: var(--c-pc); --m-icf-clip: var(--m-gema); --m-icf-shadow: none; --m-icf-color: var(--c-onpc); }
+
+/* ===== Página y superficies de nivel 1: la textura (nunca en campos, botones, chips ni dados) ===== */
+body { font-family: var(--kv-font-body); background-color: var(--c-bg); background-image: var(--m-tex); }
+.kv-card:not(.kv-card--veta, .kv-card--outlined, .kv-card--raised), .kv-top-bar, .kv-nav-rail { background-image: var(--m-tex); }
+.kv-dialog, .kv-datepicker, .kv-sheet { box-shadow: var(--m-filo), var(--m-shadow); }
+
+/* ===== Tipografía de las primitivas: Amaranth 700 en etiquetas (L 16 · M 15 · S 13) ===== */
+.kv-btn { font: 700 calc(16 * var(--kv-px))/calc(20 * var(--kv-px)) var(--kv-font-heading); }
+.kv-btn--dense, [data-density="dense"] .kv-btn { font: 700 calc(15 * var(--kv-px))/calc(18 * var(--kv-px)) var(--kv-font-heading); }
+.kv-seg__opt { font: 700 calc(15 * var(--kv-px))/calc(18 * var(--kv-px)) var(--kv-font-heading); }
+.kv-chip { font: 700 calc(15 * var(--kv-px))/calc(18 * var(--kv-px)) var(--kv-font-heading); }
+.kv-tag { font: 700 calc(13 * var(--kv-px))/calc(16 * var(--kv-px)) var(--kv-font-heading); }
+.kv-tag--small { font-size: calc(12 * var(--kv-px)); }
+.kv-field__label { font: 700 calc(14 * var(--kv-px))/calc(16 * var(--kv-px)) var(--kv-font-heading); }
+.kv-field--dense .kv-field__label, [data-density="dense"] .kv-field__label { font: 700 calc(13 * var(--kv-px))/calc(16 * var(--kv-px)) var(--kv-font-heading); }
+.kv-menu__item { font: 700 calc(16 * var(--kv-px))/calc(20 * var(--kv-px)) var(--kv-font-heading); }
+.kv-list-item__headline { font: 700 calc(16 * var(--kv-px))/calc(20 * var(--kv-px)) var(--kv-font-heading); }
+.kv-nav-item { font: 700 calc(13 * var(--kv-px))/calc(16 * var(--kv-px)) var(--kv-font-heading); }
+.kv-label-medium { font: 700 calc(15 * var(--kv-px))/calc(18 * var(--kv-px)) var(--kv-font-heading); }
+.kv-sheet__opt[aria-selected="true"] { font-family: var(--kv-font-heading); }
+.kv-cal__day, .kv-cal__cell--outside { font-family: var(--kv-font-heading); font-weight: 700; }
+.kv-avatar { color: var(--c-onpc); }
+
+/* Material solo donde la skill lo lista: el incremento del stepper va en veta. */
+.kv-stepper__key--inc { background: var(--c-pc); color: var(--c-onpc); box-shadow: none; }
+
+/* ===== Divisor de kicker: [marca] KICKER [regla] [remate] ===== */
+.kv-kicker-divider { gap: 10px; }
+.kv-kicker-divider > .kv-rhombus { display: none; }
+.kv-kicker-divider::before { content: ""; display: var(--m-lead); width: 7px; height: 7px; flex-shrink: 0; transform: rotate(45deg); background: var(--c-primary); }
+.kv-kicker-divider .kv-rule { height: var(--m-rule-h); background: var(--m-rule); }
+.kv-kicker-divider::after { content: ""; display: var(--m-tail); width: 5px; height: 5px; flex-shrink: 0; box-sizing: border-box; transform: rotate(45deg); border: 1px solid var(--c-strong); }

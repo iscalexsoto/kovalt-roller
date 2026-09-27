@@ -28,8 +28,9 @@ export default defineConfig({
         short_name: 'Roller',
         description: 'Mesa virtual para jugar Roll For Shoes con tus amigos.',
         lang: 'es',
-        // brand-and-iconography.md § App icons: theme #050D1E, fondo #0C1628 (el de los íconos).
-        theme_color: '#050D1E',
+        // theme: el bg de Pergamino oscuro (tema por defecto); fondo #0C1628, el de los íconos
+        // (brand-and-iconography.md § App icons).
+        theme_color: '#1e1711',
         background_color: '#0C1628',
         display: 'standalone',
         icons: [

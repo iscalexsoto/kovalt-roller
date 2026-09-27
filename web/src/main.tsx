@@ -7,6 +7,7 @@ import { applyTheme } from './state/theme';
 import './styles/tokens.css';
 import './styles/fonts.css';
 import './styles/components.css';
+import './styles/medieval.css';
 import './styles/app.css';
 
 applyTheme();

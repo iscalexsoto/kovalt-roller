@@ -3,7 +3,10 @@
 @font-face { font-family: 'Amaranth'; font-style: normal; font-weight: 700; font-display: swap; src: url(/fonts/Amaranth-Bold.ttf) format('truetype'); }
 @font-face { font-family: 'Amaranth'; font-style: italic; font-weight: 400; font-display: swap; src: url(/fonts/Amaranth-Italic.ttf) format('truetype'); }
 @font-face { font-family: 'Amaranth'; font-style: italic; font-weight: 700; font-display: swap; src: url(/fonts/Amaranth-BoldItalic.ttf) format('truetype'); }
-@font-face { font-family: 'Nunito Sans'; font-style: normal; font-weight: 200 1000; font-display: swap; src: url(/fonts/NunitoSans-Variable.ttf) format('truetype'); }
+/* Crimson Pro, el cuerpo de la capa medieval. Su altura de x es pequeña: la skill pide +2px sobre la escala base
+   (18/16/15). `size-adjust` lo hace aquí una vez, así los tamaños en CSS siguen siendo los de la base. */
+@font-face { font-family: 'Crimson Pro'; font-style: normal; font-weight: 200 900; font-display: swap; size-adjust: 113%; src: url(/fonts/CrimsonPro-Variable.ttf) format('truetype'); }
+@font-face { font-family: 'Crimson Pro'; font-style: italic; font-weight: 200 900; font-display: swap; size-adjust: 113%; src: url(/fonts/CrimsonPro-Italic-Variable.ttf) format('truetype'); }
 /* Cascadia Mono (la variante sin ligaduras, a propósito): solo para código. */
 @font-face { font-family: 'Cascadia Mono'; font-style: normal; font-weight: 200 700; font-display: swap; src: url(/fonts/CascadiaMono-Variable.ttf) format('truetype'); }
 @font-face { font-family: 'Cascadia Mono'; font-style: italic; font-weight: 200 700; font-display: swap; src: url(/fonts/CascadiaMono-Italic-Variable.ttf) format('truetype'); }

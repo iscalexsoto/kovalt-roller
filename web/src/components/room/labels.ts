@@ -23,6 +23,20 @@ export function statusLabel(s: Status): string {
   return `${signed(s.rating)} ${s.name}`;
 }
 
+/** Los estados aplicados a una tirada, uno por chip, leídos de su nota («−1 Herido, +1 Sigiloso»): la mesa los aplica
+ *  por turno. Si la nota no cuadra con el modificador (un nombre con coma), un solo chip con el total. */
+export function modifierSteps(modifier: number, note: string | null): { label: string; delta: number }[] {
+  if (modifier === 0) return [];
+  const parts = (note ?? '').split(', ').map((label) => {
+    const m = /^([+−-])(\d+) \S/.exec(label);
+    return m ? { label, delta: (m[1] === '+' ? 1 : -1) * Number(m[2]) } : null;
+  });
+  if (parts.length > 0 && parts.every((p) => p !== null) && parts.reduce((sum, p) => sum + p!.delta, 0) === modifier) {
+    return parts as { label: string; delta: number }[];
+  }
+  return [{ label: note ? `${signed(modifier)} · ${note}` : signed(modifier), delta: modifier }];
+}
+
 export const DIFFICULTY_LABEL: Record<Difficulty['key'], string> = {
   easy: 'Fácil',
   moderate: 'Moderado',

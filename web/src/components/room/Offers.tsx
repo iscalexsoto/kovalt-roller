@@ -15,6 +15,7 @@ import { Dialog } from '../kv/Overlay';
 import { useRoom } from './context';
 import { useDropTarget } from './drag';
 import { ItemGrid, ItemInfo, ItemTile, UniqueTag } from './ItemDialogs';
+import { Frame } from '../Frame';
 
 const KIND: Record<OfferKind, { icon: string; label: string; take: string }> = {
   loot: { icon: 'gift', label: 'Botín', take: 'Tomar' },
@@ -272,6 +273,7 @@ function OfferWindow({ offer }: { offer: OfferDoc }) {
   const left = items.reduce((n, l) => n + l.stock, 0);
 
   return (
+    <Frame>
     <section className={`rl-window rl-window--${offer.kind}`} aria-label={offer.title}>
       <header className="rl-window__head">
         <GameIcon name={kind.icon} className="rl-offer__icon" />
@@ -300,6 +302,7 @@ function OfferWindow({ offer }: { offer: OfferDoc }) {
         ))}
       {open && open.stock > 0 && <ClaimDialog offer={offer} line={open} coins={coins} onClose={() => setOpenId(null)} />}
     </section>
+    </Frame>
   );
 }
 

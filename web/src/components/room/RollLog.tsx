@@ -4,7 +4,8 @@ import { rollFrom } from '../../data/models';
 import { rollsQuery } from '../../data/rolls';
 import { EmptyState, KickerDivider } from '../kv/Layout';
 import { useRoom } from './context';
-import { RollItem, tableRolls } from './Duel';
+import { RollItem } from './Duel';
+import { tableRolls } from './table';
 import { useRollActions } from './useRollActions';
 
 function read(key: string): string | null {
@@ -51,12 +52,12 @@ export function RollLog() {
   } else if (list.length > 0) {
     children.push(
       <div key="k-idle" className="rl-idle">
-        <EmptyState register="empty" icon="hourglass" title="Esperando la siguiente acción" body={ctx.isDm ? 'Cuando alguien actúe, su tirada aparecerá aquí.' : 'Actúa con una habilidad de tu ficha cuando quieras.'} />
+        <EmptyState register="empty" icon="hourglass" title="La mesa aguarda" body={ctx.isDm ? 'Cuando alguien actúe, su tirada quedará en la crónica.' : 'Actúa con una habilidad de tu ficha cuando quieras.'} />
       </div>,
     );
   }
   if (rest.length > 0) {
-    children.push(<KickerDivider key="k-log">Registro</KickerDivider>);
+    children.push(<KickerDivider key="k-log">Crónica de la mesa</KickerDivider>);
     rest.forEach((r) => children.push(<RollItem key={r.id} roll={r} actions={actions} hero={false} />));
   }
 

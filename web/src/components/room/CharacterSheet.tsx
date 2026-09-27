@@ -6,6 +6,7 @@ import { useBusy } from '../../hooks/useBusy';
 import { Button, IconButton } from '../kv/Button';
 import { Field, TextArea } from '../kv/Field';
 import { EmptyState, KickerDivider } from '../kv/Layout';
+import { Frame } from '../Frame';
 import { useRoom } from './context';
 import { Inventory } from './Inventory';
 import { skillLabel, skillLabelText, skillName } from './labels';
@@ -120,6 +121,7 @@ export function CharacterSheet({ character }: { character: CharacterDoc }) {
   const saveSkills = (updated: Parameters<typeof dmUpdateSheet>[3]) => dmUpdateSheet(ctx.room.id, character.id, sheet.xp, updated);
 
   return (
+    <Frame>
     <section className="rl-sheet" aria-label={`Ficha de ${sheet.name}`}>
       <header className="rl-sheet__head">
         <InlineText field="name" label="Nombre" value={sheet.name} canEdit={isOwner} maxLength={60}>
@@ -143,7 +145,8 @@ export function CharacterSheet({ character }: { character: CharacterDoc }) {
       </KickerDivider>
       <ul className="rl-skills">
         {sheet.skills.map((s, i) => (
-          <li key={i} className={`rl-skill${s.permanent ? ' rl-skill--base' : ''}`}>
+          <li key={i} className="rl-skill-rim">
+            <div className={`rl-skill${s.permanent ? ' rl-skill--base' : ''}`}>
             <span className="rl-skill__level kv-num">{s.level}</span>
             <span className="rl-skill__text">
               <span className="rl-skill__name">{skillName(s.name)}</span>
@@ -152,11 +155,12 @@ export function CharacterSheet({ character }: { character: CharacterDoc }) {
             {ctx.isDm && !s.permanent && <IconButton icon="pencil" small label={`Editar ${skillLabel(s)}`} disabled={busy} onClick={() => setEditing(i)} />}
             {canAct && (
               <span className="rl-skill__roll">
-                <Button variant="tonal" dense icon="dices" aria-label={`Actuar con ${skillLabel(s)}`} onClick={() => declare.open(i)}>
+                <Button variant="primary" dense icon="dices" aria-label={`Actuar con ${skillLabel(s)}`} onClick={() => declare.open(i)}>
                   {s.level}d6
                 </Button>
               </span>
             )}
+            </div>
           </li>
         ))}
       </ul>
@@ -208,6 +212,7 @@ export function CharacterSheet({ character }: { character: CharacterDoc }) {
       </InlineText>
       {declare.dialog}
     </section>
+    </Frame>
   );
 }
 
